@@ -1,0 +1,2184 @@
+2026 Clinical Diagnostic Laboratory Fee Schedule
+CPT codes, descriptions and other data only are copyright 2026 American Medical Association. All rights reserved. CPT is a registered trademark of the American Medical Association.
+The Department of Health and Human Services is planning for the federal Public Health Emergency for COVID-19 (PHE), declared under Section 319 of the Public Health Service Act, to expire at the end of the day on May 11, 2023. Because of the termination of the PHE, HCPCS codes G2023, G2024, U0003, U0004, and U0005 will no longer be payable for dates of service on or after May 12, 2023, and the HCPCS codes will be terminated.
+
+YEAR~HCPCS~MOD~EFF_DATE~INDICATOR~RATE~SHORTDESC
+2026~0001U~  ~20260101~N~00720.00~Rbc dna hea 35 ag 11 bld grp
+2026~0002M~  ~20260101~N~00503.40~Liver dis 10 assays w/ash
+2026~0002U~  ~20260101~N~00025.00~Onc clrct 3 ur metab alg plp
+2026~0003M~  ~20260101~N~00503.40~Liver dis 10 assays w/nash
+2026~0003U~  ~20260101~N~00950.00~Onc ovar 5 prtn ser alg scor
+2026~0004M~  ~20260101~N~00079.00~Scoliosis dna alys
+2026~0005U~  ~20260101~N~00760.00~Onco prst8 3 gene ur alg
+2026~0006M~  ~20260101~N~00150.00~Onc hep gene risk classifier
+2026~0007M~  ~20260101~N~00375.00~Onc gastro 51 gene nomogram
+2026~0007U~  ~20260101~N~00114.43~Rx test prsmv ur w/def conf
+2026~0008U~  ~20260101~N~00597.91~Hpylori detcj abx rstnc dna
+2026~0009U~  ~20260101~N~00107.00~Onc brst ca erbb2 amp/nonamp
+2026~0010U~  ~20260101~N~00427.26~Nfct ds strn typ whl gen seq
+2026~0011M~  ~20260101~N~00760.00~Onc prst8 ca mrna 12 gen alg
+2026~0011U~  ~20260101~N~00114.43~Rx mntr lc-ms/ms oral fluid
+2026~0012M~  ~20260101~N~00760.00~Onc mrna 5 gen rsk urthl ca
+2026~0013M~  ~20260101~N~00760.00~Onc mrna 5 gen recr urthl ca
+2026~0015M~  ~20260101~N~01305.37~Adrnl cortcl tum bchm asy 25
+2026~0016M~  ~20260101~N~03489.63~Onc bladder mrna 219 gen alg
+2026~0016U~  ~20260101~N~00163.96~Onc hmtlmf neo rna bcr/abl1
+2026~0017M~  ~20260101~N~02510.21~Onc dlbcl mrna 20 genes alg
+2026~0017U~  ~20260101~N~00091.66~Onc hmtlmf neo jak2 mut dna
+2026~0018M~  ~20260101~N~00640.73~Trnsplj rnl meas cd154+cll
+2026~0018U~  ~20260101~N~03002.09~Onc thyr 10 microrna seq alg
+2026~0019M~  ~20260101~N~00712.40~Cv ds plasma alys prtn bmrk
+2026~0019U~  ~20260101~N~03675.00~Onc rna tiss predict alg
+2026~0020M~  ~20260101~N~02500.00~Onc cns alys 30000 dna loci
+2026~0021U~  ~20260101~N~00760.00~Onc prst8 detcj 8 autoantb
+2026~0022U~  ~20260101~N~01950.00~Tgsap nsm lung neo dna&rna23
+2026~0023U~  ~20260101~N~00248.51~Onc aml dna detcj/nondetcj
+2026~0024U~  ~20260101~N~00034.19~Glyca nuc mr spectrsc quan
+2026~0025U~  ~20260101~N~00114.43~Tenofovir liq chrom ur quan
+2026~0026U~  ~20260101~N~03600.00~Onc thyr dna&mrna 112 genes
+2026~0027U~  ~20260101~N~00121.91~Jak2 gene trgt seq alys
+2026~0029U~  ~20260101~N~00742.27~Rx metab advrs trgt seq alys
+2026~0030U~  ~20260101~N~00134.13~Rx metab warf trgt seq alys
+2026~0031U~  ~20260101~N~00174.81~Cyp1a2 gene
+2026~0032U~  ~20260101~N~00174.81~Comt gene
+2026~0034U~  ~20260101~N~00466.17~Tpmt nudt15 genes
+2026~0035U~  ~20260101~N~00540.99~Neuro csf prion prtn qual
+2026~0036U~  ~20260101~N~04780.00~Xome tum & nml spec seq alys
+2026~0037U~  ~20260101~N~03500.00~Trgt gen seq dna 324 genes
+2026~0038U~  ~20260101~N~00029.60~Vitamin d srm microsamp quan
+2026~0039U~  ~20260101~N~00013.74~Dna antb 2strand hi avidity
+2026~0040U~  ~20260101~N~00409.90~Bcr/abl1 gene major bp quan
+2026~0041U~  ~20260101~N~00017.21~B brgdrferi antb 5 prtn igm
+2026~0042U~  ~20260101~N~00017.21~B brgdrferi antb 12 prtn igg
+2026~0043U~  ~20260101~N~00014.86~Tbrf b grp antb 4 prtn igm
+2026~0044U~  ~20260101~N~00014.86~Tbrf b grp antb 4 prtn igg
+2026~0045U~  ~20260101~N~03873.00~Onc brst dux carc is 12 gene
+2026~0046U~  ~20260101~N~00407.43~Flt3 gene itd variants quan
+2026~0047U~  ~20260101~N~03873.00~Onc prst8 mrna 17 gene alg
+2026~0048U~  ~20260101~N~02919.60~Onc sld org neo dna 468 gene
+2026~0049U~  ~20260101~N~00407.43~Npm1 gene analysis quan
+2026~0050U~  ~20260101~N~02916.60~Trgt gen seq dna 194 genes
+2026~0051U~  ~20260101~N~00246.92~Rx mntr lc-ms/ms ur/bld 31
+2026~0052U~  ~20260101~N~00033.86~Lpoprtn bld w/5 maj classes
+2026~0054U~  ~20260101~N~00198.74~Rx mntr 14+ drugs & sbsts
+2026~0055U~  ~20260101~N~03240.00~Card hrt trnspl 96 dna seq
+2026~0058U~  ~20260101~N~00322.96~Onc merkel cll carc srm quan
+2026~0059U~  ~20260101~N~00322.96~Onc merkel cll carc srm +/-
+2026~0060U~  ~20260101~N~00759.05~Twn zyg gen seq alys chrms2
+2026~0061U~  ~20260101~N~00025.10~Tc meas 5 bmrk sfdi m-s alys
+2026~0062U~  ~20260101~N~00380.72~Ai sle igg&igm alys 80 bmrk
+2026~0063U~  ~20260101~N~00750.00~Neuro autism 32 amines alg
+2026~0064U~  ~20260101~N~00031.33~Antb tp total&rpr ia qual
+2026~0065U~  ~20260101~N~00018.09~Syfls tst nontreponemal antb
+2026~0067U~  ~20260101~N~01897.00~Onc brst imhchem prfl 4 bmrk
+2026~0068U~  ~20260101~N~00142.63~Candida species pnl amp prb
+2026~0069U~  ~20260101~N~00380.00~Onc clrct microrna mir-31-3p
+2026~0070U~  ~20260101~N~00676.37~Cyp2d6 gen com&slct rar vrnt
+2026~0071U~  ~20260101~N~00600.00~Cyp2d6 full gene sequence
+2026~0072U~  ~20260101~N~00450.91~Cyp2d6 gen cyp2d6-2d7 hybrid
+2026~0073U~  ~20260101~N~00450.91~Cyp2d6 gen cyp2d7-2d6 hybrid
+2026~0074U~  ~20260101~N~00450.91~Cyp2d6 nonduplicated gene
+2026~0075U~  ~20260101~N~00450.91~Cyp2d6 5' gene dup/mlt
+2026~0076U~  ~20260101~N~00450.91~Cyp2d6 3' gene dup/mlt
+2026~0077U~  ~20260101~N~00043.43~Ig paraprotein qual bld/ur
+2026~0080U~  ~20260101~N~03520.00~Onc lng 5 clin rsk factr alg
+2026~0082U~  ~20260101~N~00246.92~Rx test def 90+ rx/sbsts ur
+2026~0083U~  ~20260101~N~00167.35~Onc rspse chemo cntrst tomog
+2026~0084U~  ~20260101~N~00720.00~Rbc dna gnotyp 10 bld groups
+2026~0086U~  ~20260101~N~00200.00~Nfct ds bact&fng org id 6+
+2026~0087U~  ~20260101~N~03159.42~Crd hrt trnspl mrna 1283 gen
+2026~0088U~  ~20260101~N~03159.42~Trnsplj kdn algrft rej 1494
+2026~0089U~  ~20260101~N~00760.00~Onc mlnma prame & linc00518
+2026~0090U~  ~20260101~N~01950.00~Onc cutan mlnma mrna 23 gene
+2026~0092U~  ~20260101~N~02488.00~Onc lng 3 prtn bmrk plsm alg
+2026~0093U~  ~20260101~N~00062.14~Rx mntr 65 com drugs urine
+2026~0094U~  ~20260101~N~07582.20~Genome rapid sequence alys
+2026~0095U~  ~20260101~N~00771.98~Ee 2 prtn bmrk elisa est
+2026~0096U~  ~20260101~N~00035.09~Hpv hi risk types male urine
+2026~0101U~  ~20260101~N~01743.95~Hered colon ca do 15 genes
+2026~0102U~  ~20260101~N~01303.95~Hered brst ca rltd do 17 gen
+2026~0103U~  ~20260101~N~01743.95~Hered ova ca pnl 24 genes
+2026~0105U~  ~20260101~N~00950.00~Neph ckd mult eclia tum nec
+2026~0106U~  ~20260101~N~00874.49~Gstr emptg 7 timed brth spec
+2026~0107U~  ~20260101~N~00016.00~C diff tox ag detcj ia stool
+2026~0108U~  ~20260101~N~04950.00~Gi barrett esoph 9 prtn bmrk
+2026~0109U~  ~20260101~N~00142.63~Id aspergillus dna 4 species
+2026~0110U~  ~20260101~N~00027.11~Rx mntr 1+oral onc rx&sbsts
+2026~0111U~  ~20260101~N~00682.29~Onc colon ca kras&nras alys
+2026~0112U~  ~20260101~N~00356.13~Iadi 16s&18s rrna genes
+2026~0113U~  ~20260101~N~00760.00~Onc prst8 pca3&tmprss2-erg
+2026~0114U~  ~20260101~N~01938.01~Gi barretts esoph vim&ccna1
+2026~0115U~  ~20260101~N~00275.35~Respir iadna 18 viral&2 bact
+2026~0116U~  ~20260101~N~00246.92~Rx mntr nzm ia 35+oral flu
+2026~0117U~  ~20260101~N~00840.65~Pain mgmt 11 endogenous anal
+2026~0118U~  ~20260101~N~02753.25~Trnsplj don-drv cll-fr dna
+2026~0119U~  ~20260101~N~00083.76~Crd ceramides liq chrom plsm
+2026~0120U~  ~20260101~N~02510.21~Onc b cll lymphm mrna 58 gen
+2026~0121U~  ~20260101~N~00509.20~Sc dis vcam-1 whole blood
+2026~0122U~  ~20260101~N~00526.23~Sc dis p-selectin whl blood
+2026~0123U~  ~20260101~N~00357.63~Mchnl fragility rbc prflg
+2026~0129U~  ~20260101~N~01303.95~Hered brst ca rltd do panel
+2026~0130U~  ~20260101~N~00584.90~Hered colon ca do mrna pnl
+2026~0133U~  ~20260101~N~00690.29~Hered prst8 ca rltd do 11
+2026~0134U~  ~20260101~N~00748.39~Hered pan ca mrna pnl 18 gen
+2026~0136U~  ~20260101~N~00407.43~Atm mrna seq alys
+2026~0137U~  ~20260101~N~00282.88~Palb2 mrna seq alys
+2026~0138U~  ~20260101~N~00468.33~Brca1 brca2 mrna seq alys
+2026~0140U~  ~20260101~N~00156.75~Nfct ds fungi dna 15 trgt
+2026~0141U~  ~20260101~N~00156.75~Nfct ds bact&fng gram pos
+2026~0142U~  ~20260101~N~00156.75~Nfct ds bact&fng gram neg
+2026~0152U~  ~20260101~N~02126.20~Nfct ds dna untrgt ngnrj seq
+2026~0153U~  ~20260101~N~03159.42~Onc breast mrna 101 genes
+2026~0154U~  ~20260101~N~00482.14~Onc urthl ca rna fgfr3 gene
+2026~0155U~  ~20260101~N~00274.83~Onc brst ca dna pik3ca gene
+2026~0156U~  ~20260101~N~01740.00~Copy number sequence alys
+2026~0157U~  ~20260101~N~00282.88~Apc mrna seq alys
+2026~0158U~  ~20260101~N~00282.88~Mlh1 mrna seq alys
+2026~0159U~  ~20260101~N~00282.88~Msh2 mrna seq alys
+2026~0160U~  ~20260101~N~00282.88~Msh6 mrna seq alys
+2026~0161U~  ~20260101~N~00282.88~Pms2 mrna seq alys
+2026~0162U~  ~20260101~N~00486.54~Hered colon ca trgt mrna pnl
+2026~0163U~  ~20260101~N~00390.75~Onc clrct scr 3 prtn alg
+2026~0164U~  ~20260101~N~00112.02~Gi ibs ia anti-cdtb&vinculin
+2026~0165U~  ~20260101~N~00463.76~Peanut allg asmt epi
+2026~0166U~  ~20260101~N~00503.40~Liver ds 10 biochem asy srm
+2026~0169U~  ~20260101~N~00466.17~Nudt15&tpmt gene com vrnt
+2026~0170U~  ~20260101~N~01950.00~Neuro asd rna next gen seq
+2026~0171U~  ~20260101~N~01519.06~Trgt gen seq alys pnl dna 23
+2026~0172U~  ~20260101~N~03030.00~Onc sld tum alys brca1 brca2
+2026~0173U~  ~20260101~N~00466.17~Psyc gen alys panel 14 genes
+2026~0174U~  ~20260101~N~01305.37~Onc solid tumor 30 prtn trgt
+2026~0175U~  ~20260101~N~01336.09~Psyc gen alys panel 15 genes
+2026~0176U~  ~20260101~N~00064.19~Cdtb&vinculin igg antb ia
+2026~0177U~  ~20260101~N~00274.83~Onc brst ca dna pik3ca 11
+2026~0178U~  ~20260101~N~00459.86~Peanut allg asmt epi clin rx
+2026~0179U~  ~20260101~N~01943.21~Onc nonsm cll lng ca alys 23
+2026~0180U~  ~20260101~N~00274.83~Abo gnotyp abo 7 exons
+2026~0181U~  ~20260101~N~00185.20~Co gnotyp aqp1 exon 1
+2026~0182U~  ~20260101~N~00301.35~Crom gnotyp cd55 exons 1-10
+2026~0183U~  ~20260101~N~00185.20~Di gnotyp slc4a1 exon 19
+2026~0184U~  ~20260101~N~00185.20~Do gnotyp art4 exon 2
+2026~0185U~  ~20260101~N~00185.20~Fut1 gnotyp fut1 exon 4
+2026~0186U~  ~20260101~N~00185.20~Fut2 gnotyp fut2 exon 2
+2026~0187U~  ~20260101~N~00274.83~Fy gnotyp ackr1 exons 1-2
+2026~0188U~  ~20260101~N~00274.83~Ge gnotyp gypc exons 1-4
+2026~0189U~  ~20260101~N~00274.83~Gypa gnotyp ntrns 1 5 exon 2
+2026~0190U~  ~20260101~N~00274.83~Gypb gnotyp ntrns 1 5 seux 3
+2026~0191U~  ~20260101~N~00274.83~In gnotyp cd44 exons 2 3 6
+2026~0192U~  ~20260101~N~00274.83~Jk gnotyp slc14a1 exon 9
+2026~0193U~  ~20260101~N~00282.88~Jr gnotyp abcg2 exons 2-26
+2026~0194U~  ~20260101~N~00185.20~Kel gnotyp kel exon 8
+2026~0195U~  ~20260101~N~00375.25~Klf1 targeted sequencing
+2026~0196U~  ~20260101~N~00185.20~Lu gnotyp bcam exon 3
+2026~0197U~  ~20260101~N~00185.20~Lw gnotyp icam4 exon 1
+2026~0198U~  ~20260101~N~00282.88~Rhd&rhce gntyp rhd1-10&rhce5
+2026~0199U~  ~20260101~N~00274.83~Sc gnotyp ermap exons 4 12
+2026~0200U~  ~20260101~N~00274.83~Xk gnotyp xk exons 1-3
+2026~0201U~  ~20260101~N~00185.20~Yt gnotyp ache exon 2
+2026~0202U~  ~20260101~N~00416.78~Nfct ds 22 trgt sars-cov-2
+2026~0203U~  ~20260101~N~00760.00~Ai ibd mrna xprsn prfl 17
+2026~0205U~  ~20260101~N~00047.00~Oph amd alys 3 gene variants
+2026~0206U~  ~20260101~N~02215.40~Neuro alzheimer cell aggregj
+2026~0207U~  ~20260101~N~00511.20~Neuro alzheimer quan imaging
+2026~0209U~  ~20260101~N~00787.15~Cytog const alys interrog
+2026~0210U~  ~20260101~N~00018.63~Syphilis tst antb ia quan
+2026~0211U~  ~20260101~N~08455.00~Onc pan-tum dna&rna gnrj seq
+2026~0212U~  ~20260101~N~05475.20~Rare ds gen dna alys proband
+2026~0213U~  ~20260101~N~02709.95~Rare ds gen dna alys ea comp
+2026~0214U~  ~20260101~N~05224.60~Rare ds xom dna alys proband
+2026~0215U~  ~20260101~N~02574.65~Rare ds xom dna alys ea comp
+2026~0216U~  ~20260101~N~01537.02~Neuro inh ataxia dna 12 com
+2026~0217U~  ~20260101~N~02198.35~Neuro inh ataxia dna 51 gene
+2026~0218U~  ~20260101~N~02279.00~Neuro musc dys dmd seq alys
+2026~0219U~  ~20260101~N~00725.00~Nfct agt hiv gnrj seq alys
+2026~0220U~  ~20260101~N~00706.25~Onc brst ca ai assmt 12 feat
+2026~0221U~  ~20260101~N~00274.83~Abo gnotyp next gnrj seq abo
+2026~0222U~  ~20260101~N~00282.88~Rhd&rhce gntyp next gnrj seq
+2026~0223U~  ~20260101~N~00416.78~Nfct ds 22 trgt sars-cov-2
+2026~0224U~  ~20260101~N~00051.43~Antibody sars-cov-2 titer(s)
+2026~0225U~  ~20260101~N~00416.78~Nfct ds dna&rna 21 sarscov2
+2026~0226U~  ~20260101~N~00042.28~Svnt sarscov2 elisa plsm srm
+2026~0227U~  ~20260101~N~00062.14~Rx asy prsmv 30+rx/metablt
+2026~0228U~  ~20260101~N~00173.03~Onc prst8 ma molec prfl alg
+2026~0229U~  ~20260101~N~00384.00~Bcat1&ikzf1 prmtr mthyln aly
+2026~0230U~  ~20260101~N~00301.35~Ar full sequence analysis
+2026~0231U~  ~20260101~N~00846.27~Cacna1a full gene analysis
+2026~0232U~  ~20260101~N~00274.83~Cstb full gene analysis
+2026~0233U~  ~20260101~N~00274.83~Fxn gene analysis
+2026~0234U~  ~20260101~N~00527.87~Mecp2 full gene analysis
+2026~0235U~  ~20260101~N~00600.00~Pten full gene analysis
+2026~0236U~  ~20260101~N~00602.70~Smn1&smn2 full gene analysis
+2026~0237U~  ~20260101~N~00584.90~Car ion chnlpthy gen seq pnl
+2026~0238U~  ~20260101~N~00584.90~Onc lnch syn gen dna seq aly
+2026~0239U~  ~20260101~N~03500.00~Trgt gen seq alys pnl 311+
+2026~0242U~  ~20260101~N~05000.00~Trgt gen seq alys pnl 55-74
+2026~0243U~  ~20260101~N~00064.41~Ob pe biochem assay pgf alg
+2026~0244U~  ~20260101~N~03500.00~Onc solid orgn dna 257 genes
+2026~0245U~  ~20260101~N~01266.07~Onc thyr mut alys 10 gen&37
+2026~0246U~  ~20260101~N~00720.00~Rbc dna gnotyp 16 bld groups
+2026~0247U~  ~20260101~N~00750.00~Ob prtrm brth ibp4 shbg meas
+2026~0248U~  ~20260101~N~03033.86~Onc sphrd cell cul 12 rx pnl
+2026~0249U~  ~20260101~N~02219.13~Onc brst alys 32 phsprtn alg
+2026~0250U~  ~20260101~N~02919.60~Onc sld org neo dna 505 gene
+2026~0251U~  ~20260101~N~00017.27~Hepcidin-25 elisa serum/plsm
+2026~0252U~  ~20260101~N~00759.05~Ftl aneuploidy str alys dna
+2026~0253U~  ~20260101~N~03159.42~Rprdtve med rna gen prfl 238
+2026~0254U~  ~20260101~N~00759.05~Reprdtve med alys 24 chrmsm
+2026~0255U~  ~20260101~N~00031.60~Andrology infertility assmt
+2026~0256U~  ~20260101~N~00159.95~Tma/tmao prfl lcms/ms ur alg
+2026~0257U~  ~20260101~N~00712.47~Vlcad leuk nzm actv whl bld
+2026~0258U~  ~20260101~N~03675.00~Ai psor mrna 50-100 gen alg
+2026~0259U~  ~20260101~N~00052.71~Neph ckd nuc mrs meas gfr
+2026~0260U~  ~20260101~N~01263.53~Rare ds id opt genome mapg
+2026~0261U~  ~20260101~N~02513.25~Onc clrct ca img alys w/ai
+2026~0262U~  ~20260101~N~03200.00~Onc sld tum rt-pcr 7 gen
+2026~0263U~  ~20260101~N~00750.00~Neuro asd meas 16 c metblt
+2026~0264U~  ~20260101~N~01263.53~Rare ds id opt genome mapg
+2026~0265U~  ~20260101~N~05475.80~Rar do whl gn&mtcdrl dna als
+2026~0266U~  ~20260101~N~03200.00~Unxpl cnst hrtbl do gn xprsn
+2026~0267U~  ~20260101~N~06739.33~Rare do id opt gen mapg&seq
+2026~0268U~  ~20260101~N~00608.17~Hem ahus gen seq alys 15 gen
+2026~0269U~  ~20260101~N~00608.17~Hem aut dm cgen trmbctpna 22
+2026~0270U~  ~20260101~N~00608.17~Hem cgen coagj do 20 genes
+2026~0271U~  ~20260101~N~00608.17~Hem cgen neutropenia 24 gen
+2026~0272U~  ~20260101~N~00608.17~Hem genetic bld do 60 genes
+2026~0273U~  ~20260101~N~00608.17~Hem gen hyprfibrnlysis 8 gen
+2026~0274U~  ~20260101~N~00608.17~Hem gen pltlt do 62 genes
+2026~0275U~  ~20260101~N~00018.37~Hem heprn nduc trmbctpna srm
+2026~0276U~  ~20260101~N~02448.56~Hem inh thrombocytopenia 42
+2026~0277U~  ~20260101~N~00608.17~Hem gen pltlt funcj do 40
+2026~0278U~  ~20260101~N~00608.17~Hem gen thrombosis 14 genes
+2026~0279U~  ~20260101~N~00011.53~Hem vw factor&clgn iii bndg
+2026~0280U~  ~20260101~N~00017.27~Hem vw factor&clgn iv bndg
+2026~0281U~  ~20260101~N~00017.27~Hem vwd propeptide ag lvl
+2026~0282U~  ~20260101~N~00720.00~Rbc dna gntyp 12 bld grp gen
+2026~0283U~  ~20260101~N~00018.40~Vw factor type 2b eval plsm
+2026~0284U~  ~20260101~N~00017.27~Vw factor type 2n eval plsm
+2026~0285U~  ~20260101~N~00443.31~Onc ds prog&rspse mntr radj
+2026~0286U~  ~20260101~N~00134.13~Cep72 nudt15&tpmt gene alys
+2026~0287U~  ~20260101~N~03600.00~Onc thyr dna&mrna 112 genes
+2026~0288U~  ~20260101~N~03873.00~Onc lung mrna quan pcr 11&3
+2026~0289U~  ~20260101~N~00760.00~Neuro alzheimer mrna 24 gen
+2026~0290U~  ~20260101~N~00760.00~Pain mgmt mrna gen xprsn 36
+2026~0291U~  ~20260101~N~01755.00~Psyc mood do mrna 144 genes
+2026~0292U~  ~20260101~N~01755.00~Psyc strs do mrna 72 genes
+2026~0293U~  ~20260101~N~00760.00~Psyc suicidal idea mrna 54
+2026~0294U~  ~20260101~N~00760.00~Lngvty&mrtlty rsk mrna 18gen
+2026~0295U~  ~20260101~N~05435.00~Onc brst dux carc 7 proteins
+2026~0296U~  ~20260101~N~01950.00~Onc orl&/orop ca 20 mlc feat
+2026~0297U~  ~20260101~N~02919.60~Onc pan tum whl gen seq dna
+2026~0298U~  ~20260101~N~02919.60~Onc pan tum whl trns seq rna
+2026~0299U~  ~20260101~N~01863.22~Onc pan tum whl gen opt mapg
+2026~0300U~  ~20260101~N~04183.13~Onc pan tum whl gen seq&opt
+2026~0301U~  ~20260101~N~00262.72~Iadna bartonella ddpcr
+2026~0302U~  ~20260101~N~00361.37~Iadna brtnla ddpcr flwg liq
+2026~0303U~  ~20260101~N~02201.62~Hem rbc ads whl bld hypoxic
+2026~0304U~  ~20260101~N~02075.80~Hem rbc ads whl bld normoxic
+2026~0305U~  ~20260101~N~00662.58~Hem rbc fnclty&dfrm shr strs
+2026~0306U~  ~20260101~N~03878.45~Onc mrd nxt-gnrj alys 1st
+2026~0307U~  ~20260101~N~00794.49~Onc mrd nxt-gnrj alys sbsq
+2026~0308U~  ~20260101~N~00390.75~Crd cad alys 3 prtn 3 param
+2026~0309U~  ~20260101~N~00390.75~Crd cv ds aly 4 prtn plm alg
+2026~0310U~  ~20260101~N~00390.75~Ped vsclts kd alys 3 bmrks
+2026~0311U~  ~20260101~N~00008.08~Nfct ds bct quan antmcrb sc
+2026~0312U~  ~20260101~N~00840.65~Ai ds sle alys 8 igg autoant
+2026~0313U~  ~20260101~N~03600.00~Onc pncrs dna&mrna seq 74
+2026~0314U~  ~20260101~N~01950.00~Onc cutan mlnma mrna 35 gene
+2026~0315U~  ~20260101~N~08500.00~Onc cutan sq cll ca mrna 40
+2026~0316U~  ~20260101~N~00018.66~B brgdrferi lyme ds ospa evl
+2026~0317U~  ~20260101~N~02030.00~Onc lung ca 4-prb fish assay
+2026~0318U~  ~20260101~N~01770.48~Ped whl gen mthyltn alys 50+
+2026~0319U~  ~20260101~N~02650.00~Neph rna pretrnspl perph bld
+2026~0320U~  ~20260101~N~02650.00~Neph rna psttrnspl perph bld
+2026~0321U~  ~20260101~N~00634.84~Iadna gu pthgn 20bct&fng org
+2026~0322U~  ~20260101~N~00750.00~Neuro asd meas 14 acyl carn
+2026~0323U~  ~20260101~N~02126.20~Iadna cns pthgn next gen seq
+2026~0326U~  ~20260101~N~05000.00~Trgt gen seq alys pnl 83+
+2026~0327U~  ~20260101~N~00795.00~Ftl aneuploidy trsmy dna seq
+2026~0328U~  ~20260101~N~00114.43~Drug assay 120+ rx&metablt
+2026~0329U~  ~20260101~N~03437.98~Onc neo xome&trns seq alys
+2026~0330U~  ~20260101~N~00416.78~Iadna vag pthgn panel 27 org
+2026~0331U~  ~20260101~N~01863.22~Onc hl neo opt gen mapping
+2026~0332U~  ~20260101~N~01142.06~Onc pan tum gen prflg 8 dna
+2026~0333U~  ~20260101~N~00662.32~Onc lvr surveilanc hcc cfdna
+2026~0334U~  ~20260101~N~03500.00~Onc sld orgn tgsa dna 84/+
+2026~0335U~  ~20260101~N~05224.60~Rare ds whl gen seq feta
+2026~0336U~  ~20260101~N~02574.65~Rare ds whl gen seq bld/slv
+2026~0337U~  ~20260101~N~02435.00~Onc plsm cell do&myeloma id
+2026~0338U~  ~20260101~N~02435.00~Onc sld tum crcg tum cl slct
+2026~0339U~  ~20260101~N~00760.00~Onc prst8 mrna hoxc6 & dlx1
+2026~0340U~  ~20260101~N~03590.00~Onc pan ca alys mrd plasma
+2026~0341U~  ~20260101~N~01900.20~Ftl aneup dna seq cmpr alys
+2026~0342U~  ~20260101~N~00897.00~Onc pncrtc ca mult ia eclia
+2026~0343U~  ~20260101~N~00760.00~Onc prst8 xom aly 442 sncrna
+2026~0344U~  ~20260101~N~00792.17~Hep nafld semiq evl 28 lipid
+2026~0345U~  ~20260101~N~01336.09~Psyc genom alys pnl 15 gen
+2026~0347U~  ~20260101~N~01336.09~Rx metab/pcx dna 16 gen alys
+2026~0348U~  ~20260101~N~00742.27~Rx metab/pcx dna 25 gen alys
+2026~0349U~  ~20260101~N~00742.27~Rx metab/pcx dna 27gen rx ia
+2026~0350U~  ~20260101~N~01336.09~Rx metab/pcx dna 27 gen alys
+2026~0351U~  ~20260101~N~00260.50~Nfct ds bct/viral trail ip10
+2026~0355U~  ~20260101~N~00137.00~Apol1 risk variants
+2026~0356U~  ~20260101~N~01800.00~Onc orop/anal 17 dna ddpcr
+2026~0358U~  ~20260101~N~00260.50~Neuro alys b-amyl 1-42&1-40
+2026~0359U~  ~20260101~N~00760.00~Onc prst8 ca alys all psa
+2026~0360U~  ~20260101~N~00840.65~Onc lung elisa 7 autoant alg
+2026~0362U~  ~20260101~N~03600.00~Onc pap thyr ca rna 82&10
+2026~0363U~  ~20260101~N~00760.00~Onc urthl mrna 5 gen alg
+2026~0364U~  ~20260101~N~02007.25~Onc hl neo gen seq alys alg
+2026~0365U~  ~20260101~N~00897.00~Onc bldr 10 ur hrbr urthl ca
+2026~0366U~  ~20260101~N~00897.00~Onc bldr 10 prb recr bldr ca
+2026~0367U~  ~20260101~N~00902.18~Onc bldr 10 flwg trurl rescj
+2026~0368U~  ~20260101~N~00416.78~Onc clrct ca mut&mthyltn mrk
+2026~0371U~  ~20260101~N~00416.78~Iadna gu pthgn semiq dna16&1
+2026~0372U~  ~20260101~N~00416.78~Nfct ds gu pthgn arg detcj
+2026~0375U~  ~20260101~N~00897.00~Onc ovrn bchm asy 7 prtn alg
+2026~0376U~  ~20260101~N~00706.25~Onc prst8 ca img alys 128
+2026~0377U~  ~20260101~N~00047.58~Cv ds quan advsrm/plsm lprtn
+2026~0378U~  ~20260101~N~00137.00~Rfc1 repeat xpnsj vrnt alys
+2026~0379U~  ~20260101~N~03288.51~Tgsap sl or neo dna523&rna55
+2026~0381U~  ~20260101~N~00044.12~Maple syrup ur ds mntr quan
+2026~0382U~  ~20260101~N~00051.64~Hyprphenylalninmia mntr quan
+2026~0383U~  ~20260101~N~00052.05~Tyrosinemia typ i mntr quan
+2026~0384U~  ~20260101~N~00750.00~Neph ckd rsk hi stg kdn ds
+2026~0385U~  ~20260101~N~00390.75~Neph ckd alg rsk dbtc kdn ds
+2026~0387U~  ~20260101~N~00948.50~Onc mlnma ambra1&amlo
+2026~0388U~  ~20260101~N~03500.00~Onc nonsm cll lng ca 37 gen
+2026~0389U~  ~20260101~N~00070.20~Ped fbrl kd ifi27&mcemp1 rna
+2026~0390U~  ~20260101~N~00064.41~Ob pe kdr eng&rbp4 ia alg
+2026~0391U~  ~20260101~N~03600.00~Onc sld tum dna&rna 437 gen
+2026~0392U~  ~20260101~N~01336.09~Rx metab genrx ia 16 genes
+2026~0393U~  ~20260101~N~00540.99~Neu prksn msfl a-syncln prtn
+2026~0394U~  ~20260101~N~00198.74~Pfas 16 pfas compnd lc ms/ms
+2026~0395U~  ~20260101~N~00797.45~Onc lng multiomics plsm alg
+2026~0398U~  ~20260101~N~01755.00~Gi baret esph dna mthyln aly
+2026~0399U~  ~20260101~N~00300.00~Neuro cere folate defncy srm
+2026~0400U~  ~20260101~N~01456.88~Ob xpnd car scr 145 genes
+2026~0401U~  ~20260101~N~00489.68~Crd c hrt ds 9 gen 12 vrnts
+2026~0402U~  ~20260101~N~00142.63~Nfct agt sti mult amp prb tq
+2026~0403U~  ~20260101~N~00760.00~Onc prst8 mrna 18 gen 1st ur
+2026~0404U~  ~20260101~N~00322.96~Onc brst semiq meas thym kn
+2026~0405U~  ~20260101~N~01770.48~Onc pncrtc 59 mthltn blk mrk
+2026~0406U~  ~20260101~N~00760.00~Onc lung flow cytmtry 5 mrk
+2026~0407U~  ~20260101~N~00950.00~Neph dbtc ckd mult eclia alg
+2026~0408U~  ~20260101~N~00014.13~Iaad blk ac wv bsnsr sarscv2
+2026~0409U~  ~20260101~N~02919.60~Onc sld tum dna 80 & rna 36
+2026~0410U~  ~20260101~N~01160.00~Onc pncrtc dna whl gn seq 5-
+2026~0411U~  ~20260101~N~01336.09~Psyc genom alys pnl 15 gen
+2026~0412U~  ~20260101~N~00750.00~Beta amyloid ab42/40 imprcip
+2026~0413U~  ~20260101~N~01263.53~Onc hl neo opt gen mapg dna
+2026~0414U~  ~20260101~N~00706.25~Onc lng aug alg aly whl sld8
+2026~0415U~  ~20260101~N~00390.75~Cv ds acs bld alg 5 yr score
+2026~0417U~  ~20260101~N~02842.53~Rare ds alys 335 nuc genes
+2026~0418U~  ~20260101~N~00706.25~Onc brst aug alg aly whl sl8
+2026~0419U~  ~20260101~N~01336.09~Nrpsyc gen seq vrnt aly 13
+2026~0420U~  ~20260101~N~01328.32~Onc urthl mrna xprsn 6 snp
+2026~0421U~  ~20260101~N~00508.87~Onc clrct scr sgl amp 8 rna
+2026~0422U~  ~20260101~N~01943.21~Onc pan solid tum alys dna
+2026~0423U~  ~20260101~N~00416.78~Psyc genomic alys pnl 26 gen
+2026~0424U~  ~20260101~N~00760.00~Onc prst8 xom alys 53 sncrna
+2026~0425U~  ~20260101~N~04094.39~Genom rpd seq alys ea cmprtr
+2026~0426U~  ~20260101~N~07582.20~Genome ultra-rapid seq alys
+2026~0427U~  ~20260101~N~00004.48~Monocyte dstrbj wdth whl bld
+2026~0429U~  ~20260101~N~00035.09~Hpv orop swab 14 hi-risk typ
+2026~0430U~  ~20260101~N~00061.54~Gi malabs aat calpro pncrtc
+2026~0431U~  ~20260101~N~00036.57~Gly rcptr alpha1 igg srm/csf
+2026~0432U~  ~20260101~N~00036.57~Klhl11 antb sr/csf asy qual
+2026~0433U~  ~20260101~N~00760.00~Onc prst8 5 dna reg mrk pcr
+2026~0434U~  ~20260101~N~00416.78~Rx metab advrs vrnt alys 25
+2026~0435U~  ~20260101~N~03033.86~Onc chemo rx cytox csc 14 rx
+2026~0436U~  ~20260101~N~01504.24~Onc lng plsm alys 388 prtn
+2026~0437U~  ~20260101~N~00760.00~Psyc anxiety do mrna 15 bmrk
+2026~0438U~  ~20260101~N~00416.78~Rx metab advrs vrnt alys 33
+2026~0439U~  ~20260101~N~00854.00~Crd chd dna alys 5 snp 3 dna
+2026~0440U~  ~20260101~N~00854.00~Crd chd dna alys 10 snp 6dna
+2026~0441U~  ~20260101~N~00444.08~Nfct ds bct fngl/viral semiq
+2026~0442U~  ~20260101~N~00041.38~Nfct ds respir nfctj mxa&crp
+2026~0443U~  ~20260101~N~00116.23~Neurflmnt lt chn ultrsens ia
+2026~0444U~  ~20260101~N~02919.60~Onc sld orgn neo tgsap 361
+2026~0445U~  ~20260101~N~00260.50~Abeta42 & ptau181 eclia csf
+2026~0446U~  ~20260101~N~00840.65~Ai ds sle alys 10 cytokine
+2026~0447U~  ~20260101~N~00840.65~Ai ds sle alys 11 cytokine
+2026~0449U~  ~20260101~N~01824.88~Car scr sev inh cond 5 genes
+2026~0452U~  ~20260101~N~00192.00~Onc bldr mthyl penk lte-qmsp
+2026~0453U~  ~20260101~N~00192.00~Onc clrct ca cfdna qpcr asy
+2026~0454U~  ~20260101~N~01263.53~Rare ds id opt genome mapg
+2026~0455U~  ~20260101~N~00142.63~Nfct agt sti mult amp prb ur
+2026~0457U~  ~20260101~N~00198.74~Pfas 9 cmpnd lcms/ms pls/sr
+2026~0458U~  ~20260101~N~00260.50~Onc brst ca s100 a8&a9 elisa
+2026~0459U~  ~20260101~N~00260.50~Abeta42 & ttau eclia csf
+2026~0460U~  ~20260101~N~00917.08~Onc whl bld/bucc rtpcr 24gen
+2026~0461U~  ~20260101~N~00917.08~Onc rxgenom alys rtpcr 24gen
+2026~0462U~  ~20260101~N~00017.27~Melatonin lvl tst slp std7/9
+2026~0463U~  ~20260101~N~00760.00~Onc crvx mrna genxprsn 14bmk
+2026~0464U~  ~20260101~N~00591.92~Onc clrct scr qrtsa dna mrk
+2026~0465U~  ~20260101~N~01938.01~Onc urthl carc dna qmsp 2gen
+2026~0466U~  ~20260101~N~00345.43~Crd cad dna gwas 564856 snp
+2026~0467U~  ~20260101~N~01519.06~Onc bldr dna ngs 60gen&aneup
+2026~0468U~  ~20260101~N~00251.70~Hep nash mir34a5p a2m ykl40
+2026~0469U~  ~20260101~N~01197.94~Rare ds whl gen seq ftl samp
+2026~0470U~  ~20260101~N~00597.91~Onc orop detcj mrd 8 dna hpv
+2026~0471U~  ~20260101~N~00760.00~Onc clrc ca 35 vrn kras&nras
+2026~0472U~  ~20260101~N~00027.90~Ca vi psp&sp1 antb sjogren
+2026~0473U~  ~20260101~N~04500.00~Onc sld tum bld/slv 648 gene
+2026~0474U~  ~20260101~N~01303.95~Hered pan ca gsap 88gene ngs
+2026~0475U~  ~20260101~N~01303.95~Hered prst8 ca gsap 23 genes
+2026~0476U~  ~20260101~N~00416.78~Rx metab psyc 14gen&cyp2d6
+2026~0477U~  ~20260101~N~00416.78~Rx metab psy 14&cyp2d6 gn-rx
+2026~0478U~  ~20260101~N~00552.99~Onc nsclc dna&rna dpcr 9gens
+2026~0479U~  ~20260101~N~00017.27~Tau phosphorylated ptau217
+2026~0480U~  ~20260101~N~02126.20~Nfct ds csf metag ngs alys
+2026~0481U~  ~20260101~N~00674.24~Idh1 idh2&tert promoter ngs
+2026~0482U~  ~20260101~N~00128.82~Ob pe biochem asy sflt1&plgf
+2026~0483U~  ~20260101~N~00035.09~Nfct ds ng gyra s91f pt mut
+2026~0484U~  ~20260101~N~00035.09~Nfct ds mgen 23s rrna pt mut
+2026~0485U~  ~20260101~N~03649.48~Onc sol tum cfdna&rna ngs gm
+2026~0486U~  ~20260101~N~01644.25~Onc pan sol tum ngs cfctdna
+2026~0487U~  ~20260101~N~02919.60~Onc sol tum cfcdna tgsap 84
+2026~0488U~  ~20260101~N~00759.05~Ob fetal ag nipt cfdna alys
+2026~0489U~  ~20260101~N~01153.62~Ob sgnipt cfdna seq alys 1+
+2026~0490U~  ~20260101~N~02435.00~Onc cutan/uveal mlnma cd146
+2026~0491U~  ~20260101~N~02435.00~Onc sol tum ctc slct er prtn
+2026~0492U~  ~20260101~N~02435.00~Onc sol tum ctc slctn pd-l1
+2026~0493U~  ~20260101~N~02753.25~Trnspl med quan dd-cfdna ngs
+2026~0494U~  ~20260101~N~00759.05~Rbc ag ftl rhd gene alys ngs
+2026~0495U~  ~20260101~N~00760.00~Onc prst8 alys crcg plsm prt
+2026~0496U~  ~20260101~N~00485.86~Onc clrct cfdna 8/7 genes
+2026~0497U~  ~20260101~N~03873.00~Onc prst8 mrna rt-pcr 6genes
+2026~0498U~  ~20260101~N~01345.31~Onc clrct ngs mut detc 43gen
+2026~0499U~  ~20260101~N~00597.91~Onc clrct&lng dna ngs 8genes
+2026~0500U~  ~20260101~N~00175.40~Autoinflam ds vexas synd dna
+2026~0501U~  ~20260101~N~00192.00~Onc clrc bld quan meas cfdna
+2026~0502U~  ~20260101~N~00035.09~Hpv e6/e7 mrk hi-rsk typ crv
+2026~0503U~  ~20260101~N~00750.00~Neuro alz ds bamyl&tau prtn
+2026~0504U~  ~20260101~N~00416.78~Nfct ds uti id 17 path orgs
+2026~0505U~  ~20260101~N~00679.77~Nfct ds vag infctj id 32orgs
+2026~0506U~  ~20260101~N~01938.01~Gi barretts esophgl cell 89
+2026~0507U~  ~20260101~N~01160.00~Onc ovr dna whole gen w/5hmc
+2026~0510U~  ~20260101~N~00473.91~Onc pncrtc ca alg alys 16gen
+2026~0511U~  ~20260101~N~03033.86~Onc sol tum 3dmicroenvir 36+
+2026~0512U~  ~20260101~N~00706.25~Onc prst8 alys dgtz img msi
+2026~0513U~  ~20260101~N~00706.25~Onc prst8 alg alys msi&hrd
+2026~0514U~  ~20260101~N~00038.57~Gi ibd ia quan deter adl lvl
+2026~0515U~  ~20260101~N~00038.57~Gi ibd ia quan deter ifx lvl
+2026~0516U~  ~20260101~N~00416.78~Rx metab rxgenomic gnotyp 40
+2026~0517U~  ~20260101~N~00246.92~Ther rx mntr 80+ psyactiv rx
+2026~0518U~  ~20260101~N~00246.92~Ther rx mntr 90+ pn&mtl hlth
+2026~0519U~  ~20260101~N~00246.92~Ther rx mntr meds p/d/a 110+
+2026~0520U~  ~20260101~N~00246.92~Ther rx mntr 200+ rx/sbsts
+2026~0521U~  ~20260101~N~00051.80~Rf iga&igm ccp antb sr-a ia
+2026~0522U~  ~20260101~N~00260.50~Ca vi psp&sp1 antb cl semiql
+2026~0523U~  ~20260101~N~01352.09~Onc soltum dna ngs snv 22gen
+2026~0524U~  ~20260101~N~00128.82~Ob pe sflt-1/plgf ia srm/pls
+2026~0525U~  ~20260101~N~03033.86~Onc sphrd cell cul 11-rx pnl
+2026~0526U~  ~20260101~L~00000.00~Nefro rnl trnspl quan cxcl10
+2026~0527U~  ~20260101~N~00142.63~Hsv 1&2 vzv amp prb tq pthgn
+2026~0528U~  ~20260101~N~00634.84~Lrt iad 18bct/8vir&7arg rna
+2026~0529U~  ~20260101~L~00000.00~Hem vte snp f2&f5 gen leiden
+2026~0530U~  ~20260101~N~02919.60~Onc pan-sol tum ctdna 77 gen
+2026~0531U~  ~20260101~L~00000.00~Nfct ds afb&inv fng 673orgs
+2026~0532U~  ~20260101~N~05031.20~Rare ds whlgen&mitochdrl dna
+2026~0533U~  ~20260101~N~00416.78~Rx metab advrs gnotyp 16gens
+2026~0534U~  ~20260101~L~00000.00~Onc prst8 mirna snp 32 vrnt
+2026~0535U~  ~20260101~N~00062.14~Pfas lc-ms/ms plsm/srm quan
+2026~0536U~  ~20260101~N~00192.00~Rbcag ftl rhd pcr alys exon4
+2026~0537U~  ~20260101~N~01495.00~Onc clrct ca cfdna >2500 dmr
+2026~0538U~  ~20260101~N~02989.55~Onc sol tum ngts ffpe 600gen
+2026~0539U~  ~20260101~N~03288.51~Onc sol tumor cfctdna 152gen
+2026~0540U~  ~20260101~N~02753.25~Trnsplj med quan dd-cfdna
+2026~0541U~  ~20260101~L~00000.00~Cv ds hdl rct cec lc-ms/ms 5
+2026~0542U~  ~20260101~L~00000.00~Nefro renal trnspl ur nmr 84
+2026~0543U~  ~20260101~N~02989.55~Onc sol tum ngs dna 517 gens
+2026~0545U~  ~20260101~N~00037.73~Achr antb id imfluor livecll
+2026~0546U~  ~20260101~N~00037.73~Ldns lrp4 antb imflr livecll
+2026~0547U~  ~20260101~N~00116.23~Neurflmnt lt chn cleia plsm
+2026~0548U~  ~20260101~N~00116.23~Gfap cleia plasma
+2026~0549U~  ~20260101~N~00760.00~Onc urthl dna mthyltd rt pcr
+2026~0552U~  ~20260101~L~00000.00~Repr med pga gdo te bx locus
+2026~0553U~  ~20260101~N~00759.05~Repr med pga embry te strux
+2026~0554U~  ~20260101~N~00759.05~Repr med pga 24chrm te bx qc
+2026~0555U~  ~20260101~N~00759.05~Repr med pga embryonic te qc
+2026~0556U~  ~20260101~N~00142.63~Nfct ds p-s dna&rna 12 trgts
+2026~0557U~  ~20260101~N~00262.99~Nfct ds bv dna mrk vag fluid
+2026~0558U~  ~20260101~N~00020.81~Onc clrct elisa bf7 ag serum
+2026~0559U~  ~20260101~N~00020.81~Onc brs quan elisa bf9ag srm
+2026~0560U~  ~20260101~N~03878.45~Onc mrd gsa cfdna baseline
+2026~0561U~  ~20260101~N~00794.49~Onc mrd gsa cfdna subsequent
+2026~0562U~  ~20260101~N~00597.91~Onc sol tum tgsa 33gens snvs
+2026~0563U~  ~20260101~N~00416.78~Nfct ds pthgn-sna 11vir&4bct
+2026~0563U~QW~20260101~N~00416.78~Nfct ds pthgn-sna 11vir&4bct
+2026~0564U~  ~20260101~N~00416.78~Nfct ds pthgn-sna 10vir&4bct
+2026~0564U~QW~20260101~N~00416.78~Nfct ds pthgn-sna 10vir&4bct
+2026~0565U~  ~20260101~N~01160.00~Onc hcc ngs detc 6626epigalt
+2026~0566U~  ~20260101~N~00416.78~Onc lng qpcr-bsd alys 13dmrs
+2026~0567U~  ~20260101~N~05031.20~Rare ds whl gen seq srs&lrs
+2026~0568U~  ~20260101~N~00897.00~Neurol dementia bamyl ptau
+2026~0569U~  ~20260101~L~00000.00~Onc sol tum ngs tmm>20000dmr
+2026~0570U~  ~20260101~N~00260.50~Neurol tbi alys gfap&uch-l1
+2026~0571U~  ~20260101~N~02919.60~Onc sol tum dna80&rna10g ngs
+2026~0572U~  ~20260101~L~00000.00~Onc prst8 httl qfish whl bld
+2026~0573U~  ~20260101~L~00000.00~Onc pancreas 3bmrk pclf alg
+2026~0574U~  ~20260101~L~00000.00~Mtb cfp-10 serum/plsm lc-ms
+2026~0575U~  ~20260101~N~00380.00~Trnsplj med lar rtpcr 4genes
+2026~0576U~  ~20260101~N~03240.00~Trnsplj med lar quan ddcfdna
+2026~0577U~  ~20260101~N~00246.92~Onc ovr serum alys 39 gps
+2026~0578U~  ~20260101~N~03873.00~Onc cutan mln rna qpcr 10gen
+2026~0579U~  ~20260101~N~00390.75~Nfro dbtc ckd elisa apoa4
+2026~0580U~  ~20260101~N~00017.21~Bbrgdrferi ld antb detcj 31
+2026~0581U~  ~20260101~N~00325.80~Trnspl med antb nohla 39trgt
+2026~0582U~  ~20260101~N~07582.20~Rare ds rpd whlgen dna vrnts
+2026~0583U~  ~20260101~N~03791.10~Rare ds rpd whlgen cmptr dna
+2026~0584U~  ~20260101~N~00540.99~Neuro csf prion prtn qual
+2026~0585U~  ~20260101~N~02919.60~Tgsap so neo cfdna 521 genes
+2026~0586U~  ~20260101~N~02919.60~Onc mrna gen xprsn 216 genes
+2026~0587U~  ~20260101~N~00114.43~Ther rx mntr 60150rx&metabl
+2026~0588U~  ~20260101~N~00760.00~Nfct ds bct/vir 32genes mrna
+2026~0589U~  ~20260101~N~00198.74~Pfas24cmpnd hiperf lc-ms/ms
+2026~0590U~  ~20260101~L~00000.00~Nfct ds bct&fngl dna 44 orgs
+2026~0591U~  ~20260101~N~00760.00~Onc prst8 ca 3prtns plsm srm
+2026~0592U~  ~20260101~N~02919.60~Onc hl neo dna tgs 417 genes
+2026~0593U~  ~20260101~N~00634.84~Nfct ds gu pthgn dna 46trgt
+2026~0594U~  ~20260101~L~00000.00~Nfct ds sepsis pncrtc spc
+2026~0595U~  ~20260101~N~00262.99~Nfct ds tfp vctrbrn&zoonotic
+2026~0596U~  ~20260101~L~00000.00~Neuro alzds plsm 3dstnct isp
+2026~0597U~  ~20260101~L~00000.00~Onc breast rna xprsn 329gens
+2026~0598U~  ~20260101~N~00300.00~Gi ibs igg antb 18food items
+2026~0599U~  ~20260101~N~00897.00~Onc pncrtc ca mult ia serum
+2026~0600U~  ~20260101~L~00000.00~Nfct ds wnd infctj 65orgs&30
+2026~0601U~  ~20260101~L~00000.00~Nfct ds pji alys 11 bmrks ia
+2026~0602U~  ~20260101~L~00000.00~Endocrin dm ins gen mthyltn
+2026~0603U~  ~20260101~L~00000.00~Rx asy prsmv 77rx/metablt ur
+2026~0604U~  ~20260101~L~00000.00~All&immunology crae 4bk pep
+2026~0605U~  ~20260101~L~00000.00~All&immunology hat tpsab1
+2026~0606U~  ~20260101~L~00000.00~Hem red cll memb do rbc oge
+2026~0607U~  ~20260101~L~00000.00~Reprdtve med ema rtpcr 31bct
+2026~0608U~  ~20260101~L~00000.00~Reprdtve med ema rtpcr 10bct
+2026~0609U~  ~20260101~L~00000.00~Onc prostate ia tot&free psa
+2026~0610U~  ~20260101~L~00000.00~Nfct ds antmcr sc phenotypic
+2026~0611U~  ~20260101~L~00000.00~Onc lvr alys >1000 mr cfdna
+2026~0612U~  ~20260101~L~00000.00~Onc lvr alys >1000 mr cfdna
+2026~0613U~  ~20260101~L~00000.00~Onc uc dna mthyltn&mut 6bmrk
+2026~0614U~  ~20260401~L~00000.00~Iem pmd alys 4 nzm cplx page
+2026~0615U~  ~20260401~L~00000.00~Bbrgdrferi ld antb detcj 26
+2026~0616U~  ~20260401~L~00000.00~Neurol dementia alys >30000
+2026~0617U~  ~20260401~L~00000.00~Cv ascvd dna alys >20000
+2026~0618U~  ~20260401~L~00000.00~Psyc bd dna mthyl alys>10000
+2026~0619U~  ~20260401~L~00000.00~Pulm copd dna alys >18000
+2026~0620U~  ~20260401~L~00000.00~Onc hcc dna mthyln alys>5000
+2026~0621U~  ~20260401~L~00000.00~Nfct ds lb dna alys>10000
+2026~0622U~  ~20260401~L~00000.00~Psyc mdd dna alys >20000
+2026~0623U~  ~20260401~L~00000.00~Ai ms dna mthyl alys >5000
+2026~0624U~  ~20260401~L~00000.00~Hep nash dna mthyl alys 5000
+2026~0625U~  ~20260401~L~00000.00~Endocrinol op dna alys>5000
+2026~0626U~  ~20260401~L~00000.00~Neurol pd dna alys >20000
+2026~0627U~  ~20260401~L~00000.00~Psyc scz dna alys >15000
+2026~0628U~  ~20260401~L~00000.00~Nfro kdn ds genetic cond 449
+2026~0629U~  ~20260401~L~00000.00~Nfct ds tb dna aly 1trgt pcr
+2026~0630U~  ~20260401~L~00000.00~Onc brst mrna gen prflg 80
+2026~36415~  ~20260101~N~00009.34~Coll venous bld venipuncture
+2026~78267~  ~20260101~N~00011.06~Urea breath tst c-14 acquisj
+2026~78268~  ~20260101~N~00094.41~Urea breath test c-14 alys
+2026~80047~  ~20260101~N~00013.73~Basic metablc pnl ionized ca
+2026~80047~QW~20260101~N~00013.73~Basic metablc pnl ionized ca
+2026~80048~  ~20260101~N~00008.46~Basic metabolic pnl total ca
+2026~80048~QW~20260101~N~00008.46~Basic metabolic pnl total ca
+2026~80051~  ~20260101~N~00007.01~Electrolyte panel
+2026~80051~QW~20260101~N~00007.01~Electrolyte panel
+2026~80053~  ~20260101~N~00010.56~Comprehen metabolic panel
+2026~80053~QW~20260101~N~00010.56~Comprehen metabolic panel
+2026~80055~  ~20260101~N~00047.81~Obstetric panel
+2026~80061~  ~20260101~N~00013.39~Lipid panel
+2026~80061~QW~20260101~N~00013.39~Lipid panel
+2026~80069~  ~20260101~N~00008.68~Renal function panel
+2026~80069~QW~20260101~N~00008.68~Renal function panel
+2026~80074~  ~20260101~N~00047.63~Acute hepatitis panel
+2026~80076~  ~20260101~N~00008.17~Hepatic function panel
+2026~80081~  ~20260101~N~00074.86~Obstetric panel inc hiv tstg
+2026~80143~  ~20260101~N~00018.64~Drug assay acetaminophen
+2026~80145~  ~20260101~N~00038.57~Drug assay adalimumab
+2026~80150~  ~20260101~N~00015.08~Assay of amikacin
+2026~80151~  ~20260101~N~00018.64~Drug assay amiodarone
+2026~80155~  ~20260101~N~00038.57~Drug assay caffeine
+2026~80156~  ~20260101~N~00014.57~Assay carbamazepine total
+2026~80157~  ~20260101~N~00013.25~Assay carbamazepine free
+2026~80158~  ~20260101~N~00018.05~Drug assay cyclosporine
+2026~80159~  ~20260101~N~00020.15~Drug assay clozapine
+2026~80161~  ~20260101~N~00018.64~Asy carbamazepin 10,11-epxid
+2026~80162~  ~20260101~N~00013.28~Assay of digoxin total
+2026~80163~  ~20260101~N~00013.28~Assay of digoxin free
+2026~80164~  ~20260101~N~00013.54~Assay dipropylacetic acd tot
+2026~80165~  ~20260101~N~00013.54~Dipropylacetic acid free
+2026~80167~  ~20260101~N~00018.64~Drug assay felbamate
+2026~80168~  ~20260101~N~00016.34~Assay of ethosuximide
+2026~80169~  ~20260101~N~00013.73~Drug assay everolimus
+2026~80170~  ~20260101~N~00016.38~Assay of gentamicin
+2026~80171~  ~20260101~N~00021.67~Drug screen quant gabapentin
+2026~80173~  ~20260101~N~00015.78~Assay of haloperidol
+2026~80175~  ~20260101~N~00013.25~Drug screen quan lamotrigine
+2026~80176~  ~20260101~N~00014.69~Assay of lidocaine
+2026~80177~  ~20260101~N~00013.25~Drug scrn quan levetiracetam
+2026~80178~  ~20260101~N~00006.61~Assay of lithium
+2026~80178~QW~20260101~N~00006.61~Assay of lithium
+2026~80179~  ~20260101~N~00018.64~Drug assay salicylate
+2026~80180~  ~20260101~N~00018.05~Drug scrn quan mycophenolate
+2026~80181~  ~20260101~N~00018.64~Drug assay flecainide
+2026~80183~  ~20260101~N~00013.25~Drug scrn quant oxcarbazepin
+2026~80184~  ~20260101~N~00015.30~Assay of phenobarbital
+2026~80185~  ~20260101~N~00013.25~Assay of phenytoin total
+2026~80186~  ~20260101~N~00013.76~Assay of phenytoin free
+2026~80187~  ~20260101~N~00027.11~Drug assay posaconazole
+2026~80188~  ~20260101~N~00016.59~Assay of primidone
+2026~80189~  ~20260101~N~00027.11~Drug assay itraconazole
+2026~80190~  ~20260101~N~00060.00~Assay of procainamide
+2026~80192~  ~20260101~N~00016.75~Assay of procainamide
+2026~80193~  ~20260101~N~00038.57~Drug assay leflunomide
+2026~80194~  ~20260101~N~00014.60~Assay of quinidine
+2026~80195~  ~20260101~N~00013.73~Assay of sirolimus
+2026~80197~  ~20260101~N~00013.73~Assay of tacrolimus
+2026~80198~  ~20260101~N~00014.14~Assay of theophylline
+2026~80199~  ~20260101~N~00027.11~Drug screen quant tiagabine
+2026~80200~  ~20260101~N~00016.13~Assay of tobramycin
+2026~80201~  ~20260101~N~00011.92~Assay of topiramate
+2026~80202~  ~20260101~N~00013.54~Assay of vancomycin
+2026~80203~  ~20260101~N~00013.25~Drug screen quant zonisamide
+2026~80204~  ~20260101~N~00038.57~Drug assay methotrexate
+2026~80210~  ~20260101~N~00027.11~Drug assay rufinamide
+2026~80220~  ~20260101~N~00018.64~Drug asy hydroxychloroquine
+2026~80230~  ~20260101~N~00038.57~Drug assay infliximab
+2026~80235~  ~20260101~N~00027.11~Drug assay lacosamide
+2026~80280~  ~20260101~N~00038.57~Drug assay vedolizumab
+2026~80285~  ~20260101~N~00027.11~Drug assay voriconazole
+2026~80299~  ~20260101~N~00018.64~Quantitative assay drug
+2026~80305~  ~20260101~N~00012.60~Drug test prsmv dir opt obs
+2026~80305~QW~20260101~N~00012.60~Drug test prsmv dir opt obs
+2026~80306~  ~20260101~N~00017.14~Drug test prsmv instrmnt
+2026~80307~  ~20260101~N~00062.14~Drug test prsmv chem anlyzr
+2026~80400~  ~20260101~N~00032.62~Acth stimulation panel
+2026~80402~  ~20260101~N~00086.96~Acth stimulation panel
+2026~80406~  ~20260101~N~00078.26~Acth stimulation panel
+2026~80408~  ~20260101~N~00125.50~Aldosterone suppression eval
+2026~80410~  ~20260101~N~00080.37~Calcitonin stimul panel
+2026~80412~  ~20260101~N~00801.62~Crh stimulation panel
+2026~80414~  ~20260101~N~00051.64~Testosterone response panel
+2026~80415~  ~20260101~N~00055.89~Tot estradiol response panel
+2026~80416~  ~20260101~N~00209.32~Renin stimulation panel
+2026~80417~  ~20260101~N~00043.99~Renin stimulation panel
+2026~80418~  ~20260101~N~00579.48~Pituitary evaluation panel
+2026~80420~  ~20260101~N~00161.88~Dexamethasone panel
+2026~80422~  ~20260101~N~00046.07~Glucagon tolerance panel
+2026~80424~  ~20260101~N~00050.50~Glucagon tolerance panel
+2026~80426~  ~20260101~N~00148.41~Gonadotropin hormone panel
+2026~80428~  ~20260101~N~00066.70~Growth hormone panel
+2026~80430~  ~20260101~N~00129.33~Growth hormone panel
+2026~80432~  ~20260101~N~00165.61~Insulin suppression panel
+2026~80434~  ~20260101~N~00285.03~Insulin tolerance panel
+2026~80435~  ~20260101~N~00103.00~Insulin tolerance panel
+2026~80436~  ~20260101~N~00091.16~Metyrapone panel
+2026~80438~  ~20260101~N~00050.41~Trh stimulation panel
+2026~80439~  ~20260101~N~00067.21~Trh stimulation panel
+2026~81000~  ~20260101~N~00004.02~Urinalysis nonauto w/scope
+2026~81001~  ~20260101~N~00003.17~Urinalysis auto w/scope
+2026~81002~  ~20260101~N~00003.48~Urinalysis nonauto w/o scope
+2026~81003~  ~20260101~N~00002.25~Urinalysis auto w/o scope
+2026~81003~QW~20260101~N~00002.25~Urinalysis auto w/o scope
+2026~81005~  ~20260101~N~00002.17~Urinalysis
+2026~81007~  ~20260101~N~00029.98~Urine screen for bacteria
+2026~81007~QW~20260101~N~00029.98~Urine screen for bacteria
+2026~81015~  ~20260101~N~00003.05~Microscopic exam of urine
+2026~81020~  ~20260101~N~00004.70~Urinalysis glass test
+2026~81025~  ~20260101~N~00008.61~Urine pregnancy test
+2026~81050~  ~20260101~N~00003.64~Urinalysis volume measure
+2026~81105~  ~20260101~N~00122.22~Hpa-1 genotyping
+2026~81106~  ~20260101~N~00122.22~Hpa-2 genotyping
+2026~81107~  ~20260101~N~00122.22~Hpa-3 genotyping
+2026~81108~  ~20260101~N~00122.22~Hpa-4 genotyping
+2026~81109~  ~20260101~N~00122.22~Hpa-5 genotyping
+2026~81110~  ~20260101~N~00122.22~Hpa-6 genotyping
+2026~81111~  ~20260101~N~00122.22~Hpa-9 genotyping
+2026~81112~  ~20260101~N~00122.22~Hpa-15 genotyping
+2026~81120~  ~20260101~N~00193.25~Idh1 common variants
+2026~81121~  ~20260101~N~00295.79~Idh2 common variants
+2026~81161~  ~20260101~N~00279.00~Dmd dup/delet analysis
+2026~81162~  ~20260101~N~01824.88~Brca1&2 gen full seq dup/del
+2026~81163~  ~20260101~N~00468.00~Brca1&2 gene full seq alys
+2026~81164~  ~20260101~N~00584.23~Brca1&2 gen ful dup/del alys
+2026~81165~  ~20260101~N~00282.88~Brca1 gene full seq alys
+2026~81166~  ~20260101~N~00301.35~Brca1 gene full dup/del alys
+2026~81167~  ~20260101~N~00282.88~Brca2 gene full dup/del alys
+2026~81168~  ~20260101~N~00207.31~Ccnd1/igh translocation alys
+2026~81170~  ~20260101~N~00300.00~Abl1 gene
+2026~81171~  ~20260101~N~00137.00~Aff2 gen aly detc abnl allel
+2026~81172~  ~20260101~N~00274.83~Aff2 gen alys charac alleles
+2026~81173~  ~20260101~N~00301.35~Ar gene full gene sequence
+2026~81174~  ~20260101~N~00185.20~Ar gene known famil variant
+2026~81175~  ~20260101~N~00676.50~Asxl1 full gene sequence
+2026~81176~  ~20260101~N~00241.90~Asxl1 gene target seq alys
+2026~81177~  ~20260101~N~00137.00~Atn1 gene detc abnor alleles
+2026~81178~  ~20260101~N~00137.00~Atxn1 gene detc abnor allele
+2026~81179~  ~20260101~N~00137.00~Atxn2 gene detc abnor allele
+2026~81180~  ~20260101~N~00137.00~Atxn3 gene detc abnor allele
+2026~81181~  ~20260101~N~00137.00~Atxn7 gene detc abnor allele
+2026~81182~  ~20260101~N~00137.00~Atxn8os gen detc abnor allel
+2026~81183~  ~20260101~N~00137.00~Atxn10 gene detc abnor allel
+2026~81184~  ~20260101~N~00137.00~Cacna1a gen detc abnor allel
+2026~81185~  ~20260101~N~00846.27~Cacna1a gene full gene seq
+2026~81186~  ~20260101~N~00185.20~Cacna1a gen known famil vrnt
+2026~81187~  ~20260101~N~00137.00~Cnbp gene detc abnor allele
+2026~81188~  ~20260101~N~00137.00~Cstb gene detc abnor allele
+2026~81189~  ~20260101~N~00274.83~Cstb gene full gene sequence
+2026~81190~  ~20260101~N~00185.20~Cstb gene known famil vrnt
+2026~81191~  ~20260101~N~00207.31~Ntrk1 translocation analysis
+2026~81192~  ~20260101~N~00207.31~Ntrk2 translocation analysis
+2026~81193~  ~20260101~N~00207.31~Ntrk3 translocation analysis
+2026~81194~  ~20260101~N~00518.28~Ntrk translocation analysis
+2026~81195~  ~20260101~N~01863.22~Cytog genom-wid alys hem mal
+2026~81200~  ~20260101~N~00047.25~Aspa gene
+2026~81201~  ~20260101~N~00780.00~Apc gene full sequence
+2026~81202~  ~20260101~N~00280.00~Apc gene known fam variants
+2026~81203~  ~20260101~N~00200.00~Apc gene dup/delet variants
+2026~81204~  ~20260101~N~00137.00~Ar gene charac alleles
+2026~81205~  ~20260101~N~00094.99~Bckdhb gene
+2026~81206~  ~20260101~N~00163.96~Bcr/abl1 gene major bp
+2026~81207~  ~20260101~N~00144.84~Bcr/abl1 gene minor bp
+2026~81208~  ~20260101~N~00214.62~Bcr/abl1 gene other bp
+2026~81209~  ~20260101~N~00039.31~Blm gene
+2026~81210~  ~20260101~N~00175.40~Braf gene
+2026~81212~  ~20260101~N~00440.00~Brca1&2 185&5385&6174 vrnt
+2026~81215~  ~20260101~N~00375.25~Brca1 gene known famil vrnt
+2026~81216~  ~20260101~N~00185.12~Brca2 gene full seq alys
+2026~81217~  ~20260101~N~00375.25~Brca2 gene known famil vrnt
+2026~81218~  ~20260101~N~00241.90~Cebpa gene full sequence
+2026~81219~  ~20260101~N~00121.63~Calr gene com variants
+2026~81220~  ~20260101~N~00556.60~Cftr gene com variants
+2026~81221~  ~20260101~N~00097.22~Cftr gene known fam variants
+2026~81222~  ~20260101~N~00435.07~Cftr gene dup/delet variants
+2026~81223~  ~20260101~N~00499.00~Cftr gene full sequence
+2026~81224~  ~20260101~N~00168.75~Cftr gene intron poly t
+2026~81225~  ~20260101~N~00291.36~Cyp2c19 gene com variants
+2026~81226~  ~20260101~N~00450.91~Cyp2d6 gene com variants
+2026~81227~  ~20260101~N~00174.81~Cyp2c9 gene com variants
+2026~81228~  ~20260101~N~00900.00~Cytog alys chrml abnr cgh
+2026~81229~  ~20260101~N~01160.00~Cytog alys chrml abnr snpcgh
+2026~81230~  ~20260101~N~00174.81~Cyp3a4 gene common variants
+2026~81231~  ~20260101~N~00174.81~Cyp3a5 gene common variants
+2026~81232~  ~20260101~N~00174.81~Dpyd gene common variants
+2026~81233~  ~20260101~N~00175.40~Btk gene common variants
+2026~81234~  ~20260101~N~00137.00~Dmpk gene detc abnor allele
+2026~81235~  ~20260101~N~00324.58~Egfr gene com variants
+2026~81236~  ~20260101~N~00282.88~Ezh2 gene full gene sequence
+2026~81237~  ~20260101~N~00175.40~Ezh2 gene common variants
+2026~81238~  ~20260101~N~00600.00~F9 full gene sequence
+2026~81239~  ~20260101~N~00274.83~Dmpk gene charac alleles
+2026~81240~  ~20260101~N~00065.69~F2 gene
+2026~81241~  ~20260101~N~00073.37~F5 gene
+2026~81242~  ~20260101~N~00036.62~Fancc gene
+2026~81243~  ~20260101~N~00057.04~Fmr1 gen aly detc abnl allel
+2026~81244~  ~20260101~N~00044.89~Fmr1 gen alys charac alleles
+2026~81245~  ~20260101~N~00165.51~Flt3 gene
+2026~81246~  ~20260101~N~00083.00~Flt3 gene analysis
+2026~81247~  ~20260101~N~00174.81~G6pd gene alys cmn variant
+2026~81248~  ~20260101~N~00375.25~G6pd known familial variant
+2026~81249~  ~20260101~N~00600.00~G6pd full gene sequence
+2026~81250~  ~20260101~N~00058.49~G6pc gene
+2026~81251~  ~20260101~N~00047.25~Gba gene
+2026~81252~  ~20260101~N~00101.12~Gjb2 gene full sequence
+2026~81253~  ~20260101~N~00061.52~Gjb2 gene known fam variants
+2026~81254~  ~20260101~N~00035.00~Gjb6 gene com variants
+2026~81255~  ~20260101~N~00051.45~Hexa gene
+2026~81256~  ~20260101~N~00065.36~Hfe gene
+2026~81257~  ~20260101~N~00102.26~Hba1/hba2 gene
+2026~81258~  ~20260101~N~00375.25~Hba1/hba2 gene fam vrnt
+2026~81259~  ~20260101~N~00600.00~Hba1/hba2 full gene sequence
+2026~81260~  ~20260101~N~00039.31~Ikbkap gene
+2026~81261~  ~20260101~N~00197.99~Igh gene rearrange amp meth
+2026~81262~  ~20260101~N~00068.55~Igh gene rearrang dir probe
+2026~81263~  ~20260101~N~00294.52~Igh vari regional mutation
+2026~81264~  ~20260101~N~00172.73~Igk rearrangeabn clonal pop
+2026~81265~  ~20260101~N~00233.07~Str markers specimen anal
+2026~81266~  ~20260101~N~00304.81~Str markers spec anal addl
+2026~81267~  ~20260101~N~00207.46~Chimerism anal no cell selec
+2026~81268~  ~20260101~N~00260.79~Chimerism anal w/cell select
+2026~81269~  ~20260101~N~00202.40~Hba1/hba2 gene dup/del vrnts
+2026~81270~  ~20260101~N~00091.66~Jak2 gene
+2026~81271~  ~20260101~N~00137.00~Htt gene detc abnor alleles
+2026~81272~  ~20260101~N~00329.51~Kit gene targeted seq analys
+2026~81273~  ~20260101~N~00124.87~Kit gene analys d816 variant
+2026~81274~  ~20260101~N~00274.83~Htt gene charac alleles
+2026~81275~  ~20260101~N~00193.25~Kras gene variants exon 2
+2026~81276~  ~20260101~N~00193.25~Kras gene addl variants
+2026~81277~  ~20260101~N~01160.00~Cytogenomic neo microra alys
+2026~81278~  ~20260101~N~00207.31~Igh@/bcl2 translocation alys
+2026~81279~  ~20260101~N~00185.20~Jak2 gene trgt sequence alys
+2026~81283~  ~20260101~N~00073.37~Ifnl3 gene
+2026~81284~  ~20260101~N~00137.00~Fxn gene detc abnor alleles
+2026~81285~  ~20260101~N~00274.83~Fxn gene charac alleles
+2026~81286~  ~20260101~N~00274.83~Fxn gene full gene sequence
+2026~81287~  ~20260101~N~00124.64~Mgmt gene prmtr mthyltn alys
+2026~81288~  ~20260101~N~00192.32~Mlh1 gene
+2026~81289~  ~20260101~N~00185.20~Fxn gene known famil variant
+2026~81290~  ~20260101~N~00039.31~Mcoln1 gene
+2026~81291~  ~20260101~N~00065.34~Mthfr gene
+2026~81292~  ~20260101~N~00675.40~Mlh1 gene full seq
+2026~81293~  ~20260101~N~00331.00~Mlh1 gene known variants
+2026~81294~  ~20260101~N~00202.40~Mlh1 gene dup/delete variant
+2026~81295~  ~20260101~N~00381.70~Msh2 gene full seq
+2026~81296~  ~20260101~N~00337.73~Msh2 gene known variants
+2026~81297~  ~20260101~N~00213.30~Msh2 gene dup/delete variant
+2026~81298~  ~20260101~N~00641.85~Msh6 gene full seq
+2026~81299~  ~20260101~N~00308.00~Msh6 gene known variants
+2026~81300~  ~20260101~N~00238.00~Msh6 gene dup/delete variant
+2026~81301~  ~20260101~N~00348.56~Microsatellite instability
+2026~81302~  ~20260101~N~00527.87~Mecp2 gene full seq
+2026~81303~  ~20260101~N~00120.00~Mecp2 gene known variant
+2026~81304~  ~20260101~N~00150.00~Mecp2 gene dup/delet variant
+2026~81305~  ~20260101~N~00175.40~Myd88 gene p.leu265pro vrnt
+2026~81306~  ~20260101~N~00291.36~Nudt15 gene common variants
+2026~81307~  ~20260101~N~00676.50~Palb2 gene full gene seq
+2026~81308~  ~20260101~N~00301.35~Palb2 gene known famil vrnt
+2026~81309~  ~20260101~N~00274.83~Pik3ca gene trgt seq alys
+2026~81310~  ~20260101~N~00246.52~Npm1 gene
+2026~81311~  ~20260101~N~00295.79~Nras gene variants exon 2&3
+2026~81312~  ~20260101~N~00137.00~Pabpn1 gene detc abnor allel
+2026~81313~  ~20260101~N~00255.05~Pca3/klk3 antigen
+2026~81314~  ~20260101~N~00329.51~Pdgfra gene
+2026~81315~  ~20260101~N~00207.31~Pml/raralpha com breakpoints
+2026~81316~  ~20260101~N~00207.31~Pml/raralpha 1 breakpoint
+2026~81317~  ~20260101~N~00676.50~Pms2 gene full seq analysis
+2026~81318~  ~20260101~N~00331.00~Pms2 known familial variants
+2026~81319~  ~20260101~N~00203.50~Pms2 gene dup/delet variants
+2026~81320~  ~20260101~N~00291.36~Plcg2 gene common variants
+2026~81321~  ~20260101~N~00600.00~Pten gene full sequence
+2026~81322~  ~20260101~N~00046.60~Pten gene known fam variant
+2026~81323~  ~20260101~N~00300.00~Pten gene dup/delet variant
+2026~81324~  ~20260101~N~00758.36~Pmp22 gene dup/delet
+2026~81325~  ~20260101~N~00769.58~Pmp22 gene full sequence
+2026~81326~  ~20260101~N~00046.60~Pmp22 gene known fam variant
+2026~81327~  ~20260101~N~00192.00~Sept9 gen prmtr mthyltn alys
+2026~81328~  ~20260101~N~00174.81~Slco1b1 gene com variants
+2026~81329~  ~20260101~N~00137.00~Smn1 gene dos/deletion alys
+2026~81330~  ~20260101~N~00047.00~Smpd1 gene common variants
+2026~81331~  ~20260101~N~00051.07~Snrpn/ube3a gene
+2026~81332~  ~20260101~N~00043.65~Serpina1 gene
+2026~81333~  ~20260101~N~00137.00~Tgfbi gene common variants
+2026~81334~  ~20260101~N~00329.51~Runx1 gene targeted seq alys
+2026~81335~  ~20260101~N~00174.81~Tpmt gene com variants
+2026~81336~  ~20260101~N~00301.35~Smn1 gene full gene sequence
+2026~81337~  ~20260101~N~00185.20~Smn1 gen nown famil seq vrnt
+2026~81338~  ~20260101~N~00150.33~Mpl gene common variants
+2026~81339~  ~20260101~N~00185.20~Mpl gene seq alys exon 10
+2026~81340~  ~20260101~N~00208.92~Trb@ gene rearrange amplify
+2026~81341~  ~20260101~N~00049.59~Trb@ gene rearrange dirprobe
+2026~81342~  ~20260101~N~00201.50~Trg gene rearrangement anal
+2026~81343~  ~20260101~N~00137.00~Ppp2r2b gen detc abnor allel
+2026~81344~  ~20260101~N~00137.00~Tbp gene detc abnor alleles
+2026~81345~  ~20260101~N~00185.20~Tert gene targeted seq alys
+2026~81346~  ~20260101~N~00174.81~Tyms gene com variants
+2026~81347~  ~20260101~N~00193.25~Sf3b1 gene common variants
+2026~81348~  ~20260101~N~00175.40~Srsf2 gene common variants
+2026~81349~  ~20260101~N~01197.94~Cytog alys chrml abnr lw-ps
+2026~81350~  ~20260101~N~00234.00~Ugt1a1 gene common variants
+2026~81351~  ~20260101~N~00641.85~Tp53 gene full gene sequence
+2026~81352~  ~20260101~N~00329.51~Tp53 gene trgt sequence alys
+2026~81353~  ~20260101~N~00308.00~Tp53 gene known famil vrnt
+2026~81354~  ~20260101~N~01263.53~Cytog alys chrml abnor ogm
+2026~81355~  ~20260101~N~00088.20~Vkorc1 gene
+2026~81357~  ~20260101~N~00193.25~U2af1 gene common variants
+2026~81360~  ~20260101~N~00193.25~Zrsr2 gene common variants
+2026~81361~  ~20260101~N~00174.81~Hbb gene com variants
+2026~81362~  ~20260101~N~00375.25~Hbb gene known fam variant
+2026~81363~  ~20260101~N~00202.40~Hbb gene dup/del variants
+2026~81364~  ~20260101~N~00324.58~Hbb full gene sequence
+2026~81370~  ~20260101~N~00402.12~Hla i & ii typing lr
+2026~81371~  ~20260101~N~00404.52~Hla i & ii type verify lr
+2026~81372~  ~20260101~N~00403.59~Hla i typing complete lr
+2026~81373~  ~20260101~N~00127.43~Hla i typing 1 locus lr
+2026~81374~  ~20260101~N~00074.33~Hla i typing 1 antigen lr
+2026~81375~  ~20260101~N~00220.74~Hla ii typing ag equiv lr
+2026~81376~  ~20260101~N~00122.22~Hla ii typing 1 locus lr
+2026~81377~  ~20260101~N~00094.74~Hla ii type 1 ag equiv lr
+2026~81378~  ~20260101~N~00345.57~Hla i & ii typing hr
+2026~81379~  ~20260101~N~00335.38~Hla i typing complete hr
+2026~81380~  ~20260101~N~00177.25~Hla i typing 1 locus hr
+2026~81381~  ~20260101~N~00169.90~Hla i typing 1 allele hr
+2026~81382~  ~20260101~N~00123.68~Hla ii typing 1 loc hr
+2026~81383~  ~20260101~N~00109.13~Hla ii typing 1 allele hr
+2026~81400~  ~20260101~N~00063.96~Mopath procedure level 1
+2026~81401~  ~20260101~N~00137.00~Mopath procedure level 2
+2026~81402~  ~20260101~N~00150.33~Mopath procedure level 3
+2026~81403~  ~20260101~N~00185.20~Mopath procedure level 4
+2026~81404~  ~20260101~N~00274.83~Mopath procedure level 5
+2026~81405~  ~20260101~N~00301.35~Mopath procedure level 6
+2026~81406~  ~20260101~N~00282.88~Mopath procedure level 7
+2026~81407~  ~20260101~N~00846.27~Mopath procedure level 8
+2026~81408~  ~20260101~N~02000.00~Mopath procedure level 9
+2026~81410~  ~20260101~N~00504.00~Aortic dysfunction/dilation
+2026~81411~  ~20260101~N~01350.19~Aortic dysfunction/dilation
+2026~81412~  ~20260101~N~02448.56~Ashkenazi jewish assoc dis
+2026~81413~  ~20260101~N~00584.90~Car ion chnnlpath inc 10 gns
+2026~81414~  ~20260101~N~00584.90~Car ion chnnlpath inc 2 gns
+2026~81415~  ~20260101~N~04780.00~Exome sequence analysis
+2026~81416~  ~20260101~N~12000.00~Exome sequence analysis
+2026~81417~  ~20260101~N~00320.00~Exome re-evaluation
+2026~81418~  ~20260101~N~00917.08~Rx metab gen seq alys pnl 6
+2026~81419~  ~20260101~N~02448.56~Epilepsy gen seq alys panel
+2026~81420~  ~20260101~N~00759.05~Fetal chrmoml aneuploidy
+2026~81422~  ~20260101~N~00759.05~Fetal chrmoml microdeltj
+2026~81425~  ~20260101~N~05031.20~Genome sequence analysis
+2026~81426~  ~20260101~N~02709.95~Genome sequence analysis
+2026~81427~  ~20260101~N~02337.65~Genome re-evaluation
+2026~81430~  ~20260101~N~01625.00~Hearing loss sequence analys
+2026~81431~  ~20260101~N~00679.57~Hearing loss dup/del analys
+2026~81432~  ~20260101~N~01303.95~Hrdtry brst ca-rlatd do 5+
+2026~81434~  ~20260101~N~00597.91~Hered rta do gen seq 15
+2026~81435~  ~20260101~N~01303.95~Hered colon ca-rlatd do 5+
+2026~81437~  ~20260101~N~01303.95~Hered neuroend tum-rlt do 5+
+2026~81439~  ~20260101~N~00584.90~Hrdtry cardmypy gene panel
+2026~81440~  ~20260101~N~03324.00~Mitochondrial gene
+2026~81441~  ~20260101~N~02448.56~Ibmfs seq alys pnl 30 genes
+2026~81442~  ~20260101~N~02143.60~Noonan spectrum disorders
+2026~81443~  ~20260101~N~02448.56~Genetic tstg severe inh cond
+2026~81445~  ~20260101~N~00597.91~So neo gsap 5-50dna/dna&rna
+2026~81448~  ~20260101~N~00584.90~Hrdtry perph neurphy panel
+2026~81449~  ~20260101~N~00597.91~So neo gsap 5-50 rna alys
+2026~81450~  ~20260101~N~00759.53~Hl neo gsap 5-50dna/dna&rna
+2026~81451~  ~20260101~N~00759.53~Hl neo gsap 5-50 rna alys
+2026~81455~  ~20260101~N~02919.60~So/hl 51/>gsap dna/dna&rna
+2026~81456~  ~20260101~N~02919.60~So/hl 51/>gsap rna alys
+2026~81457~  ~20260101~N~00896.87~So neo gsap dna mcrstl ins
+2026~81458~  ~20260101~N~01046.35~So gsap dna cpy nmbr&mcrstl
+2026~81459~  ~20260101~N~02989.55~So neo gsap dna/dna&rna
+2026~81460~  ~20260101~N~01287.00~Whole mitochondrial genome
+2026~81462~  ~20260101~N~01195.83~So gsap cll fr dna/dna&rna
+2026~81463~  ~20260101~N~01345.31~So gsap cl fr cpy nmbr&mcrst
+2026~81464~  ~20260101~N~03288.51~So gsap cll fr mcrstl ins
+2026~81465~  ~20260101~N~00936.00~Whole mitochondrial genome
+2026~81470~  ~20260101~N~00914.00~X-linked intellectual dblt
+2026~81471~  ~20260101~N~00914.00~X-linked intellectual dblt
+2026~81490~  ~20260101~N~00840.65~Autoimmune ra alys 12 bmrk
+2026~81493~  ~20260101~N~01050.00~Cor artery disease mrna
+2026~81500~  ~20260101~N~00260.50~Onco (ovar) two proteins
+2026~81503~  ~20260101~N~00897.00~Onco (ovar) five proteins
+2026~81504~  ~20260101~N~00520.00~Oncology tissue of origin
+2026~81506~  ~20260101~N~00068.92~Endo assay seven anal
+2026~81507~  ~20260101~N~00795.00~Fetal aneuploidy trisom risk
+2026~81508~  ~20260101~N~00054.30~Ftl cgen abnor two proteins
+2026~81509~  ~20260101~N~01487.37~Ftl cgen abnor 3 proteins
+2026~81510~  ~20260101~N~00055.54~Ftl cgen abnor three anal
+2026~81511~  ~20260101~N~00153.50~Ftl cgen abnor four anal
+2026~81512~  ~20260101~N~00069.52~Ftl cgen abnor five anal
+2026~81513~  ~20260101~N~00142.63~Nfct ds bv rna vag flu alg
+2026~81514~  ~20260101~N~00262.99~Nfct ds bv&vaginitis dna alg
+2026~81514~QW~20260101~N~00262.99~Nfct ds bv&vaginitis dna alg
+2026~81515~  ~20260101~N~00262.99~Nfct ds bv&vaginitis dna alg
+2026~81515~QW~20260101~N~00262.99~Nfct ds bv&vaginitis dna alg
+2026~81517~  ~20260101~N~00176.19~Liver ds alys 3 bmrk srm alg
+2026~81518~  ~20260101~N~03873.00~Onc brst mrna 11 genes
+2026~81519~  ~20260101~N~03873.00~Oncology breast mrna
+2026~81520~  ~20260101~N~02510.21~Onc breast mrna 58 genes
+2026~81521~  ~20260101~N~03873.00~Onc breast mrna 70 genes
+2026~81522~  ~20260101~N~03873.00~Onc breast mrna 12 genes
+2026~81523~  ~20260101~N~03873.00~Onc brst mrna 70 cnt 31 gene
+2026~81524~  ~20260101~L~00000.00~Onc cns tum dna mthyl 10,000
+2026~81525~  ~20260101~N~03116.00~Oncology colon mrna
+2026~81528~  ~20260101~N~00508.87~Oncology colorectal scr
+2026~81529~  ~20260101~N~07193.00~Onc cutan mlnma mrna 31 gene
+2026~81535~  ~20260101~N~00579.46~Oncology gynecologic
+2026~81536~  ~20260101~N~00177.56~Oncology gynecologic
+2026~81538~  ~20260101~N~02871.00~Oncology lung
+2026~81539~  ~20260101~N~00760.00~Oncology prostate prob score
+2026~81540~  ~20260101~N~03750.00~Oncology tum unknown origin
+2026~81541~  ~20260101~N~03873.00~Onc prostate mrna 46 genes
+2026~81542~  ~20260101~N~03873.00~Onc prostate mrna 22 cnt gen
+2026~81546~  ~20260101~N~03600.00~Onc thyr mrna 10,196 gen alg
+2026~81551~  ~20260101~N~02030.00~Onc prostate 3 genes
+2026~81552~  ~20260101~N~07776.00~Onc uveal mlnma mrna 15 gene
+2026~81554~  ~20260101~N~05409.60~Pulm ds ipf mrna 190 gen alg
+2026~81558~  ~20260101~N~03240.00~Trnspl rej kdn mrna qpcr 139
+2026~81560~  ~20260101~N~00640.73~Trnsplj pd lvr&bwl cd154+cll
+2026~81595~  ~20260101~N~03240.00~Cardiology hrt trnspl mrna
+2026~81596~  ~20260101~N~00072.19~Nfct ds chrnc hcv 6 assays
+2026~82009~  ~20260101~N~00004.52~Ketone bodys qual
+2026~82010~  ~20260101~N~00008.17~Ketone bodys quan
+2026~82010~QW~20260101~N~00008.17~Ketone bodys quan
+2026~82013~  ~20260101~N~00012.29~Acetylcholinesterase assay
+2026~82016~  ~20260101~N~00016.49~Acylcarnitines qual
+2026~82017~  ~20260101~N~00016.87~Acylcarnitines quant
+2026~82024~  ~20260101~N~00038.62~Assay of acth
+2026~82030~  ~20260101~N~00025.80~Assay of adp & amp
+2026~82040~  ~20260101~N~00004.95~Assay of serum albumin
+2026~82040~QW~20260101~N~00004.95~Assay of serum albumin
+2026~82042~  ~20260101~N~00007.78~Other source albumin quan ea
+2026~82042~QW~20260101~N~00007.78~Other source albumin quan ea
+2026~82043~  ~20260101~N~00005.78~Ur albumin quantitative
+2026~82043~QW~20260101~N~00005.78~Ur albumin quantitative
+2026~82044~  ~20260101~N~00006.23~Ur albumin semiquantitative
+2026~82044~QW~20260101~N~00006.23~Ur albumin semiquantitative
+2026~82045~  ~20260101~N~00033.94~Albumin ischemia modified
+2026~82075~  ~20260101~N~00030.00~Assay of breath ethanol
+2026~82077~  ~20260101~N~00017.27~Assay spec xcp ur&breath ia
+2026~82085~  ~20260101~N~00009.71~Assay of aldolase
+2026~82088~  ~20260101~N~00040.75~Assay of aldosterone
+2026~82103~  ~20260101~N~00013.44~Alpha-1-antitrypsin total
+2026~82104~  ~20260101~N~00014.46~Alpha-1-antitrypsin pheno
+2026~82105~  ~20260101~N~00016.77~Alpha-fetoprotein serum
+2026~82106~  ~20260101~N~00017.00~Alpha-fetoprotein amniotic
+2026~82107~  ~20260101~N~00064.41~Alpha-fetoprotein l3
+2026~82108~  ~20260101~N~00025.48~Assay of aluminum
+2026~82120~  ~20260101~N~00005.99~Amines vaginal fluid qual
+2026~82120~QW~20260101~N~00005.99~Amines vaginal fluid qual
+2026~82127~  ~20260101~N~00014.18~Amino acid single qual
+2026~82128~  ~20260101~N~00013.87~Amino acids mult qual
+2026~82131~  ~20260101~N~00022.98~Amino acids single quant
+2026~82135~  ~20260101~N~00016.45~Assay aminolevulinic acid
+2026~82136~  ~20260101~N~00019.61~Amino acids quant 2-5
+2026~82139~  ~20260101~N~00016.87~Amino acids quan 6 or more
+2026~82140~  ~20260101~N~00014.57~Assay of ammonia
+2026~82143~  ~20260101~N~00009.35~Amniotic fluid scan
+2026~82150~  ~20260101~N~00006.48~Assay of amylase
+2026~82150~QW~20260101~N~00006.48~Assay of amylase
+2026~82154~  ~20260101~N~00028.83~Androstanediol glucuronide
+2026~82157~  ~20260101~N~00029.28~Assay of androstenedione
+2026~82160~  ~20260101~N~00025.55~Assay of androsterone
+2026~82163~  ~20260101~N~00020.52~Assay of angiotensin ii
+2026~82164~  ~20260101~N~00014.60~Angiotensin i enzyme test
+2026~82166~  ~20260101~N~00038.62~Assay anti-mullerian horm
+2026~82172~  ~20260101~N~00021.09~Assay of apolipoprotein
+2026~82175~  ~20260101~N~00018.97~Assay of arsenic
+2026~82180~  ~20260101~N~00009.89~Assay of ascorbic acid
+2026~82190~  ~20260101~N~00015.90~Atomic absorption
+2026~82232~  ~20260101~N~00016.18~Assay of beta-2 protein
+2026~82233~  ~20260101~N~00128.92~Beta-amyloid 1-40 (abeta 40)
+2026~82234~  ~20260101~N~00128.92~Beta-amyloid 1-42 (abeta 42)
+2026~82239~  ~20260101~N~00017.12~Bile acids total
+2026~82240~  ~20260101~N~00026.58~Bile acids cholylglycine
+2026~82247~  ~20260101~N~00005.02~Bilirubin total
+2026~82247~QW~20260101~N~00005.02~Bilirubin total
+2026~82248~  ~20260101~N~00005.02~Bilirubin direct
+2026~82252~  ~20260101~N~00004.56~Fecal bilirubin test
+2026~82261~  ~20260101~N~00016.87~Assay of biotinidase
+2026~82270~  ~20260101~N~00004.38~Occult blood feces
+2026~82271~  ~20260101~N~00005.32~Occult blood other sources
+2026~82271~QW~20260101~N~00005.32~Occult blood other sources
+2026~82272~  ~20260101~N~00004.23~Occult bld feces 1-3 tests
+2026~82274~  ~20260101~N~00015.92~Assay test for blood fecal
+2026~82274~QW~20260101~N~00015.92~Assay test for blood fecal
+2026~82286~  ~20260101~N~00005.16~Assay of bradykinin
+2026~82300~  ~20260101~N~00023.64~Assay of cadmium
+2026~82306~  ~20260101~N~00029.60~Vitamin d 25 hydroxy
+2026~82308~  ~20260101~N~00026.79~Assay of calcitonin
+2026~82310~  ~20260101~N~00005.16~Assay of calcium
+2026~82310~QW~20260101~N~00005.16~Assay of calcium
+2026~82330~  ~20260101~N~00013.68~Assay of calcium
+2026~82330~QW~20260101~N~00013.68~Assay of calcium
+2026~82331~  ~20260101~N~00013.34~Calcium infusion test
+2026~82340~  ~20260101~N~00006.03~Assay of calcium in urine
+2026~82355~  ~20260101~N~00011.58~Calculus analysis qual
+2026~82360~  ~20260101~N~00012.87~Calculus assay quant
+2026~82365~  ~20260101~N~00012.90~Calculus spectroscopy
+2026~82370~  ~20260101~N~00012.52~X-ray assay calculus
+2026~82373~  ~20260101~N~00018.06~Assay c-d transfer measure
+2026~82374~  ~20260101~N~00004.88~Assay blood carbon dioxide
+2026~82374~QW~20260101~N~00004.88~Assay blood carbon dioxide
+2026~82375~  ~20260101~N~00012.32~Assay carboxyhb quant
+2026~82376~  ~20260101~N~00014.07~Assay carboxyhb qual
+2026~82378~  ~20260101~N~00018.96~Carcinoembryonic antigen
+2026~82379~  ~20260101~N~00016.87~Assay of carnitine
+2026~82380~  ~20260101~N~00009.22~Assay of carotene
+2026~82382~  ~20260101~N~00027.30~Assay urine catecholamines
+2026~82383~  ~20260101~N~00029.08~Assay blood catecholamines
+2026~82384~  ~20260101~N~00025.25~Assay three catecholamines
+2026~82387~  ~20260101~N~00018.06~Assay of cathepsin-d
+2026~82390~  ~20260101~N~00010.74~Assay of ceruloplasmin
+2026~82397~  ~20260101~N~00014.12~Chemiluminescent assay
+2026~82415~  ~20260101~N~00012.67~Assay of chloramphenicol
+2026~82435~  ~20260101~N~00004.60~Assay of blood chloride
+2026~82435~QW~20260101~N~00004.60~Assay of blood chloride
+2026~82436~  ~20260101~N~00005.75~Assay of urine chloride
+2026~82438~  ~20260101~N~00005.00~Assay other fluid chlorides
+2026~82441~  ~20260101~N~00006.01~Test for chlorohydrocarbons
+2026~82465~  ~20260101~N~00004.35~Assay bld/serum cholesterol
+2026~82465~QW~20260101~N~00004.35~Assay bld/serum cholesterol
+2026~82480~  ~20260101~N~00007.87~Assay serum cholinesterase
+2026~82482~  ~20260101~N~00009.81~Assay rbc cholinesterase
+2026~82485~  ~20260101~N~00020.65~Assay chondroitin sulfate
+2026~82495~  ~20260101~N~00020.28~Assay of chromium
+2026~82507~  ~20260101~N~00027.80~Assay of citrate
+2026~82523~  ~20260101~N~00018.68~Collagen crosslinks
+2026~82523~QW~20260101~N~00018.68~Collagen crosslinks
+2026~82525~  ~20260101~N~00012.41~Assay of copper
+2026~82528~  ~20260101~N~00022.52~Assay of corticosterone
+2026~82530~  ~20260101~N~00016.71~Cortisol free
+2026~82533~  ~20260101~N~00016.30~Total cortisol
+2026~82540~  ~20260101~N~00004.64~Assay of creatine
+2026~82542~  ~20260101~N~00024.09~Col chromotography qual/quan
+2026~82550~  ~20260101~N~00006.51~Assay of ck (cpk)
+2026~82550~QW~20260101~N~00006.51~Assay of ck (cpk)
+2026~82552~  ~20260101~N~00013.39~Assay of cpk in blood
+2026~82553~  ~20260101~N~00011.55~Creatine mb fraction
+2026~82554~  ~20260101~N~00011.87~Creatine isoforms
+2026~82565~  ~20260101~N~00005.12~Assay of creatinine
+2026~82565~QW~20260101~N~00005.12~Assay of creatinine
+2026~82570~  ~20260101~N~00005.18~Assay of urine creatinine
+2026~82570~QW~20260101~N~00005.18~Assay of urine creatinine
+2026~82575~  ~20260101~N~00009.46~Creatinine clearance test
+2026~82585~  ~20260101~N~00014.14~Assay of cryofibrinogen
+2026~82595~  ~20260101~N~00006.47~Assay of cryoglobulin
+2026~82600~  ~20260101~N~00019.40~Assay of cyanide
+2026~82607~  ~20260101~N~00015.08~Vitamin b-12
+2026~82608~  ~20260101~N~00014.32~B-12 binding capacity
+2026~82610~  ~20260101~N~00018.52~Cystatin c
+2026~82615~  ~20260101~N~00009.55~Test for urine cystines
+2026~82626~  ~20260101~N~00025.27~Dehydroepiandrosterone
+2026~82627~  ~20260101~N~00022.23~Dehydroepiandrosterone
+2026~82633~  ~20260101~N~00030.98~Desoxycorticosterone
+2026~82634~  ~20260101~N~00029.28~Deoxycortisol
+2026~82638~  ~20260101~N~00012.25~Assay of dibucaine number
+2026~82642~  ~20260101~N~00029.28~Dihydrotestosterone
+2026~82652~  ~20260101~N~00038.50~Vit d 1 25-dihydroxy
+2026~82653~  ~20260101~N~00022.97~El-1 fecal quantitative
+2026~82656~  ~20260101~N~00011.53~El-1 fecal qual/semiq
+2026~82657~  ~20260101~N~00022.17~Enzyme cell activity
+2026~82658~  ~20260101~N~00044.03~Enzyme cell activity ra
+2026~82664~  ~20260101~N~00061.50~Electrophoretic test
+2026~82668~  ~20260101~N~00018.79~Assay of erythropoietin
+2026~82670~  ~20260101~N~00027.94~Assay of total estradiol
+2026~82671~  ~20260101~N~00032.30~Assay of estrogens
+2026~82672~  ~20260101~N~00021.70~Assay of estrogen
+2026~82677~  ~20260101~N~00024.18~Assay of estriol
+2026~82679~  ~20260101~N~00024.95~Assay of estrone
+2026~82679~QW~20260101~N~00024.95~Assay of estrone
+2026~82681~  ~20260101~N~00027.94~Assay dir meas fr estradiol
+2026~82693~  ~20260101~N~00014.90~Assay of ethylene glycol
+2026~82696~  ~20260101~N~00026.24~Assay of etiocholanolone
+2026~82705~  ~20260101~N~00005.10~Fats/lipids feces qual
+2026~82710~  ~20260101~N~00016.80~Fats/lipids feces quant
+2026~82715~  ~20260101~N~00022.97~Assay of fecal fat
+2026~82725~  ~20260101~N~00018.77~Assay of blood fatty acids
+2026~82726~  ~20260101~N~00019.75~Long chain fatty acids
+2026~82728~  ~20260101~N~00013.63~Assay of ferritin
+2026~82731~  ~20260101~N~00064.41~Assay of fetal fibronectin
+2026~82735~  ~20260101~N~00018.54~Assay of fluoride
+2026~82746~  ~20260101~N~00014.70~Assay of folic acid serum
+2026~82747~  ~20260101~N~00017.65~Assay of folic acid rbc
+2026~82757~  ~20260101~N~00017.34~Assay of semen fructose
+2026~82759~  ~20260101~N~00021.48~Assay of rbc galactokinase
+2026~82760~  ~20260101~N~00011.20~Assay of galactose
+2026~82775~  ~20260101~N~00021.07~Assay galactose transferase
+2026~82776~  ~20260101~N~00011.74~Galactose transferase test
+2026~82777~  ~20260101~N~00044.25~Galectin-3
+2026~82784~  ~20260101~N~00009.30~Assay iga/igd/igg/igm each
+2026~82785~  ~20260101~N~00016.46~Assay of ige
+2026~82787~  ~20260101~N~00008.02~Igg 1 2 3 or 4 each
+2026~82800~  ~20260101~N~00011.00~Blood ph
+2026~82803~  ~20260101~N~00026.07~Blood gases any combination
+2026~82805~  ~20260101~N~00078.77~Blood gases w/o2 saturation
+2026~82810~  ~20260101~N~00009.77~Blood gases o2 sat only
+2026~82820~  ~20260101~N~00013.34~Hemoglobin-oxygen affinity
+2026~82930~  ~20260101~N~00006.71~Gastric analy w/ph ea spec
+2026~82938~  ~20260101~N~00017.69~Gastrin test
+2026~82941~  ~20260101~N~00017.63~Assay of gastrin
+2026~82943~  ~20260101~N~00014.29~Assay of glucagon
+2026~82945~  ~20260101~N~00003.93~Glucose other fluid
+2026~82946~  ~20260101~N~00017.77~Glucagon tolerance test
+2026~82947~  ~20260101~N~00003.93~Assay glucose blood quant
+2026~82947~QW~20260101~N~00003.93~Assay glucose blood quant
+2026~82948~  ~20260101~N~00005.04~Reagent strip/blood glucose
+2026~82950~  ~20260101~N~00004.75~Glucose test
+2026~82950~QW~20260101~N~00004.75~Glucose test
+2026~82951~  ~20260101~N~00012.87~Glucose tolerance test (gtt)
+2026~82951~QW~20260101~N~00012.87~Glucose tolerance test (gtt)
+2026~82952~  ~20260101~N~00003.92~Gtt-added samples
+2026~82952~QW~20260101~N~00003.92~Gtt-added samples
+2026~82955~  ~20260101~N~00009.70~Assay of g6pd enzyme
+2026~82960~  ~20260101~N~00006.05~Test for g6pd enzyme
+2026~82962~  ~20260101~N~00003.28~Glucose blood test
+2026~82963~  ~20260101~N~00021.48~Assay of glucosidase
+2026~82965~  ~20260101~N~00013.15~Assay of gdh enzyme
+2026~82977~  ~20260101~N~00007.20~Assay of ggt
+2026~82977~QW~20260101~N~00007.20~Assay of ggt
+2026~82978~  ~20260101~N~00015.45~Assay of glutathione
+2026~82979~  ~20260101~N~00009.44~Assay rbc glutathione
+2026~82985~  ~20260101~N~00016.76~Assay of glycated protein
+2026~82985~QW~20260101~N~00016.76~Assay of glycated protein
+2026~83001~  ~20260101~N~00018.58~Assay of gonadotropin (fsh)
+2026~83001~QW~20260101~N~00018.58~Assay of gonadotropin (fsh)
+2026~83002~  ~20260101~N~00018.52~Assay of gonadotropin (lh)
+2026~83002~QW~20260101~N~00018.52~Assay of gonadotropin (lh)
+2026~83003~  ~20260101~N~00016.67~Assay growth hormone (hgh)
+2026~83006~  ~20260101~N~00075.60~Growth stimulation gene 2
+2026~83009~  ~20260101~N~00067.36~H pylori (c-13) blood
+2026~83010~  ~20260101~N~00012.58~Assay of haptoglobin quant
+2026~83012~  ~20260101~N~00026.89~Assay of haptoglobins
+2026~83013~  ~20260101~N~00067.36~H pylori (c-13) breath
+2026~83014~  ~20260101~N~00007.86~H pylori drug admin
+2026~83015~  ~20260101~N~00020.94~Heavy metal qual any number
+2026~83018~  ~20260101~N~00021.96~Heavy metal quan each nes
+2026~83020~  ~20260101~N~00012.87~Hemoglobin electrophoresis
+2026~83021~  ~20260101~N~00018.06~Hemoglobin chromotography
+2026~83026~  ~20260101~N~00004.01~Hemoglobin copper sulfate
+2026~83030~  ~20260101~N~00010.74~Hemoglobin f fetal chemical
+2026~83033~  ~20260101~N~00008.00~Hemoglobin ftl f assay qual
+2026~83036~  ~20260101~N~00009.71~Hemoglobin glycosylated a1c
+2026~83036~QW~20260101~N~00009.71~Hemoglobin glycosylated a1c
+2026~83037~  ~20260101~N~00009.71~Hb glycosylated a1c home dev
+2026~83037~QW~20260101~N~00009.71~Hb glycosylated a1c home dev
+2026~83045~  ~20260101~N~00006.49~Hgb methemoglobin qual
+2026~83050~  ~20260101~N~00008.20~Hgb methemoglobin quan
+2026~83051~  ~20260101~N~00007.31~Hemoglobin plasma
+2026~83060~  ~20260101~N~00008.80~Hgb sulfhemoglobin quan
+2026~83065~  ~20260101~N~00009.00~Hemoglobin thermolabile
+2026~83068~  ~20260101~N~00009.47~Hemoglobin unstable screen
+2026~83069~  ~20260101~N~00003.95~Hemoglobin urine
+2026~83070~  ~20260101~N~00004.75~Assay of hemosiderin qual
+2026~83080~  ~20260101~N~00016.87~Assay of b hexosaminidase ea
+2026~83088~  ~20260101~N~00029.53~Assay of histamine
+2026~83090~  ~20260101~N~00017.92~Assay of homocysteine
+2026~83150~  ~20260101~N~00022.41~Assay of homovanillic acid
+2026~83491~  ~20260101~N~00017.90~Asy hydroxycorticosteroids17
+2026~83497~  ~20260101~N~00012.90~Assay of 5-hiaa
+2026~83498~  ~20260101~N~00027.17~Asy hydroxyprogesterone 17-d
+2026~83500~  ~20260101~N~00022.65~Assay free hydroxyproline
+2026~83505~  ~20260101~N~00024.30~Assay total hydroxyproline
+2026~83516~  ~20260101~N~00011.53~Immunoassay nonantibody
+2026~83516~QW~20260101~N~00011.53~Immunoassay nonantibody
+2026~83518~  ~20260101~N~00009.64~Immunoassay dipstick
+2026~83518~QW~20260101~N~00009.64~Immunoassay dipstick
+2026~83519~  ~20260101~N~00018.40~Ria nonantibody
+2026~83520~  ~20260101~N~00017.27~Immunoassay quant nos nonab
+2026~83520~QW~20260101~N~00017.27~Immunoassay quant nos nonab
+2026~83521~  ~20260101~N~00017.27~Ig light chains free each
+2026~83525~  ~20260101~N~00011.43~Assay of insulin
+2026~83527~  ~20260101~N~00012.95~Assay of insulin
+2026~83528~  ~20260101~N~00019.82~Assay of intrinsic factor
+2026~83529~  ~20260101~N~00017.27~Asay of interleukin-6 (il-6)
+2026~83540~  ~20260101~N~00006.47~Assay of iron
+2026~83550~  ~20260101~N~00008.74~Iron binding test
+2026~83570~  ~20260101~N~00008.85~Assay of idh enzyme
+2026~83582~  ~20260101~N~00015.47~Assay of ketogenic steroids
+2026~83586~  ~20260101~N~00012.80~Assay 17- ketosteroids
+2026~83593~  ~20260101~N~00028.50~Fractionation ketosteroids
+2026~83605~  ~20260101~N~00011.57~Assay of lactic acid
+2026~83605~QW~20260101~N~00011.57~Assay of lactic acid
+2026~83615~  ~20260101~N~00006.04~Lactate (ld) (ldh) enzyme
+2026~83625~  ~20260101~N~00012.79~Assay of ldh enzymes
+2026~83630~  ~20260101~N~00019.70~Lactoferrin fecal (qual)
+2026~83631~  ~20260101~N~00019.63~Lactoferrin fecal (quant)
+2026~83632~  ~20260101~N~00020.22~Placental lactogen
+2026~83633~  ~20260101~N~00011.25~Test urine for lactose
+2026~83655~  ~20260101~N~00012.11~Assay of lead
+2026~83655~QW~20260101~N~00012.11~Assay of lead
+2026~83661~  ~20260101~N~00021.99~L/s ratio fetal lung
+2026~83662~  ~20260101~N~00018.91~Foam stability fetal lung
+2026~83663~  ~20260101~N~00018.91~Fluoro polarize fetal lung
+2026~83664~  ~20260101~N~00019.32~Lamellar bdy fetal lung
+2026~83670~  ~20260101~N~00009.81~Assay of lap enzyme
+2026~83690~  ~20260101~N~00006.89~Assay of lipase
+2026~83695~  ~20260101~N~00014.32~Assay of lipoprotein(a)
+2026~83698~  ~20260101~N~00046.31~Assay lipoprotein pla2
+2026~83700~  ~20260101~N~00011.26~Lipopro bld electrophoretic
+2026~83701~  ~20260101~N~00033.86~Lipoprotein bld hr fraction
+2026~83704~  ~20260101~N~00034.19~Lipoprotein bld quan part
+2026~83718~  ~20260101~N~00008.19~Assay of lipoprotein
+2026~83718~QW~20260101~N~00008.19~Assay of lipoprotein
+2026~83719~  ~20260101~N~00012.75~Assay of blood lipoprotein
+2026~83721~  ~20260101~N~00010.50~Assay of blood lipoprotein
+2026~83721~QW~20260101~N~00010.50~Assay of blood lipoprotein
+2026~83722~  ~20260101~N~00034.19~Lipoprtn dir meas sd ldl chl
+2026~83727~  ~20260101~N~00017.19~Assay of lrh hormone
+2026~83735~  ~20260101~N~00006.70~Assay of magnesium
+2026~83775~  ~20260101~N~00007.37~Assay malate dehydrogenase
+2026~83785~  ~20260101~N~00026.65~Assay of manganese
+2026~83789~  ~20260101~N~00024.11~Mass spectrometry qual/quan
+2026~83825~  ~20260101~N~00016.26~Assay of mercury
+2026~83835~  ~20260101~N~00016.94~Assay of metanephrines
+2026~83857~  ~20260101~N~00010.74~Assay of methemalbumin
+2026~83861~  ~20260101~N~00022.48~Microfluid analy tears
+2026~83861~QW~20260101~N~00022.48~Microfluid analy tears
+2026~83864~  ~20260101~N~00028.50~Mucopolysaccharides
+2026~83872~  ~20260101~N~00005.86~Assay synovial fluid mucin
+2026~83873~  ~20260101~N~00017.20~Assay of csf protein
+2026~83874~  ~20260101~N~00012.92~Assay of myoglobin
+2026~83876~  ~20260101~N~00050.86~Assay myeloperoxidase
+2026~83880~  ~20260101~N~00039.26~Assay of natriuretic peptide
+2026~83880~QW~20260101~N~00039.26~Assay of natriuretic peptide
+2026~83883~  ~20260101~N~00013.60~Assay nephelometry not spec
+2026~83884~  ~20260101~N~00116.23~Assay neurflmnt light chain
+2026~83885~  ~20260101~N~00024.51~Assay of nickel
+2026~83915~  ~20260101~N~00011.15~Assay of nucleotidase
+2026~83916~  ~20260101~N~00027.39~Oligoclonal bands
+2026~83918~  ~20260101~N~00023.60~Organic acids total quant
+2026~83919~  ~20260101~N~00016.45~Organic acids qual each
+2026~83921~  ~20260101~N~00021.21~Organic acid single quant
+2026~83930~  ~20260101~N~00006.61~Assay of blood osmolality
+2026~83935~  ~20260101~N~00006.82~Assay of urine osmolality
+2026~83937~  ~20260101~N~00029.85~Assay of osteocalcin
+2026~83945~  ~20260101~N~00014.45~Assay of oxalate
+2026~83950~  ~20260101~N~00064.41~Oncoprotein her-2/neu
+2026~83951~  ~20260101~N~00064.41~Oncoprotein dcp
+2026~83970~  ~20260101~N~00041.28~Assay of parathormone
+2026~83986~  ~20260101~N~00003.58~Assay ph body fluid nos
+2026~83986~QW~20260101~N~00003.58~Assay ph body fluid nos
+2026~83987~  ~20260101~N~00003.58~Exhaled breath condensate
+2026~83993~  ~20260101~N~00019.63~Assay for calprotectin fecal
+2026~84030~  ~20260101~N~00005.50~Assay of blood pku
+2026~84035~  ~20260101~N~00003.98~Assay of phenylketones
+2026~84060~  ~20260101~N~00007.64~Assay acid phosphatase
+2026~84066~  ~20260101~N~00009.66~Assay prostate phosphatase
+2026~84075~  ~20260101~N~00005.18~Assay alkaline phosphatase
+2026~84075~QW~20260101~N~00005.18~Assay alkaline phosphatase
+2026~84078~  ~20260101~N~00008.26~Assay alkaline phosphatase
+2026~84080~  ~20260101~N~00014.78~Assay alkaline phosphatases
+2026~84081~  ~20260101~N~00016.52~Assay phosphatidylglycerol
+2026~84085~  ~20260101~N~00009.44~Assay of rbc pg6d enzyme
+2026~84087~  ~20260101~N~00010.73~Assay phosphohexose enzymes
+2026~84100~  ~20260101~N~00004.74~Assay of phosphorus
+2026~84105~  ~20260101~N~00005.78~Assay of urine phosphorus
+2026~84106~  ~20260101~N~00005.82~Test for porphobilinogen
+2026~84110~  ~20260101~N~00008.44~Assay of porphobilinogen
+2026~84112~  ~20260101~N~00098.11~Eval amniotic fluid protein
+2026~84119~  ~20260101~N~00013.36~Test urine for porphyrins
+2026~84120~  ~20260101~N~00014.71~Assay of urine porphyrins
+2026~84126~  ~20260101~N~00039.11~Assay of feces porphyrins
+2026~84132~  ~20260101~N~00004.76~Assay of serum potassium
+2026~84132~QW~20260101~N~00004.76~Assay of serum potassium
+2026~84133~  ~20260101~N~00004.73~Assay of urine potassium
+2026~84134~  ~20260101~N~00014.59~Assay of prealbumin
+2026~84135~  ~20260101~N~00021.27~Assay of pregnanediol
+2026~84138~  ~20260101~N~00021.05~Assay of pregnanetriol
+2026~84140~  ~20260101~N~00020.67~Assay of pregnenolone
+2026~84143~  ~20260101~N~00022.81~Assay of 17-hydroxypregneno
+2026~84144~  ~20260101~N~00020.86~Assay of progesterone
+2026~84145~  ~20260101~N~00027.22~Procalcitonin (pct)
+2026~84146~  ~20260101~N~00019.38~Assay of prolactin
+2026~84150~  ~20260101~N~00041.77~Assay of prostaglandin
+2026~84152~  ~20260101~N~00018.39~Assay of psa complexed
+2026~84153~  ~20260101~N~00018.39~Assay of psa total
+2026~84154~  ~20260101~N~00018.39~Assay of psa free
+2026~84155~  ~20260101~N~00003.67~Assay of protein serum
+2026~84155~QW~20260101~N~00003.67~Assay of protein serum
+2026~84156~  ~20260101~N~00003.67~Assay of protein urine
+2026~84157~  ~20260101~N~00004.00~Assay of protein other
+2026~84157~QW~20260101~N~00004.00~Assay of protein other
+2026~84160~  ~20260101~N~00005.61~Assay of protein any source
+2026~84163~  ~20260101~N~00015.05~Pappa serum
+2026~84165~  ~20260101~N~00010.74~Protein e-phoresis serum
+2026~84166~  ~20260101~N~00017.83~Protein e-phoresis/urine/csf
+2026~84181~  ~20260101~N~00017.03~Western blot test
+2026~84182~  ~20260101~N~00029.21~Protein western blot test
+2026~84202~  ~20260101~N~00014.35~Assay rbc protoporphyrin
+2026~84203~  ~20260101~N~00009.74~Test rbc protoporphyrin
+2026~84206~  ~20260101~N~00026.69~Assay of proinsulin
+2026~84207~  ~20260101~N~00028.10~Assay of vitamin b-6
+2026~84210~  ~20260101~N~00014.48~Assay of pyruvate
+2026~84220~  ~20260101~N~00009.44~Assay of pyruvate kinase
+2026~84228~  ~20260101~N~00011.63~Assay of quinine
+2026~84233~  ~20260101~N~00087.88~Assay of estrogen
+2026~84234~  ~20260101~N~00064.88~Assay of progesterone
+2026~84235~  ~20260101~N~00071.23~Assay of endocrine hormone
+2026~84238~  ~20260101~N~00036.57~Assay nonendocrine receptor
+2026~84244~  ~20260101~N~00021.99~Assay of renin
+2026~84252~  ~20260101~N~00020.24~Assay of vitamin b-2
+2026~84255~  ~20260101~N~00025.53~Assay of selenium
+2026~84260~  ~20260101~N~00030.98~Assay of serotonin
+2026~84270~  ~20260101~N~00021.73~Assay of sex hormone globul
+2026~84275~  ~20260101~N~00013.44~Assay of sialic acid
+2026~84285~  ~20260101~N~00025.21~Assay of silica
+2026~84295~  ~20260101~N~00004.81~Assay of serum sodium
+2026~84295~QW~20260101~N~00004.81~Assay of serum sodium
+2026~84300~  ~20260101~N~00005.06~Assay of urine sodium
+2026~84302~  ~20260101~N~00004.86~Assay of sweat sodium
+2026~84305~  ~20260101~N~00021.26~Assay of somatomedin
+2026~84307~  ~20260101~N~00018.28~Assay of somatostatin
+2026~84311~  ~20260101~N~00008.10~Spectrophotometry
+2026~84315~  ~20260101~N~00003.28~Body fluid specific gravity
+2026~84375~  ~20260101~N~00039.00~Chromatogram assay sugars
+2026~84376~  ~20260101~N~00005.50~Sugars single qual
+2026~84377~  ~20260101~N~00005.50~Sugars multiple qual
+2026~84378~  ~20260101~N~00011.53~Sugars single quant
+2026~84379~  ~20260101~N~00011.53~Sugars multiple quant
+2026~84392~  ~20260101~N~00005.49~Assay of urine sulfate
+2026~84393~  ~20260101~N~00128.92~Tau phosphorylated ea
+2026~84394~  ~20260101~N~00128.92~Total tau
+2026~84402~  ~20260101~N~00025.47~Assay of free testosterone
+2026~84403~  ~20260101~N~00025.81~Assay of total testosterone
+2026~84410~  ~20260101~N~00051.28~Testosterone bioavailable
+2026~84425~  ~20260101~N~00021.23~Assay of vitamin b-1
+2026~84430~  ~20260101~N~00011.63~Assay of thiocyanate
+2026~84431~  ~20260101~N~00035.11~Thromboxane urine
+2026~84432~  ~20260101~N~00016.06~Assay of thyroglobulin
+2026~84433~  ~20260101~N~00022.17~Asy thiopurin s-mthyltrnsfrs
+2026~84436~  ~20260101~N~00006.87~Assay of total thyroxine
+2026~84437~  ~20260101~N~00006.47~Assay of neonatal thyroxine
+2026~84439~  ~20260101~N~00009.02~Assay of free thyroxine
+2026~84442~  ~20260101~N~00014.78~Assay of thyroid activity
+2026~84443~  ~20260101~N~00016.80~Assay thyroid stim hormone
+2026~84443~QW~20260101~N~00016.80~Assay thyroid stim hormone
+2026~84445~  ~20260101~N~00050.86~Assay of tsi globulin
+2026~84446~  ~20260101~N~00014.18~Assay of vitamin e
+2026~84449~  ~20260101~N~00018.00~Assay of transcortin
+2026~84450~  ~20260101~N~00005.18~Transferase (ast) (sgot)
+2026~84450~QW~20260101~N~00005.18~Transferase (ast) (sgot)
+2026~84460~  ~20260101~N~00005.30~Alanine amino (alt) (sgpt)
+2026~84460~QW~20260101~N~00005.30~Alanine amino (alt) (sgpt)
+2026~84466~  ~20260101~N~00012.76~Assay of transferrin
+2026~84478~  ~20260101~N~00005.74~Assay of triglycerides
+2026~84478~QW~20260101~N~00005.74~Assay of triglycerides
+2026~84479~  ~20260101~N~00006.47~Assay of thyroid (t3 or t4)
+2026~84480~  ~20260101~N~00014.18~Assay triiodothyronine (t3)
+2026~84481~  ~20260101~N~00016.94~Free assay (ft-3)
+2026~84482~  ~20260101~N~00015.76~T3 reverse
+2026~84484~  ~20260101~N~00012.47~Assay of troponin quant
+2026~84485~  ~20260101~N~00007.20~Assay duodenal fluid trypsin
+2026~84488~  ~20260101~N~00007.30~Test feces for trypsin
+2026~84490~  ~20260101~N~00009.93~Assay of feces for trypsin
+2026~84510~  ~20260101~N~00010.63~Assay of tyrosine
+2026~84512~  ~20260101~N~00010.09~Assay of troponin qual
+2026~84520~  ~20260101~N~00003.95~Assay of urea nitrogen
+2026~84520~QW~20260101~N~00003.95~Assay of urea nitrogen
+2026~84525~  ~20260101~N~00005.13~Urea nitrogen semi-quant
+2026~84540~  ~20260101~N~00005.56~Assay of urine/urea-n
+2026~84545~  ~20260101~N~00007.20~Urea-n clearance test
+2026~84550~  ~20260101~N~00004.52~Assay of blood/uric acid
+2026~84550~QW~20260101~N~00004.52~Assay of blood/uric acid
+2026~84560~  ~20260101~N~00005.08~Assay of urine/uric acid
+2026~84577~  ~20260101~N~00016.80~Assay of feces/urobilinogen
+2026~84578~  ~20260101~N~00004.47~Test urine urobilinogen
+2026~84580~  ~20260101~N~00009.55~Assay of urine urobilinogen
+2026~84583~  ~20260101~N~00006.05~Assay of urine urobilinogen
+2026~84585~  ~20260101~N~00015.50~Assay of urine vma
+2026~84586~  ~20260101~N~00035.33~Assay of vip
+2026~84588~  ~20260101~N~00033.94~Assay of vasopressin
+2026~84590~  ~20260101~N~00011.61~Assay of vitamin a
+2026~84591~  ~20260101~N~00017.06~Assay of nos vitamin
+2026~84597~  ~20260101~N~00013.72~Assay of vitamin k
+2026~84600~  ~20260101~N~00017.11~Assay of volatiles
+2026~84620~  ~20260101~N~00012.91~Xylose tolerance test
+2026~84630~  ~20260101~N~00011.39~Assay of zinc
+2026~84681~  ~20260101~N~00020.81~Assay of c-peptide
+2026~84702~  ~20260101~N~00015.05~Chorionic gonadotropin test
+2026~84703~  ~20260101~N~00007.52~Chorionic gonadotropin assay
+2026~84703~QW~20260101~N~00007.52~Chorionic gonadotropin assay
+2026~84704~  ~20260101~N~00015.29~Hcg free betachain test
+2026~84830~  ~20260101~N~00012.70~Ovulation tests
+2026~85002~  ~20260101~N~00004.82~Bleeding time test
+2026~85004~  ~20260101~N~00006.47~Automated diff wbc count
+2026~85007~  ~20260101~N~00003.80~Bl smear w/diff wbc count
+2026~85008~  ~20260101~N~00003.43~Bl smear w/o diff wbc count
+2026~85009~  ~20260101~N~00005.07~Manual diff wbc count b-coat
+2026~85013~  ~20260101~N~00007.00~Spun microhematocrit
+2026~85014~  ~20260101~N~00002.37~Hematocrit
+2026~85014~QW~20260101~N~00002.37~Hematocrit
+2026~85018~  ~20260101~N~00002.37~Hemoglobin
+2026~85018~QW~20260101~N~00002.37~Hemoglobin
+2026~85025~  ~20260101~N~00007.77~Complete cbc w/auto diff wbc
+2026~85025~QW~20260101~N~00007.77~Complete cbc w/auto diff wbc
+2026~85027~  ~20260101~N~00006.47~Complete cbc automated
+2026~85032~  ~20260101~N~00004.31~Manual cell count each
+2026~85041~  ~20260101~N~00003.02~Automated rbc count
+2026~85044~  ~20260101~N~00004.31~Manual reticulocyte count
+2026~85045~  ~20260101~N~00003.99~Automated reticulocyte count
+2026~85046~  ~20260101~N~00005.57~Reticyte/hgb concentrate
+2026~85048~  ~20260101~N~00002.54~Automated leukocyte count
+2026~85049~  ~20260101~N~00004.48~Automated platelet count
+2026~85055~  ~20260101~N~00035.74~Reticulated platelet assay
+2026~85130~  ~20260101~N~00011.89~Chromogenic substrate assay
+2026~85170~  ~20260101~N~00016.30~Blood clot retraction
+2026~85175~  ~20260101~N~00020.37~Blood clot lysis time
+2026~85210~  ~20260101~N~00012.98~Clot factor ii prothrom spec
+2026~85220~  ~20260101~N~00017.65~Blooc clot factor v test
+2026~85230~  ~20260101~N~00017.90~Clot factor vii proconvertin
+2026~85240~  ~20260101~N~00017.90~Clot factor viii ahg 1 stage
+2026~85244~  ~20260101~N~00020.42~Clot factor viii reltd antgn
+2026~85245~  ~20260101~N~00022.94~Clot factor viii vw ristoctn
+2026~85246~  ~20260101~N~00022.94~Clot factor viii vw antigen
+2026~85247~  ~20260101~N~00022.94~Clot factor viii multimetric
+2026~85250~  ~20260101~N~00019.04~Clot factor ix ptc/chrstmas
+2026~85260~  ~20260101~N~00017.90~Clot factor x stuart-power
+2026~85270~  ~20260101~N~00017.90~Clot factor xi pta
+2026~85280~  ~20260101~N~00019.35~Clot factor xii hageman
+2026~85290~  ~20260101~N~00016.34~Clot factor xiii fibrin stab
+2026~85291~  ~20260101~N~00009.11~Clot factor xiii fibrin scrn
+2026~85292~  ~20260101~N~00018.93~Clot factor fletcher fact
+2026~85293~  ~20260101~N~00018.93~Clot factor wght kininogen
+2026~85300~  ~20260101~N~00011.85~Antithrombin iii activity
+2026~85301~  ~20260101~N~00010.81~Antithrombin iii antigen
+2026~85302~  ~20260101~N~00012.01~Clot inhibit prot c antigen
+2026~85303~  ~20260101~N~00013.84~Clot inhibit prot c activity
+2026~85305~  ~20260101~N~00011.61~Clot inhibit prot s total
+2026~85306~  ~20260101~N~00015.32~Clot inhibit prot s free
+2026~85307~  ~20260101~N~00015.32~Assay activated protein c
+2026~85335~  ~20260101~N~00012.87~Factor inhibitor test
+2026~85337~  ~20260101~N~00017.27~Thrombomodulin
+2026~85345~  ~20260101~N~00004.69~Coagulation time lee & white
+2026~85347~  ~20260101~N~00004.28~Coagulation time activated
+2026~85348~  ~20260101~N~00004.49~Coagulation time otr method
+2026~85360~  ~20260101~N~00008.41~Euglobulin lysis
+2026~85362~  ~20260101~N~00006.89~Fibrin degradation products
+2026~85366~  ~20260101~N~00080.46~Fibrinogen test
+2026~85370~  ~20260101~N~00012.43~Fibrinogen test
+2026~85378~  ~20260101~N~00009.72~Fibrin degrade semiquant
+2026~85379~  ~20260101~N~00010.18~Fibrin degradation quant
+2026~85380~  ~20260101~N~00010.18~Fibrin degradj d-dimer
+2026~85384~  ~20260101~N~00009.72~Fibrinogen activity
+2026~85385~  ~20260101~N~00014.46~Fibrinogen antigen
+2026~85390~  ~20260101~N~00015.48~Fibrinolysins screen i&r
+2026~85397~  ~20260101~N~00030.86~Clotting funct activity
+2026~85400~  ~20260101~N~00007.71~Fibrinolytic plasmin
+2026~85410~  ~20260101~N~00007.71~Fibrinolytic antiplasmin
+2026~85415~  ~20260101~N~00017.19~Fibrinolytic plasminogen
+2026~85420~  ~20260101~N~00006.53~Fibrinolytic plasminogen
+2026~85421~  ~20260101~N~00010.18~Fibrinolytic plasminogen
+2026~85441~  ~20260101~N~00004.20~Heinz bodies direct
+2026~85445~  ~20260101~N~00006.82~Heinz bodies induced
+2026~85460~  ~20260101~N~00007.73~Hemoglobin fetal
+2026~85461~  ~20260101~N~00009.36~Hemoglobin fetal
+2026~85475~  ~20260101~N~00008.87~Hemolysin acid
+2026~85520~  ~20260101~N~00013.09~Heparin assay
+2026~85525~  ~20260101~N~00011.84~Heparin neutralization
+2026~85530~  ~20260101~N~00013.09~Heparin-protamine tolerance
+2026~85536~  ~20260101~N~00006.88~Iron stain peripheral blood
+2026~85540~  ~20260101~N~00008.60~Wbc alkaline phosphatase
+2026~85547~  ~20260101~N~00008.60~Rbc mechanical fragility
+2026~85549~  ~20260101~N~00018.75~Muramidase
+2026~85555~  ~20260101~N~00007.47~Rbc osmotic fragility
+2026~85557~  ~20260101~N~00013.36~Rbc osmotic fragility
+2026~85576~  ~20260101~N~00024.91~Blood platelet aggregation
+2026~85576~QW~20260101~N~00024.91~Blood platelet aggregation
+2026~85597~  ~20260101~N~00017.98~Phospholipid pltlt neutraliz
+2026~85598~  ~20260101~N~00017.98~Hexagnal phosph pltlt neutrl
+2026~85610~  ~20260101~N~00004.29~Prothrombin time
+2026~85610~QW~20260101~N~00004.29~Prothrombin time
+2026~85611~  ~20260101~N~00003.94~Prothrombin test
+2026~85612~  ~20260101~N~00017.49~Viper venom prothrombin time
+2026~85613~  ~20260101~N~00009.58~Russell viper venom diluted
+2026~85635~  ~20260101~N~00009.85~Reptilase test
+2026~85651~  ~20260101~N~00004.27~Rbc sed rate nonautomated
+2026~85652~  ~20260101~N~00002.70~Rbc sed rate automated
+2026~85660~  ~20260101~N~00005.51~Rbc sickle cell test
+2026~85670~  ~20260101~N~00005.77~Thrombin time plasma
+2026~85675~  ~20260101~N~00006.85~Thrombin time titer
+2026~85705~  ~20260101~N~00009.63~Thromboplastin inhibition
+2026~85730~  ~20260101~N~00006.01~Thromboplastin time partial
+2026~85732~  ~20260101~N~00006.47~Thromboplastin time partial
+2026~85810~  ~20260101~N~00011.67~Blood viscosity examination
+2026~86000~  ~20260101~N~00006.98~Agglutinins febrile antigen
+2026~86001~  ~20260101~N~00007.82~Allergen specific igg
+2026~86003~  ~20260101~N~00005.22~Allg spec ige crude xtrc ea
+2026~86005~  ~20260101~N~00007.97~Allg spec ige multiallg scr
+2026~86008~  ~20260101~N~00017.93~Allg spec ige recomb ea
+2026~86015~  ~20260101~N~00012.05~Actin antibody each
+2026~86021~  ~20260101~N~00015.05~Wbc antibody identification
+2026~86022~  ~20260101~N~00018.37~Platelet antibodies
+2026~86023~  ~20260101~N~00012.46~Immunoglobulin assay
+2026~86036~  ~20260101~N~00012.05~Anca screen each antibody
+2026~86037~  ~20260101~N~00012.05~Anca titer each antibody
+2026~86038~  ~20260101~N~00012.09~Antinuclear antibodies
+2026~86039~  ~20260101~N~00011.16~Antinuclear antibodies (ana)
+2026~86041~  ~20260101~N~00018.40~Acetylcholn rcptr bndng antb
+2026~86042~  ~20260101~N~00018.40~Acetylcholn rcptr blckg antb
+2026~86043~  ~20260101~N~00012.05~Acetylcholn rcptr modlg antb
+2026~86051~  ~20260101~N~00011.53~Aquaporin-4 antb elisa
+2026~86052~  ~20260101~N~00012.05~Aquaporin-4 antb cba each
+2026~86053~  ~20260101~N~00037.73~Aqaprn-4 antb flo cytmtry ea
+2026~86060~  ~20260101~N~00007.30~Antistreptolysin o titer
+2026~86063~  ~20260101~N~00005.77~Antistreptolysin o screen
+2026~86140~  ~20260101~N~00005.18~C-reactive protein
+2026~86141~  ~20260101~N~00012.95~C-reactive protein hs
+2026~86146~  ~20260101~N~00025.45~Beta-2 glycoprotein antibody
+2026~86147~  ~20260101~N~00025.45~Cardiolipin antibody ea ig
+2026~86148~  ~20260101~N~00016.07~Anti-phospholipid antibody
+2026~86152~  ~20260101~N~00250.78~Cell enumeration & id
+2026~86155~  ~20260101~N~00015.99~Chemotaxis assay
+2026~86156~  ~20260101~N~00008.07~Cold agglutinin screen
+2026~86157~  ~20260101~N~00008.06~Cold agglutinin titer
+2026~86160~  ~20260101~N~00012.00~Complement antigen
+2026~86161~  ~20260101~N~00012.00~Complement/function activity
+2026~86162~  ~20260101~N~00020.32~Complement total (ch50)
+2026~86171~  ~20260101~N~00010.01~Complement fixation each
+2026~86200~  ~20260101~N~00012.95~Ccp antibody
+2026~86215~  ~20260101~N~00013.25~Deoxyribonuclease antibody
+2026~86225~  ~20260101~N~00013.74~Dna antibody native
+2026~86226~  ~20260101~N~00012.11~Dna antibody single strand
+2026~86231~  ~20260101~N~00012.09~Ema each ig class
+2026~86235~  ~20260101~N~00017.93~Nuclear antigen antibody
+2026~86255~  ~20260101~N~00012.05~Fluorescent antibody screen
+2026~86256~  ~20260101~N~00012.05~Fluorescent antibody titer
+2026~86258~  ~20260101~N~00012.05~Dgp antibody each ig class
+2026~86277~  ~20260101~N~00015.74~Growth hormone antibody
+2026~86280~  ~20260101~N~00008.19~Hemagglutination inhibition
+2026~86294~  ~20260101~N~00025.57~Immunoassay tumor qual
+2026~86294~QW~20260101~N~00025.57~Immunoassay tumor qual
+2026~86300~  ~20260101~N~00020.81~Immunoassay tumor ca 15-3
+2026~86301~  ~20260101~N~00020.81~Immunoassay tumor ca 19-9
+2026~86304~  ~20260101~N~00020.81~Immunoassay tumor ca 125
+2026~86305~  ~20260101~N~00020.81~Human epididymis protein 4
+2026~86308~  ~20260101~N~00005.18~Heterophile antibody screen
+2026~86308~QW~20260101~N~00005.18~Heterophile antibody screen
+2026~86309~  ~20260101~N~00006.47~Heterophile antibody titer
+2026~86310~  ~20260101~N~00007.37~Heterophile antibody absrbj
+2026~86316~  ~20260101~N~00020.81~Immunoassay tumor other
+2026~86317~  ~20260101~N~00014.99~Immunoassay infectious agent
+2026~86318~  ~20260101~N~00018.09~Ia infectious agent antibody
+2026~86318~QW~20260101~N~00018.09~Ia infectious agent antibody
+2026~86320~  ~20260101~N~00029.92~Serum immunoelectrophoresis
+2026~86325~  ~20260101~N~00023.13~Other immunoelectrophoresis
+2026~86328~  ~20260101~N~00045.28~Ia nfct ab sarscov2 covid19
+2026~86328~QW~20260101~N~00045.28~Ia nfct ab sarscov2 covid19
+2026~86329~  ~20260101~N~00014.05~Immunodiffusion nes
+2026~86331~  ~20260101~N~00011.98~Immunodiffusion ouchterlony
+2026~86332~  ~20260101~N~00024.37~Immune complex assay
+2026~86334~  ~20260101~N~00022.34~Immunofix e-phoresis serum
+2026~86335~  ~20260101~N~00029.35~Immunfix e-phorsis/urine/csf
+2026~86336~  ~20260101~N~00015.59~Inhibin a
+2026~86337~  ~20260101~N~00021.41~Insulin antibodies
+2026~86340~  ~20260101~N~00015.08~Intrinsic factor antibody
+2026~86341~  ~20260101~N~00023.57~Islet cell antibody
+2026~86343~  ~20260101~N~00012.46~Leukocyte histamine release
+2026~86344~  ~20260101~N~00010.39~Leukocyte phagocytosis
+2026~86352~  ~20260101~N~00135.86~Cell function assay w/stim
+2026~86353~  ~20260101~N~00049.03~Lymphocyte transformation
+2026~86355~  ~20260101~N~00037.73~B cells total count
+2026~86356~  ~20260101~N~00026.78~Mononuclear cell antigen
+2026~86357~  ~20260101~N~00037.73~Nk cells total count
+2026~86359~  ~20260101~N~00037.73~T cells total count
+2026~86360~  ~20260101~N~00046.98~T cell absolute count/ratio
+2026~86361~  ~20260101~N~00026.78~T cell absolute count
+2026~86362~  ~20260101~N~00012.05~Mog-igg1 antb cba each
+2026~86363~  ~20260101~N~00037.73~Mog-igg1 antb flo cytmtry ea
+2026~86364~  ~20260101~N~00011.53~Tiss trnsgltmnase ea ig clas
+2026~86366~  ~20260101~N~00018.40~Muscle-specific kinase antb
+2026~86367~  ~20260101~N~00077.78~Stem cells total count
+2026~86376~  ~20260101~N~00014.55~Microsomal antibody each
+2026~86381~  ~20260101~N~00025.45~Mitochondrial antibody each
+2026~86382~  ~20260101~N~00016.91~Neutralization test viral
+2026~86384~  ~20260101~N~00013.61~Nitroblue tetrazolium dye
+2026~86386~  ~20260101~N~00021.78~Nuclear matrix protein 22
+2026~86386~QW~20260101~N~00021.78~Nuclear matrix protein 22
+2026~86403~  ~20260101~N~00011.54~Particle agglut antbdy scrn
+2026~86406~  ~20260101~N~00010.64~Particle agglut antbdy titr
+2026~86408~  ~20260101~N~00042.13~Neutrlzg antb sarscov2 scr
+2026~86409~  ~20260101~N~00079.61~Neutrlzg antb sarscov2 titer
+2026~86413~  ~20260101~N~00051.43~Sars-cov-2 antb quantitative
+2026~86430~  ~20260101~N~00006.14~Rheumatoid factor test qual
+2026~86431~  ~20260101~N~00005.67~Rheumatoid factor quant
+2026~86480~  ~20260101~N~00061.98~Tb test cell immun measure
+2026~86481~  ~20260101~N~00100.00~Tb ag response t-cell susp
+2026~86581~  ~20260101~N~00092.03~Strptcs pneum antb serot ia
+2026~86590~  ~20260101~N~00012.66~Streptokinase antibody
+2026~86592~  ~20260101~N~00004.27~Syphilis test non-trep qual
+2026~86593~  ~20260101~N~00004.40~Syphilis test non-trep quant
+2026~86596~  ~20260101~N~00012.05~Voltage-gtd ca chnl antb ea
+2026~86602~  ~20260101~N~00010.18~Antinomyces antibody
+2026~86603~  ~20260101~N~00012.87~Adenovirus antibody
+2026~86606~  ~20260101~N~00015.05~Aspergillus antibody
+2026~86609~  ~20260101~N~00012.88~Bacterium antibody
+2026~86611~  ~20260101~N~00010.18~Bartonella antibody
+2026~86612~  ~20260101~N~00012.90~Blastomyces antibody
+2026~86615~  ~20260101~N~00013.19~Bordetella antibody
+2026~86617~  ~20260101~N~00015.49~Lyme disease antibody
+2026~86618~  ~20260101~N~00017.03~Lyme disease antibody
+2026~86618~QW~20260101~N~00017.03~Lyme disease antibody
+2026~86619~  ~20260101~N~00013.38~Borrelia antibody
+2026~86622~  ~20260101~N~00008.93~Brucella antibody
+2026~86625~  ~20260101~N~00013.12~Campylobacter antibody
+2026~86628~  ~20260101~N~00012.01~Candida antibody
+2026~86631~  ~20260101~N~00011.82~Chlamydia antibody
+2026~86632~  ~20260101~N~00012.68~Chlamydia igm antibody
+2026~86635~  ~20260101~N~00011.47~Coccidioides antibody
+2026~86638~  ~20260101~N~00012.12~Q fever antibody
+2026~86641~  ~20260101~N~00014.41~Cryptococcus antibody
+2026~86644~  ~20260101~N~00014.39~Cmv antibody
+2026~86645~  ~20260101~N~00016.85~Cmv antibody igm
+2026~86648~  ~20260101~N~00015.21~Diphtheria antibody
+2026~86651~  ~20260101~N~00013.19~Encephalitis californ antbdy
+2026~86652~  ~20260101~N~00013.19~Encephaltis east eqne anbdy
+2026~86653~  ~20260101~N~00013.19~Encephaltis st louis antbody
+2026~86654~  ~20260101~N~00013.19~Encephaltis west eqne antbdy
+2026~86658~  ~20260101~N~00013.03~Enterovirus antibody
+2026~86663~  ~20260101~N~00013.12~Epstein-barr antibody
+2026~86664~  ~20260101~N~00015.29~Epstein-barr nuclear antigen
+2026~86665~  ~20260101~N~00018.14~Epstein-barr capsid vca
+2026~86666~  ~20260101~N~00010.18~Ehrlichia antibody
+2026~86668~  ~20260101~N~00014.16~Francisella tularensis
+2026~86671~  ~20260101~N~00012.25~Fungus nes antibody
+2026~86674~  ~20260101~N~00014.72~Giardia lamblia antibody
+2026~86677~  ~20260101~N~00016.85~Helicobacter pylori antibody
+2026~86682~  ~20260101~N~00013.01~Helminth antibody
+2026~86684~  ~20260101~N~00015.84~Hemophilus influenza antibdy
+2026~86687~  ~20260101~N~00009.09~Htlv-i antibody
+2026~86688~  ~20260101~N~00014.00~Htlv-ii antibody
+2026~86689~  ~20260101~N~00019.35~Htlv/hiv confirmj antibody
+2026~86692~  ~20260101~N~00017.16~Hepatitis delta agent antbdy
+2026~86694~  ~20260101~N~00014.39~Herpes simplex nes antbdy
+2026~86695~  ~20260101~N~00013.19~Herpes simplex type 1 test
+2026~86696~  ~20260101~N~00019.35~Herpes simplex type 2 test
+2026~86698~  ~20260101~N~00013.79~Histoplasma antibody
+2026~86701~  ~20260101~N~00008.89~Hiv-1antibody
+2026~86701~QW~20260101~N~00008.89~Hiv-1antibody
+2026~86702~  ~20260101~N~00013.52~Hiv-2 antibody
+2026~86703~  ~20260101~N~00013.71~Hiv-1/hiv-2 1 result antbdy
+2026~86704~  ~20260101~N~00012.05~Hep b core antibody total
+2026~86705~  ~20260101~N~00011.77~Hep b core antibody igm
+2026~86706~  ~20260101~N~00010.74~Hep b surface antibody
+2026~86707~  ~20260101~N~00011.57~Hepatitis be antibody
+2026~86708~  ~20260101~N~00012.39~Hepatitis a antibody
+2026~86709~  ~20260101~N~00011.26~Hepatitis a igm antibody
+2026~86710~  ~20260101~N~00013.55~Influenza virus antibody
+2026~86711~  ~20260101~N~00016.89~John cunningham antibody
+2026~86713~  ~20260101~N~00015.30~Legionella antibody
+2026~86717~  ~20260101~N~00012.25~Leishmania antibody
+2026~86720~  ~20260101~N~00016.20~Leptospira antibody
+2026~86723~  ~20260101~N~00013.19~Listeria monocytogenes
+2026~86727~  ~20260101~N~00012.87~Lymph choriomeningitis ab
+2026~86732~  ~20260101~N~00015.00~Mucormycosis antibody
+2026~86735~  ~20260101~N~00013.05~Mumps antibody
+2026~86738~  ~20260101~N~00013.24~Mycoplasma antibody
+2026~86741~  ~20260101~N~00013.19~Neisseria meningitidis
+2026~86744~  ~20260101~N~00015.99~Nocardia antibody
+2026~86747~  ~20260101~N~00015.03~Parvovirus antibody
+2026~86750~  ~20260101~N~00013.19~Malaria antibody
+2026~86753~  ~20260101~N~00012.39~Protozoa antibody nos
+2026~86756~  ~20260101~N~00015.89~Respiratory virus antibody
+2026~86757~  ~20260101~N~00019.35~Rickettsia antibody
+2026~86759~  ~20260101~N~00018.23~Rotavirus antibody
+2026~86762~  ~20260101~N~00014.39~Rubella antibody
+2026~86765~  ~20260101~N~00012.88~Rubeola antibody
+2026~86768~  ~20260101~N~00013.19~Salmonella antibody
+2026~86769~  ~20260101~N~00042.13~Sars-cov-2 covid-19 antibody
+2026~86769~QW~20260101~N~00042.13~Sars-cov-2 covid-19 antibody
+2026~86771~  ~20260101~N~00024.48~Shigella antibody
+2026~86774~  ~20260101~N~00014.80~Tetanus antibody
+2026~86777~  ~20260101~N~00014.39~Toxoplasma antibody
+2026~86778~  ~20260101~N~00014.41~Toxoplasma antibody igm
+2026~86780~  ~20260101~N~00013.24~Treponema pallidum
+2026~86780~QW~20260101~N~00013.24~Treponema pallidum
+2026~86784~  ~20260101~N~00012.56~Trichinella antibody
+2026~86787~  ~20260101~N~00012.88~Varicella-zoster antibody
+2026~86788~  ~20260101~N~00016.85~West nile virus ab igm
+2026~86789~  ~20260101~N~00014.39~West nile virus antibody
+2026~86790~  ~20260101~N~00012.88~Virus antibody nos
+2026~86793~  ~20260101~N~00013.19~Yersinia antibody
+2026~86794~  ~20260101~N~00016.85~Zika virus igm antibody
+2026~86800~  ~20260101~N~00015.91~Thyroglobulin antibody
+2026~86803~  ~20260101~N~00014.27~Hepatitis c ab test
+2026~86803~QW~20260101~N~00014.27~Hepatitis c ab test
+2026~86804~  ~20260101~N~00015.49~Hep c ab test confirm
+2026~86805~  ~20260101~N~00189.51~Lymphocytotoxicity assay
+2026~86806~  ~20260101~N~00047.59~Lymphocytotoxicity assay
+2026~86807~  ~20260101~N~00078.65~Cytotoxic antibody screening
+2026~86808~  ~20260101~N~00029.68~Cytotoxic antibody screening
+2026~86812~  ~20260101~N~00025.81~Hla typing a b or c
+2026~86813~  ~20260101~N~00058.00~Hla typing a b or c
+2026~86816~  ~20260101~N~00030.17~Hla typing dr/dq
+2026~86817~  ~20260101~N~00106.14~Hla typing dr/dq
+2026~86821~  ~20260101~N~00036.56~Lymphocyte culture mixed
+2026~86825~  ~20260101~N~00109.49~Hla x-math non-cytotoxic
+2026~86826~  ~20260101~N~00036.53~Hla x-match noncytotoxc addl
+2026~86828~  ~20260101~N~00064.19~Hla class i&ii antibody qual
+2026~86829~  ~20260101~N~00064.19~Hla class i/ii antibody qual
+2026~86830~  ~20260101~N~00095.52~Hla class i phenotype qual
+2026~86831~  ~20260101~N~00081.88~Hla class ii phenotype qual
+2026~86832~  ~20260101~N~00323.75~Hla class i high defin qual
+2026~86833~  ~20260101~N~00325.80~Hla class ii high defin qual
+2026~86834~  ~20260101~N~00357.56~Hla class i semiquant panel
+2026~86835~  ~20260101~N~00322.96~Hla class ii semiquant panel
+2026~86850~  ~20260101~N~00009.77~Rbc antibody screen
+2026~86880~  ~20260101~N~00005.39~Coombs test direct
+2026~86885~  ~20260101~N~00005.72~Coombs test indirect qual
+2026~86886~  ~20260101~N~00005.18~Coombs test indirect titer
+2026~86900~  ~20260101~N~00002.99~Blood typing serologic abo
+2026~86901~  ~20260101~N~00002.99~Blood typing serologic rh(d)
+2026~86902~  ~20260101~N~00006.35~Blood type antigen donor ea
+2026~86904~  ~20260101~N~00016.34~Blood typing patient serum
+2026~86905~  ~20260101~N~00003.83~Blood typing rbc antigens
+2026~86906~  ~20260101~N~00007.75~Bld typing serologic rh phnt
+2026~86940~  ~20260101~N~00008.77~Hemolysins/agglutinins auto
+2026~86941~  ~20260101~N~00012.11~Hemolysins/agglutinins
+2026~87003~  ~20260101~N~00016.84~Small animal inoculation
+2026~87015~  ~20260101~N~00006.68~Specimen infect agnt concntj
+2026~87040~  ~20260101~N~00010.32~Blood culture for bacteria
+2026~87045~  ~20260101~N~00009.44~Feces culture aerobic bact
+2026~87046~  ~20260101~N~00009.44~Stool cultr aerobic bact ea
+2026~87070~  ~20260101~N~00008.62~Culture othr specimn aerobic
+2026~87071~  ~20260101~N~00009.89~Culture aerobic quant other
+2026~87073~  ~20260101~N~00009.66~Culture bacteria anaerobic
+2026~87075~  ~20260101~N~00009.47~Cultr bacteria except blood
+2026~87076~  ~20260101~N~00008.08~Culture anaerobe ident each
+2026~87077~  ~20260101~N~00008.08~Culture aerobic identify
+2026~87077~QW~20260101~N~00008.08~Culture aerobic identify
+2026~87081~  ~20260101~N~00006.63~Culture screen only
+2026~87084~  ~20260101~N~00027.07~Culture of specimen by kit
+2026~87086~  ~20260101~N~00008.07~Urine culture/colony count
+2026~87088~  ~20260101~N~00008.09~Urine bacteria culture
+2026~87101~  ~20260101~N~00007.71~Skin fungi culture
+2026~87102~  ~20260101~N~00008.41~Fungus isolation culture
+2026~87103~  ~20260101~N~00020.46~Blood fungus culture
+2026~87106~  ~20260101~N~00010.32~Fungi identification yeast
+2026~87107~  ~20260101~N~00010.32~Fungi identification mold
+2026~87109~  ~20260101~N~00015.39~Mycoplasma
+2026~87110~  ~20260101~N~00019.60~Chlamydia culture
+2026~87116~  ~20260101~N~00010.80~Mycobacteria culture
+2026~87118~  ~20260101~N~00014.61~Mycobacteric identification
+2026~87140~  ~20260101~N~00005.57~Culture type immunofluoresc
+2026~87143~  ~20260101~N~00012.52~Culture typing glc/hplc
+2026~87147~  ~20260101~N~00005.18~Culture type immunologic
+2026~87149~  ~20260101~N~00020.05~Dna/rna direct probe
+2026~87150~  ~20260101~N~00035.09~Dna/rna amplified probe
+2026~87152~  ~20260101~N~00007.74~Culture type pulse field gel
+2026~87153~  ~20260101~N~00115.36~Dna/rna sequencing
+2026~87154~  ~20260101~N~00218.06~Cul typ id bld pthgn 6+ trgt
+2026~87158~  ~20260101~N~00007.74~Culture typing added method
+2026~87164~  ~20260101~N~00010.74~Dark field exam spec collj
+2026~87166~  ~20260101~N~00011.30~Dark field exam w/o collj
+2026~87168~  ~20260101~N~00004.27~Macroscopic exam arthropod
+2026~87169~  ~20260101~N~00004.31~Macroscopic exam parasite
+2026~87172~  ~20260101~N~00004.27~Pinworm exam
+2026~87176~  ~20260101~N~00005.88~Tissue homogenization cultr
+2026~87177~  ~20260101~N~00008.90~Ova and parasites smears
+2026~87181~  ~20260101~N~00004.75~Sc std agar dilution per agt
+2026~87182~  ~20260101~L~00000.00~Sc std carbapenemase nzm det
+2026~87183~  ~20260101~N~00035.09~Sc std carbapenem resist gen
+2026~87184~  ~20260101~N~00007.48~Sc std disk method per plate
+2026~87185~  ~20260101~N~00004.75~Sc std enzyme detcj per nzm
+2026~87186~  ~20260101~N~00008.65~Sc std microdil/agar dil
+2026~87187~  ~20260101~N~00040.17~Sc std microdil/agar mlc
+2026~87188~  ~20260101~N~00006.64~Sc std macrobroth dil meth
+2026~87190~  ~20260101~N~00007.31~Sc std myobacteria prop meth
+2026~87197~  ~20260101~N~00015.02~Serum bactericidal titer
+2026~87205~  ~20260101~N~00004.27~Smear gram stain
+2026~87206~  ~20260101~N~00005.39~Smear fluorescent/acid stai
+2026~87207~  ~20260101~N~00005.99~Smear special stain
+2026~87209~  ~20260101~N~00017.98~Smear complex stain
+2026~87210~  ~20260101~N~00005.82~Smear wet mount saline/ink
+2026~87210~QW~20260101~N~00005.82~Smear wet mount saline/ink
+2026~87220~  ~20260101~N~00004.27~Tissue exam for fungi
+2026~87230~  ~20260101~N~00019.74~Toxin/antitoxin asy tiss cul
+2026~87250~  ~20260101~N~00019.56~Virus inoculate eggs/animal
+2026~87252~  ~20260101~N~00026.07~Virus inoculation tissue
+2026~87253~  ~20260101~N~00020.20~Virus inoculate tissue addl
+2026~87254~  ~20260101~N~00019.56~Virus inoculation shell via
+2026~87255~  ~20260101~N~00033.86~Genet virus isolate hsv
+2026~87260~  ~20260101~N~00014.43~Adenovirus ag if
+2026~87265~  ~20260101~N~00011.98~Pertussis ag if
+2026~87267~  ~20260101~N~00013.42~Enterovirus antibody dfa
+2026~87269~  ~20260101~N~00013.61~Giardia ag if
+2026~87270~  ~20260101~N~00011.98~Chlamydia trachomatis ag if
+2026~87271~  ~20260101~N~00013.42~Cytomegalovirus dfa
+2026~87272~  ~20260101~N~00011.98~Cryptosporidium ag if
+2026~87273~  ~20260101~N~00011.98~Herpes simplex 2 ag if
+2026~87274~  ~20260101~N~00011.98~Herpes simplex 1 ag if
+2026~87275~  ~20260101~N~00012.25~Influenza b ag if
+2026~87276~  ~20260101~N~00016.07~Influenza a ag if
+2026~87278~  ~20260101~N~00015.60~Legion pneumophilia ag if
+2026~87279~  ~20260101~N~00016.43~Parainfluenza ag if
+2026~87280~  ~20260101~N~00013.42~Respiratory syncytial ag if
+2026~87281~  ~20260101~N~00011.98~Pneumocystis carinii ag if
+2026~87283~  ~20260101~N~00060.80~Rubeola ag if
+2026~87285~  ~20260101~N~00012.18~Treponema pallidum ag if
+2026~87290~  ~20260101~N~00013.42~Varicella zoster ag if
+2026~87299~  ~20260101~N~00016.10~Antibody detection nos if
+2026~87300~  ~20260101~N~00011.98~Ag detection polyval if
+2026~87301~  ~20260101~N~00011.98~Adenovirus ag ia
+2026~87305~  ~20260101~N~00011.98~Aspergillus ag ia
+2026~87320~  ~20260101~N~00015.00~Chlmyd trach ag ia
+2026~87324~  ~20260101~N~00011.98~Clostridium ag ia
+2026~87327~  ~20260101~N~00013.42~Cryptococcus neoform ag ia
+2026~87328~  ~20260101~N~00013.82~Cryptosporidium ag ia
+2026~87329~  ~20260101~N~00011.98~Giardia ag ia
+2026~87332~  ~20260101~N~00011.98~Cytomegalovirus ag ia
+2026~87335~  ~20260101~N~00012.66~E coli 0157 ag ia
+2026~87336~  ~20260101~N~00016.00~Entamoeb hist dispr ag ia
+2026~87337~  ~20260101~N~00011.98~Entamoeb hist group ag ia
+2026~87338~  ~20260101~N~00014.38~Hpylori stool ag ia
+2026~87338~QW~20260101~N~00014.38~Hpylori stool ag ia
+2026~87339~  ~20260101~N~00016.00~H pylori ag ia
+2026~87340~  ~20260101~N~00010.33~Hepatitis b surface ag ia
+2026~87341~  ~20260101~N~00010.33~Hep b surface ag neutrlzj ia
+2026~87350~  ~20260101~N~00011.53~Hepatitis be ag ia
+2026~87380~  ~20260101~N~00018.36~Hepatitis delta agent ag ia
+2026~87385~  ~20260101~N~00013.25~Histoplasma capsul ag ia
+2026~87389~  ~20260101~N~00024.08~Hiv-1 ag w/hiv-1&-2 ab ag ia
+2026~87389~QW~20260101~N~00024.08~Hiv-1 ag w/hiv-1&-2 ab ag ia
+2026~87390~  ~20260101~N~00024.06~Hiv-1 ag ia
+2026~87391~  ~20260101~N~00021.90~Hiv-2 ag ia
+2026~87400~  ~20260101~N~00014.13~Influenza a/b each ag ia
+2026~87400~QW~20260101~N~00014.13~Influenza a/b each ag ia
+2026~87420~  ~20260101~N~00013.91~Resp syncytial virus ag ia
+2026~87420~QW~20260101~N~00013.91~Resp syncytial virus ag ia
+2026~87425~  ~20260101~N~00011.98~Rotavirus ag ia
+2026~87426~  ~20260101~N~00035.33~Sarscov coronavirus ag ia
+2026~87426~QW~20260101~N~00035.33~Sarscov coronavirus ag ia
+2026~87427~  ~20260101~N~00011.98~Shiga-like toxin ag ia
+2026~87428~  ~20260101~N~00070.29~Sarscov & inf vir a&b ag ia
+2026~87428~QW~20260101~N~00070.29~Sarscov & inf vir a&b ag ia
+2026~87430~  ~20260101~N~00016.81~Strep a ag ia
+2026~87430~QW~20260101~N~00016.81~Strep a ag ia
+2026~87449~  ~20260101~N~00011.98~Nos each organism ag ia
+2026~87449~QW~20260101~N~00011.98~Nos each organism ag ia
+2026~87451~  ~20260101~N~00010.51~Polyvalent mult org ea ag ia
+2026~87467~  ~20260101~N~00025.32~Hepatitis b surface ag quan
+2026~87468~  ~20260101~N~00035.09~Anaplsma phgcytophlm amp prb
+2026~87469~  ~20260101~N~00035.09~Babesia microti amp prb
+2026~87471~  ~20260101~N~00035.09~Bartonella dna amp probe
+2026~87472~  ~20260101~N~00042.84~Bartonella dna quant
+2026~87475~  ~20260101~N~00020.05~Lyme dis dna dir probe
+2026~87476~  ~20260101~N~00035.09~Lyme dis dna amp probe
+2026~87478~  ~20260101~N~00035.09~Borrelia miyamotoi amp prb
+2026~87480~  ~20260101~N~00020.05~Candida dna dir probe
+2026~87481~  ~20260101~N~00035.09~Candida dna amp probe
+2026~87482~  ~20260101~N~00055.74~Candida dna quant
+2026~87483~  ~20260101~N~00416.78~Cns dna amp probe type 12-25
+2026~87484~  ~20260101~N~00035.09~Ehrlicha chaffeensis amp prb
+2026~87485~  ~20260101~N~00020.05~Chlmyd pneum dna dir probe
+2026~87486~  ~20260101~N~00035.09~Chlmyd pneum dna amp probe
+2026~87487~  ~20260101~N~00042.84~Chlmyd pneum dna quant
+2026~87490~  ~20260101~N~00022.75~Chlmyd trach dna dir probe
+2026~87491~  ~20260101~N~00035.09~Chlmyd trach dna amp probe
+2026~87491~QW~20260101~N~00035.09~Chlmyd trach dna amp probe
+2026~87492~  ~20260101~N~00053.47~Chlmyd trach dna quant
+2026~87493~  ~20260101~N~00037.27~C diff amplified probe
+2026~87494~  ~20260101~N~00070.18~Chlmy trch&neisra gonor mult
+2026~87494~QW~20260101~N~00070.18~Chlmy trch&neisra gonor mult
+2026~87495~  ~20260101~N~00030.03~Cytomeg dna dir probe
+2026~87496~  ~20260101~N~00035.09~Cytomeg dna amp probe
+2026~87497~  ~20260101~N~00042.84~Cytomeg dna quant
+2026~87498~  ~20260101~N~00035.09~Enterovirus probe&revrs trns
+2026~87500~  ~20260101~N~00035.09~Vanomycin dna amp probe
+2026~87501~  ~20260101~N~00051.31~Influenza dna amp prob 1+
+2026~87502~  ~20260101~N~00095.80~Influenza dna amp probe
+2026~87502~QW~20260101~N~00095.80~Influenza dna amp probe
+2026~87503~  ~20260101~N~00029.22~Influenza dna amp prob addl
+2026~87505~  ~20260101~N~00128.29~Nfct agent detection gi
+2026~87506~  ~20260101~N~00262.99~Iadna-dna/rna probe tq 6-11
+2026~87507~  ~20260101~N~00416.78~Iadna-dna/rna probe tq 12-25
+2026~87510~  ~20260101~N~00020.05~Gardner vag dna dir probe
+2026~87511~  ~20260101~N~00035.09~Gardner vag dna amp probe
+2026~87512~  ~20260101~N~00041.76~Gardner vag dna quant
+2026~87513~  ~20260101~N~00035.09~H pylri clrthmcn rst amp prb
+2026~87516~  ~20260101~N~00035.09~Hepatitis b dna amp probe
+2026~87517~  ~20260101~N~00042.84~Hepatitis b dna quant
+2026~87520~  ~20260101~N~00031.22~Hepatitis c rna dir probe
+2026~87521~  ~20260101~N~00035.09~Hepatitis c probe&rvrs trnsc
+2026~87521~QW~20260101~N~00035.09~Hepatitis c probe&rvrs trnsc
+2026~87522~  ~20260101~N~00042.84~Hepatitis c revrs trnscrpj
+2026~87523~  ~20260101~N~00042.84~Hepatitis d quantification
+2026~87525~  ~20260101~N~00029.80~Hepatitis g dna dir probe
+2026~87526~  ~20260101~N~00039.26~Hepatitis g dna amp probe
+2026~87527~  ~20260101~N~00041.76~Hepatitis g dna quant
+2026~87528~  ~20260101~N~00020.05~Hsv dna dir probe
+2026~87529~  ~20260101~N~00035.09~Hsv dna amp probe
+2026~87530~  ~20260101~N~00042.84~Hsv dna quant
+2026~87531~  ~20260101~N~00058.00~Hhv-6 dna dir probe
+2026~87532~  ~20260101~N~00035.09~Hhv-6 dna amp probe
+2026~87533~  ~20260101~N~00041.76~Hhv-6 dna quant
+2026~87534~  ~20260101~N~00021.92~Hiv-1 dna dir probe
+2026~87535~  ~20260101~N~00035.09~Hiv-1 probe&reverse trnscrpj
+2026~87536~  ~20260101~N~00085.10~Hiv-1 quant&revrse trnscrpj
+2026~87537~  ~20260101~N~00021.92~Hiv-2 dna dir probe
+2026~87538~  ~20260101~N~00035.09~Hiv-2 probe&revrse trnscripj
+2026~87539~  ~20260101~N~00058.62~Hiv-2 quant&revrse trnscripj
+2026~87540~  ~20260101~N~00020.05~Legion pneumo dna dir prob
+2026~87541~  ~20260101~N~00035.09~Legion pneumo dna amp prob
+2026~87542~  ~20260101~N~00041.76~Legion pneumo dna quant
+2026~87550~  ~20260101~N~00020.05~Mycobacteria dna dir probe
+2026~87551~  ~20260101~N~00048.24~Mycobacteria dna amp probe
+2026~87552~  ~20260101~N~00042.84~Mycobacteria dna quant
+2026~87555~  ~20260101~N~00026.88~M.tuberculo dna dir probe
+2026~87556~  ~20260101~N~00041.68~M.tuberculo dna amp probe
+2026~87557~  ~20260101~N~00042.84~M.tuberculo dna quant
+2026~87560~  ~20260101~N~00027.29~M.avium-intra dna dir prob
+2026~87561~  ~20260101~N~00035.09~M.avium-intra dna amp prob
+2026~87562~  ~20260101~N~00042.84~M.avium-intra dna quant
+2026~87563~  ~20260101~N~00035.09~M. genitalium amp probe
+2026~87563~QW~20260101~N~00035.09~M. genitalium amp probe
+2026~87564~  ~20260101~N~00076.77~Mtb rifampin rst amp prb tq
+2026~87580~  ~20260101~N~00020.05~M.pneumon dna dir probe
+2026~87581~  ~20260101~N~00035.09~M.pneumon dna amp probe
+2026~87582~  ~20260101~N~00302.62~M.pneumon dna quant
+2026~87590~  ~20260101~N~00026.88~N.gonorrhoeae dna dir prob
+2026~87591~  ~20260101~N~00035.09~N.gonorrhoeae dna amp prob
+2026~87591~QW~20260101~N~00035.09~N.gonorrhoeae dna amp prob
+2026~87592~  ~20260101~N~00042.84~N.gonorrhoeae dna quant
+2026~87593~  ~20260101~N~00051.31~Orthopoxvirus amp prb each
+2026~87594~  ~20260101~N~00035.09~Pneumcysts jirovecii amp prb
+2026~87623~  ~20260101~N~00035.09~Hpv low-risk types
+2026~87624~  ~20260101~N~00035.09~Hpv hi-risk typ pooled rslt
+2026~87625~  ~20260101~N~00040.55~Hpv types 16 & 18 only
+2026~87626~  ~20260101~N~00070.20~Hpv sep hi-rsk typ&pool rslt
+2026~87627~  ~20260101~N~00679.77~Jt spc pthgn&rx rsist gen26+
+2026~87631~  ~20260101~N~00142.63~Resp virus 3-5 targets
+2026~87631~QW~20260101~N~00142.63~Resp virus 3-5 targets
+2026~87632~  ~20260101~N~00218.06~Resp virus 6-11 targets
+2026~87633~  ~20260101~N~00416.78~Resp virus 12-25 targets
+2026~87633~QW~20260101~N~00416.78~Resp virus 12-25 targets
+2026~87634~  ~20260101~N~00070.20~Rsv dna/rna amp probe
+2026~87634~QW~20260101~N~00070.20~Rsv dna/rna amp probe
+2026~87635~  ~20260101~N~00051.31~Sars-cov-2 covid-19 amp prb
+2026~87635~QW~20260101~N~00051.31~Sars-cov-2 covid-19 amp prb
+2026~87636~  ~20260101~N~00142.63~Sarscov2 & inf a&b amp prb
+2026~87636~QW~20260101~N~00142.63~Sarscov2 & inf a&b amp prb
+2026~87637~  ~20260101~N~00142.63~Sarscov2&inf a&b&rsv amp prb
+2026~87637~QW~20260101~N~00142.63~Sarscov2&inf a&b&rsv amp prb
+2026~87640~  ~20260101~N~00035.09~Staph a dna amp probe
+2026~87641~  ~20260101~N~00035.09~Mr-staph dna amp probe
+2026~87650~  ~20260101~N~00020.05~Strep a dna dir probe
+2026~87650~QW~20260101~N~00020.05~Strep a dna dir probe
+2026~87651~  ~20260101~N~00035.09~Strep a dna amp probe
+2026~87651~QW~20260101~N~00035.09~Strep a dna amp probe
+2026~87652~  ~20260101~N~00041.76~Strep a dna quant
+2026~87653~  ~20260101~N~00035.09~Strep b dna amp probe
+2026~87660~  ~20260101~N~00020.05~Trichomonas vagin dir probe
+2026~87661~  ~20260101~N~00035.09~Trichomonas vaginalis amplif
+2026~87662~  ~20260101~N~00051.31~Zika virus dna/rna amp probe
+2026~87797~  ~20260101~N~00030.03~Detect agent nos dna dir
+2026~87798~  ~20260101~N~00035.09~Detect agent nos dna amp
+2026~87799~  ~20260101~N~00042.84~Detect agent nos dna quant
+2026~87800~  ~20260101~N~00043.67~Detect agnt mult dna direc
+2026~87801~  ~20260101~N~00070.20~Detect agnt mult dna ampli
+2026~87801~QW~20260101~N~00070.20~Detect agnt mult dna ampli
+2026~87802~  ~20260101~N~00012.73~Strep b assay w/optic
+2026~87803~  ~20260101~N~00016.00~Clostridium toxin a w/optic
+2026~87804~  ~20260101~N~00016.55~Influenza assay w/optic
+2026~87804~QW~20260101~N~00016.55~Influenza assay w/optic
+2026~87806~  ~20260101~N~00032.77~Hiv ag w/hiv1&2 antb w/optic
+2026~87806~QW~20260101~N~00032.77~Hiv ag w/hiv1&2 antb w/optic
+2026~87807~  ~20260101~N~00013.10~Rsv assay w/optic
+2026~87807~QW~20260101~N~00013.10~Rsv assay w/optic
+2026~87808~  ~20260101~N~00015.29~Trichomonas assay w/optic
+2026~87808~QW~20260101~N~00015.29~Trichomonas assay w/optic
+2026~87809~  ~20260101~N~00021.76~Adenovirus assay w/optic
+2026~87809~QW~20260101~N~00021.76~Adenovirus assay w/optic
+2026~87810~  ~20260101~N~00035.29~Chlmyd trach assay w/optic
+2026~87811~  ~20260101~N~00041.38~Sars-cov-2 covid19 w/optic
+2026~87811~QW~20260101~N~00041.38~Sars-cov-2 covid19 w/optic
+2026~87812~  ~20260101~N~00074.48~Sarscov2&inf typ a&b w/optic
+2026~87812~QW~20260101~N~00074.48~Sarscov2&inf typ a&b w/optic
+2026~87850~  ~20260101~N~00024.56~N. gonorrhoeae assay w/optic
+2026~87880~  ~20260101~N~00016.53~Strep a assay w/optic
+2026~87880~QW~20260101~N~00016.53~Strep a assay w/optic
+2026~87899~  ~20260101~N~00016.07~Agent nos assay w/optic
+2026~87899~QW~20260101~N~00016.07~Agent nos assay w/optic
+2026~87900~  ~20260101~N~00130.35~Phenotype infect agent drug
+2026~87901~  ~20260101~N~00257.45~Nfct agt gntyp alys hiv1 rev
+2026~87902~  ~20260101~N~00257.45~Nfct agt gntyp alys hep c
+2026~87903~  ~20260101~N~00488.66~Phenotype dna hiv w/culture
+2026~87904~  ~20260101~N~00026.07~Phenotype dna hiv w/clt add
+2026~87905~  ~20260101~N~00012.22~Ia nzmtc actv oth/thn virus
+2026~87905~QW~20260101~N~00012.22~Ia nzmtc actv oth/thn virus
+2026~87906~  ~20260101~N~00128.73~Nfct agt gntyp alys hiv1
+2026~87910~  ~20260101~N~00257.45~Nfct agt gntyp alys cmv
+2026~87912~  ~20260101~N~00257.45~Nfct agt gntyp alys hep b
+2026~87913~  ~20260101~N~00257.45~Nfct agt gntyp alys sarscov2
+2026~88130~  ~20260101~N~00017.98~Sex chromatin identification
+2026~88140~  ~20260101~N~00007.99~Sex chromatin identification
+2026~88142~  ~20260101~N~00020.26~Cytopath c/v thin layer
+2026~88143~  ~20260101~N~00023.04~Cytopath c/v thin layer redo
+2026~88147~  ~20260101~N~00050.56~Cytopath c/v automated
+2026~88148~  ~20260101~N~00018.54~Cytopath c/v auto rescreen
+2026~88150~  ~20260101~N~00018.54~Cytopath c/v manual
+2026~88152~  ~20260101~N~00027.64~Cytopath c/v auto redo
+2026~88153~  ~20260101~N~00024.03~Cytopath c/v redo
+2026~88155~  ~20260101~N~00014.65~Cytopath c/v index add-on
+2026~88164~  ~20260101~N~00018.54~Cytopath tbs c/v manual
+2026~88165~  ~20260101~N~00042.22~Cytopath tbs c/v redo
+2026~88166~  ~20260101~N~00018.54~Cytopath tbs c/v auto redo
+2026~88167~  ~20260101~N~00018.54~Cytopath tbs c/v select
+2026~88174~  ~20260101~N~00025.37~Cytopath c/v auto in fluid
+2026~88175~  ~20260101~N~00026.61~Cytopath c/v auto fluid redo
+2026~88230~  ~20260101~N~00116.49~Tissue culture lymphocyte
+2026~88233~  ~20260101~N~00140.73~Tissue culture skin/biopsy
+2026~88235~  ~20260101~N~00150.30~Tissue culture placenta
+2026~88237~  ~20260101~N~00143.75~Tissue culture bone marrow
+2026~88239~  ~20260101~N~00147.52~Tissue culture tumor
+2026~88240~  ~20260101~N~00013.07~Cell cryopreserve/storage
+2026~88241~  ~20260101~N~00012.09~Frozen cell preparation
+2026~88245~  ~20260101~N~00173.17~Chromosome analysis 20-25
+2026~88248~  ~20260101~N~00173.17~Chromosome analysis 50-100
+2026~88249~  ~20260101~N~00173.17~Chromosome analysis 100
+2026~88261~  ~20260101~N~00264.34~Chromosome analysis 5
+2026~88262~  ~20260101~N~00125.49~Chromosome analysis 15-20
+2026~88263~  ~20260101~N~00150.29~Chromosome analysis 45
+2026~88264~  ~20260101~N~00144.61~Chromosome analysis 20-25
+2026~88267~  ~20260101~N~00188.57~Chromosome analys placenta
+2026~88269~  ~20260101~N~00173.66~Chromosome analys amniotic
+2026~88271~  ~20260101~N~00021.42~Cytogenetics dna probe
+2026~88272~  ~20260101~N~00040.70~Cytogenetics 3-5
+2026~88273~  ~20260101~N~00034.81~Cytogenetics 10-30
+2026~88274~  ~20260101~N~00042.38~Cytogenetics 25-99
+2026~88275~  ~20260101~N~00051.19~Cytogenetics 100-300
+2026~88280~  ~20260101~N~00033.47~Chromosome karyotype study
+2026~88283~  ~20260101~N~00068.60~Chromosome banding study
+2026~88285~  ~20260101~N~00026.91~Chromosome count additional
+2026~88289~  ~20260101~N~00034.43~Chromosome study additional
+2026~88371~  ~20260101~N~00022.23~Protein western blot tissue
+2026~88372~  ~20260101~N~00026.22~Protein analysis w/probe
+2026~88720~  ~20260101~N~00005.02~Bilirubin total transcut
+2026~88738~  ~20260101~N~00005.02~Hgb quant transcutaneous
+2026~88740~  ~20260101~N~00009.37~Transcutaneous carboxyhb
+2026~88741~  ~20260101~N~00009.37~Transcutaneous methb
+2026~89050~  ~20260101~N~00004.72~Body fluid cell count
+2026~89051~  ~20260101~N~00005.60~Body fluid cell count
+2026~89055~  ~20260101~N~00004.27~Leukocyte assessment fecal
+2026~89060~  ~20260101~N~00007.33~Exam synovial fluid crystals
+2026~89125~  ~20260101~N~00005.88~Specimen fat stain
+2026~89160~  ~20260101~N~00004.85~Exam feces for meat fibers
+2026~89190~  ~20260101~N~00005.79~Nasal smear for eosinophils
+2026~89300~  ~20260101~N~00009.84~Semen analysis w/huhner
+2026~89300~QW~20260101~N~00009.84~Semen analysis w/huhner
+2026~89310~  ~20260101~N~00008.61~Semen analysis w/count
+2026~89320~  ~20260101~N~00012.31~Semen anal vol/count/mot
+2026~89321~  ~20260101~N~00012.05~Semen anal sperm detection
+2026~89321~QW~20260101~N~00012.05~Semen anal sperm detection
+2026~89322~  ~20260101~N~00015.50~Semen anal strict criteria
+2026~89325~  ~20260101~N~00010.67~Sperm antibody test
+2026~89329~  ~20260101~N~00019.59~Sperm evaluation test
+2026~89330~  ~20260101~N~00010.38~Evaluation cervical mucus
+2026~89331~  ~20260101~N~00019.59~Retrograde ejaculation anal
+2026~G0027~  ~20260101~N~00006.50~Semen analysis
+2026~G0103~  ~20260101~N~00019.31~Psa screening
+2026~G0123~  ~20260101~N~00020.26~Screen cerv/vag thin layer
+2026~G0143~  ~20260101~N~00027.05~Scr c/v cyto,thinlayer,rescr
+2026~G0144~  ~20260101~N~00043.97~Scr c/v cyto,thinlayer,rescr
+2026~G0145~  ~20260101~N~00026.49~Scr c/v cyto,thinlayer,rescr
+2026~G0147~  ~20260101~N~00018.54~Scr c/v cyto, automated sys
+2026~G0148~  ~20260101~N~00031.94~Scr c/v cyto, autosys, rescr
+2026~G0306~  ~20260101~N~00007.77~Cbc/diffwbc w/o platelet
+2026~G0307~  ~20260101~N~00006.47~Cbc without platelet
+2026~G0327~  ~20260101~L~00000.00~Colon ca scrn;bld-bsd biomrk
+2026~G0328~  ~20260101~N~00018.05~Fecal blood scrn immunoassay
+2026~G0328~QW~20260101~N~00018.05~Fecal blood scrn immunoassay
+2026~G0432~  ~20260101~N~00019.57~Eia hiv-1/hiv-2 screen
+2026~G0433~  ~20260101~N~00018.29~Elisa hiv-1/hiv-2 screen
+2026~G0433~QW~20260101~N~00018.29~Elisa hiv-1/hiv-2 screen
+2026~G0435~  ~20260101~N~00011.98~Oral hiv-1/hiv-2 screen
+2026~G0471~  ~20260101~N~00011.34~Ven blood coll snf/hha
+2026~G0472~  ~20260101~N~00046.35~Hep c screen high risk/other
+2026~G0472~QW~20260101~N~00046.35~Hep c screen high risk/other
+2026~G0475~  ~20260101~N~00024.08~Hiv combination assay
+2026~G0475~QW~20260101~N~00024.08~Hiv combination assay
+2026~G0476~  ~20260101~N~00035.09~Hpv combo assay ca screen
+2026~G0480~  ~20260101~N~00114.43~Drug test def 1-7 classes
+2026~G0481~  ~20260101~N~00156.59~Drug test def 8-14 classes
+2026~G0482~  ~20260101~N~00198.74~Drug test def 15-21 classes
+2026~G0483~  ~20260101~N~00246.92~Drug test def 22+ classes
+2026~G0499~  ~20260101~N~00028.27~Hepb screen high risk indiv
+2026~G0567~  ~20260101~N~00035.09~Screening hep c detect
+2026~G0567~QW~20260101~N~00035.09~Screening hep c detect
+2026~G0659~  ~20260101~N~00062.14~Drug test def simple all cl
+2026~G9143~  ~20260101~N~00120.72~Warfarin respon genetic test
+2026~P2028~  ~20260101~N~00004.95~Cephalin floculation test
+2026~P2029~  ~20260101~N~00004.95~Congo red blood test
+2026~P2031~  ~20260101~N~00004.95~Hair analysis
+2026~P2033~  ~20260101~N~00004.95~Blood thymol turbidity
+2026~P2038~  ~20260101~N~00004.95~Blood mucoprotein
+2026~P3000~  ~20260101~N~00018.54~Screen pap by tech w md supv
+2026~P9612~  ~20260101~N~00009.34~Catheterize for urine spec
+2026~P9615~  ~20260101~N~00009.34~Urine specimen collect mult
+2026~Q0111~  ~20260101~N~00018.54~Wet mounts/ w preparations
+2026~Q0112~  ~20260101~N~00005.83~Potassium hydroxide preps
+2026~Q0113~  ~20260101~N~00004.27~Pinworm examinations
+2026~Q0114~  ~20260101~N~00009.74~Fern test
+2026~Q0115~  ~20260101~N~00025.00~Post-coital mucous exam
+2026~U0001~  ~20260101~N~00035.92~2019-ncov diagnostic p
+2026~U0002~  ~20260101~N~00051.31~Covid-19 lab test non-cdc
+2026~U0002~QW~20260101~N~00051.31~Covid-19 lab test non-cdc
