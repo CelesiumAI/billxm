@@ -2132,6 +2132,22 @@ function BillXM() {
   function goIntake() { reset(); setPortal(null); setScreen("intake"); }
 
   // ── FILE HANDLING ──────────────────────────────────────────
+  // Load demo PDF as a native document (same as a user uploading a PDF)
+  function loadDemoPdf() {
+    setError(""); setProcessing(true); setInputMode("file"); setScreen("upload"); setUsingDemo(true);
+    fetch("/samplebills/Memorial%20Herman%20Hospital%20Bill.pdf")
+      .then(r => { if (!r.ok) throw new Error("Failed to load demo PDF"); return r.arrayBuffer(); })
+      .then(buf => {
+        const bytes = new Uint8Array(buf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        const b64 = btoa(binary);
+        setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "pdf", b64: b64, mimeType: "application/pdf" }]);
+        setProcessing(false);
+      })
+      .catch(err => { setError("Could not load demo bill: " + err.message); setProcessing(false); });
+  }
+
   function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
     if (files.length + fileList.length > 10) { setError("Maximum 10 files allowed."); return; }
@@ -2767,7 +2783,7 @@ function BillXM() {
               <button onClick={() => setScreen("upload")} style={{ padding: "14px 36px", borderRadius: 10, background: C.blue, color: "white", border: "none", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 24px rgba(37,99,235,0.4)", fontFamily: C.font, letterSpacing: "-0.01em" }}>
                 Upload My Bill →
               </button>
-              <button onClick={() => { setBillText(SAMPLE_BILL); setInputMode("text"); setScreen("upload"); setUsingDemo(true); }} style={{ padding: "14px 28px", borderRadius: 10, background: "rgba(255,255,255,0.08)", color: "white", border: "1px solid rgba(255,255,255,0.2)", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: C.font }}>
+              <button onClick={loadDemoPdf} style={{ padding: "14px 28px", borderRadius: 10, background: "rgba(255,255,255,0.08)", color: "white", border: "1px solid rgba(255,255,255,0.2)", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: C.font }}>
                 Try Demo Bill
               </button>
             </div>
@@ -2869,7 +2885,7 @@ function BillXM() {
               )}
               {processing && <div style={{ textAlign: "center", color: C.muted, fontSize: 13, marginTop: 12 }}>Processing files...</div>}
               <div style={{ marginTop: 14, textAlign: "center" }}>
-                <button onClick={() => { setBillText(SAMPLE_BILL); setInputMode("text"); setUsingDemo(true); }} style={{ background: "none", border: "none", color: C.blue, fontSize: 13, cursor: "pointer", fontFamily: C.font, textDecoration: "underline" }}>
+                <button onClick={loadDemoPdf} style={{ background: "none", border: "none", color: C.blue, fontSize: 13, cursor: "pointer", fontFamily: C.font, textDecoration: "underline" }}>
                   Or try the Memorial Hermann Hospital demo bill →
                 </button>
               </div>
@@ -3021,6 +3037,11 @@ function BillXM() {
                 </div>
               ))}
             </div>
+            {report.drg_benchmark && report.drg_benchmark.medicare_payment > 0 && (
+              <div style={{ padding: "8px 14px", background: "rgba(96,165,250,0.1)", borderRadius: 8, border: "1px solid rgba(96,165,250,0.2)", fontSize: 11, color: "#93c5fd", lineHeight: 1.5 }}>
+                Fair value includes Medicare DRG estimate of {fmt(report.drg_benchmark.medicare_payment)} for facility charges + CPT-coded service rates. See DRG Benchmark in Overview for details.
+              </div>
+            )}
           </div>
         </div>
 
@@ -3042,6 +3063,36 @@ function BillXM() {
           {/* ── OVERVIEW ── */}
           {activeTab === "overview" && (
             <div>
+              {/* DRG Benchmark Card */}
+              {report.drg_benchmark && report.drg_benchmark.medicare_payment > 0 && (
+                <Card style={{ padding: 20, marginBottom: 16, border: "2px solid #3b82f6", background: "linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 20 }}>🏥</span>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#1e3a5f" }}>DRG Benchmark: What Medicare Actually Pays</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+                    <div style={{ flex: 1, minWidth: 180, padding: "14px 16px", background: "white", borderRadius: 10, border: "1px solid #bfdbfe" }}>
+                      <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Estimated DRG</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#1e40af", marginTop: 4 }}>DRG {report.drg_benchmark.drg}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{report.drg_benchmark.description}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 180, padding: "14px 16px", background: "white", borderRadius: 10, border: "1px solid #bfdbfe" }}>
+                      <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Medicare Would Pay</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: "#2563eb", marginTop: 4 }}>{fmt(report.drg_benchmark.medicare_payment)}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>for the entire hospital stay</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 180, padding: "14px 16px", background: "white", borderRadius: 10, border: "1px solid #bfdbfe" }}>
+                      <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Hospital Billed</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: "#dc2626", marginTop: 4 }}>{fmt(report.total_billed)}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{report.total_billed && report.drg_benchmark.medicare_payment ? Math.round(report.total_billed / report.drg_benchmark.medicare_payment) + "x what Medicare pays" : ""}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, padding: "10px 14px", background: "rgba(59,130,246,0.06)", borderRadius: 8 }}>
+                    {report.drg_benchmark.explanation || `Medicare would pay this hospital approximately ${fmt(report.drg_benchmark.medicare_payment)} for this entire stay under DRG ${report.drg_benchmark.drg}. The hospital billed ${fmt(report.total_billed)} — that's ${Math.round(report.total_billed / report.drg_benchmark.medicare_payment)}x the Medicare rate.`}
+                  </div>
+                </Card>
+              )}
+
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
                 {/* Savings by type */}
                 <Card style={{ flex: 2, minWidth: 280, padding: 20 }}>
