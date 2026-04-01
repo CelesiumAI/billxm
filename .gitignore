@@ -1,3 +1,10 @@
 .vercel
 .env*.local
-node_modules/ 
+node_modules/
+
+# CMS source data files
+data/*.xls
+data/*.xlsx
+data/*.csv
+data/*.zip
+data/*.txt
