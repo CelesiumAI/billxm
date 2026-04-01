@@ -192,7 +192,7 @@ function parseJsonResponse(raw, label) {
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { messages, tier } = req.body;
+  const { messages, tier, hasExtractedPdf } = req.body;
   if (!messages || !tier) return res.status(400).json({ error: 'Missing messages or tier' });
 
   try {
@@ -201,11 +201,11 @@ module.exports = async function handler(req, res) {
     const isPdf = hasPdfDocument(messages);
 
     // ═══════════════════════════════════════════════════════════
-    // PDF PATH: Send directly to Sonnet — no Haiku pre-extraction
-    // Claude natively reads PDF documents within its context window
+    // DIRECT PATH: Native PDFs or large text-extracted PDFs
+    // Send directly to Sonnet — no Haiku pre-extraction
     // ═══════════════════════════════════════════════════════════
-    if (isPdf) {
-      console.log('PDF detected — sending directly to Sonnet (skipping Haiku)');
+    if (isPdf || hasExtractedPdf) {
+      console.log((isPdf ? 'Native PDF' : 'Extracted PDF text') + ' — sending directly to Sonnet (skipping Haiku)');
 
       // Build DRG candidate list
       var drgList = '';
@@ -250,7 +250,7 @@ module.exports = async function handler(req, res) {
       var reportResponse;
       try {
         reportResponse = await client.messages.create({
-          model: 'claude-sonnet-4-6',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 8000,
           system: pdfSystemPrompt,
           messages: messages,
@@ -430,7 +430,7 @@ module.exports = async function handler(req, res) {
     let sonnetResponse;
     try {
       sonnetResponse = await client.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 8000,
         system: REPORT_PROMPT,
         messages: [{ role: 'user', content: 'Generate a full billing analysis report for this data: ' + JSON.stringify(reportInput) }],

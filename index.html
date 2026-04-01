@@ -1931,8 +1931,8 @@ function parseExcel(file) {
   });
 }
 // ── pdf.js for large PDF text extraction ────────────────────
-const PDF_NATIVE_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
-const PDF_NATIVE_MAX_PAGES = 50;
+// Claude API supports PDFs up to ~100 pages natively. Only extract text for very large files.
+const PDF_NATIVE_MAX_SIZE = 4.5 * 1024 * 1024; // 4.5 MB — Claude's native PDF limit
 
 function loadPdfJs() {
   return new Promise(function(resolve, reject) {
@@ -1973,35 +1973,20 @@ function extractPdfText(buffer) {
   });
 }
 
-// Process a PDF: native document for small PDFs, text extraction for large ones
+// Process a PDF: native for most, text extraction only for very large files (>4.5MB)
 function processPdf(file) {
+  if (file.size <= PDF_NATIVE_MAX_SIZE) {
+    // Send natively — Claude handles up to ~100 pages / 4.5MB directly
+    return readFileAsBase64(file).then(function(b64) {
+      return { name: file.name, fileType: "pdf", b64: b64, mimeType: "application/pdf" };
+    });
+  }
+  // Very large file — extract text via pdf.js
+  console.log(file.name + ": " + (file.size / 1024 / 1024).toFixed(1) + " MB, using text extraction");
   return readFileAsArrayBuffer(file).then(function(buffer) {
-    var isLarge = file.size > PDF_NATIVE_MAX_SIZE;
-    // Quick page count check for borderline files
-    if (!isLarge) {
-      return loadPdfJs().then(function(pdfjsLib) {
-        return pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-      }).then(function(pdf) {
-        if (pdf.numPages > PDF_NATIVE_MAX_PAGES) {
-          // Too many pages — extract text instead
-          console.log(file.name + ": " + pdf.numPages + " pages, using text extraction");
-          return extractPdfText(buffer).then(function(result) {
-            return { name: file.name, fileType: "text", textContent: result.text,
-              note: "Extracted " + result.numPages + " pages via pdf.js" };
-          });
-        }
-        // Small enough — send natively
-        return readFileAsBase64(file).then(function(b64) {
-          return { name: file.name, fileType: "pdf", b64: b64, mimeType: "application/pdf" };
-        });
-      });
-    }
-    // Large file — always extract text
-    console.log(file.name + ": " + (file.size / 1024 / 1024).toFixed(1) + " MB, using text extraction");
     return extractPdfText(buffer).then(function(result) {
       if (result.text.length < 100) {
-        // Scanned PDF with no extractable text — fall back to native document
-        console.log(file.name + ": scanned PDF detected, sending as native document");
+        // Scanned PDF — fall back to native even if large
         return readFileAsBase64(file).then(function(b64) {
           return { name: file.name, fileType: "pdf", b64: b64, mimeType: "application/pdf" };
         });
@@ -2215,34 +2200,16 @@ function BillXM() {
   // Load demo PDF — try real PDF first, fall back to text demo
   function loadDemoPdf() {
     setError(""); setProcessing(true); setInputMode("file"); setScreen("upload"); setUsingDemo(true);
-    fetch("/samplebills/Memorial%20Herman%20Hospital%20Bill.pdf")
+    fetch("/samplebills/Sample%20ER%20Bill.pdf")
       .then(function(r) { if (!r.ok) throw new Error("PDF not available"); return r.arrayBuffer(); })
       .then(function(buf) {
-        var size = buf.byteLength;
-        if (size <= PDF_NATIVE_MAX_SIZE) {
-          // Small enough to send natively — check page count
-          return loadPdfJs().then(function(pdfjsLib) {
-            return pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-          }).then(function(pdf) {
-            if (pdf.numPages <= PDF_NATIVE_MAX_PAGES) {
-              var bytes = new Uint8Array(buf);
-              var binary = "";
-              for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-              var b64 = btoa(binary);
-              setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "pdf", b64: b64, mimeType: "application/pdf" }]);
-            } else {
-              return extractPdfText(buf).then(function(result) {
-                setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "text", textContent: result.text, note: result.numPages + " pages extracted" }]);
-              });
-            }
-          });
-        } else {
-          return extractPdfText(buf).then(function(result) {
-            setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "text", textContent: result.text, note: result.numPages + " pages extracted" }]);
-          });
-        }
+        var bytes = new Uint8Array(buf);
+        var binary = "";
+        for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        var b64 = btoa(binary);
+        setFiles([{ name: "Sample ER Bill.pdf", fileType: "pdf", b64: b64, mimeType: "application/pdf" }]);
+        setProcessing(false);
       })
-      .then(function() { setProcessing(false); })
       .catch(function() {
         // PDF not accessible — fall back to text demo
         console.log("Demo PDF not available, using text fallback");
@@ -2313,7 +2280,7 @@ function BillXM() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
-      body: JSON.stringify({ messages, tier: tier || "report" }),
+      body: JSON.stringify({ messages, tier: tier || "report", hasExtractedPdf: files.some(f => f.fileType === "text" && f.note) }),
     }).then(r => { clearTimeout(timeout); return r.json(); })
       .catch(err => { clearTimeout(timeout); throw err.name === "AbortError" ? new Error("Analysis timed out — please try again.") : err; });
   }
@@ -2988,7 +2955,7 @@ function BillXM() {
               {processing && <div style={{ textAlign: "center", color: C.muted, fontSize: 13, marginTop: 12 }}>Processing files...</div>}
               <div style={{ marginTop: 14, textAlign: "center" }}>
                 <button onClick={loadDemoPdf} style={{ background: "none", border: "none", color: C.blue, fontSize: 13, cursor: "pointer", fontFamily: C.font, textDecoration: "underline" }}>
-                  Or try the Memorial Hermann Hospital demo bill →
+                  Or try a real hospital bill demo →
                 </button>
               </div>
             </div>
