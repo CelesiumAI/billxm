@@ -2275,14 +2275,28 @@ function BillXM() {
   // ── API CALL — routes through backend proxy ─────────────────
   function callApi(system, messages, maxTokens, tier) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000);
+    // Large PDFs need more time — up to 3 minutes
+    const hasLargePdf = files.some(f => f.fileType === "pdf" && f.b64 && f.b64.length > 200000);
+    const timeout = setTimeout(() => controller.abort(), hasLargePdf ? 300000 : 180000);
     return fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
       body: JSON.stringify({ messages, tier: tier || "report", hasExtractedPdf: files.some(f => f.fileType === "text" && f.note) }),
-    }).then(r => { clearTimeout(timeout); return r.json(); })
-      .catch(err => { clearTimeout(timeout); throw err.name === "AbortError" ? new Error("Analysis timed out — please try again.") : err; });
+    }).then(function(r) {
+      clearTimeout(timeout);
+      if (!r.ok) {
+        if (r.status === 504) throw new Error("Analysis timed out on the server. The bill may be too large. Try pasting key charge pages as text instead.");
+        return r.text().then(function(txt) {
+          throw new Error("Server error (" + r.status + "): " + (txt || "").slice(0, 200));
+        });
+      }
+      return r.json().catch(function() { throw new Error("Server returned invalid response. Please try again."); });
+    }).catch(function(err) {
+      clearTimeout(timeout);
+      if (err.name === "AbortError") throw new Error("Analysis timed out — the bill may be too large. Try pasting key charge pages as text instead.");
+      throw err;
+    });
   }
 
   // ── LETTER CALL — separate backend route ────────────────────
@@ -2298,17 +2312,170 @@ function BillXM() {
       .catch(err => { clearTimeout(timeout); throw err.name === "AbortError" ? new Error("Letter generation timed out.") : err; });
   }
 
+  const [analysisProgress, setAnalysisProgress] = useState("");
+  const CHUNK_PAGES = 8; // pages per chunk — keeps payload under 4.5MB
+
+  // Render PDF pages to images using pdf.js
+  function renderPdfPagesToImages(b64Data, startPage, endPage) {
+    return loadPdfJs().then(function(pdfjsLib) {
+      var raw = atob(b64Data);
+      var arr = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      return pdfjsLib.getDocument({ data: arr }).promise;
+    }).then(function(pdf) {
+      var images = [];
+      var chain = Promise.resolve();
+      var end = Math.min(endPage, pdf.numPages);
+      for (var p = startPage; p <= end; p++) {
+        (function(pageNum) {
+          chain = chain.then(function() {
+            return pdf.getPage(pageNum).then(function(page) {
+              var scale = 1.0;
+              var viewport = page.getViewport({ scale: scale });
+              var canvas = document.createElement("canvas");
+              canvas.width = viewport.width;
+              canvas.height = viewport.height;
+              var ctx = canvas.getContext("2d");
+              return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
+                var dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+                images.push({ page: pageNum, b64: dataUrl.split(",")[1] });
+              });
+            });
+          });
+        })(p);
+      }
+      return chain.then(function() { return { images: images, totalPages: pdf.numPages }; });
+    });
+  }
+
+  // Build chunk messages from rendered page images
+  function buildChunkMessages(images) {
+    var contentParts = [];
+    images.forEach(function(img) {
+      contentParts.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: img.b64 } });
+    });
+    contentParts.push({ type: "text", text: "Extract all CPT/HCPCS codes, descriptions, quantities, and billed amounts from these bill pages. Return JSON only." });
+    return [{ role: "user", content: contentParts }];
+  }
+
+  // Send a chunk to the backend
+  function analyzeChunk(images) {
+    var msgs = buildChunkMessages(images);
+    return fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: msgs, tier: "chunk" }),
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { throw new Error("Chunk error (" + r.status + "): " + t.slice(0, 200)); });
+      return r.json();
+    }).then(function(data) {
+      if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || "Chunk failed");
+      var raw = (data.content || []).map(function(b) { return b.text || ""; }).join("");
+      var clean = raw.replace(/```json|```/g, "").trim();
+      var s = clean.indexOf("{"), e = clean.lastIndexOf("}");
+      if (s < 0) throw new Error("No JSON in chunk response");
+      return JSON.parse(clean.slice(s, e + 1));
+    });
+  }
+
+  // Send merged data for final report
+  function analyzeMerge(mergeData) {
+    return fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tier: "merge", mergeData: mergeData }),
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { throw new Error("Merge error (" + r.status + "): " + t.slice(0, 200)); });
+      return r.json();
+    }).then(function(data) {
+      if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || "Merge failed");
+      var raw = (data.content || []).map(function(b) { return b.text || ""; }).join("");
+      var clean = raw.replace(/```json|```/g, "").trim();
+      var s = clean.indexOf("{"), e = clean.lastIndexOf("}");
+      if (s < 0) throw new Error("No JSON in merge response");
+      return JSON.parse(clean.slice(s, e + 1));
+    });
+  }
+
+  // Check if a PDF needs chunking (scanned + many pages)
+  function needsChunking(file) {
+    if (file.fileType !== "pdf" || !file.b64) return false;
+    // Estimate: base64 of a scanned PDF with many pages is large
+    // 444KB PDF = ~592KB base64. Each scanned page ~2500 tokens. >25 pages = likely too big.
+    var sizeKB = file.b64.length * 0.75 / 1024;
+    return sizeKB > 300 && sizeKB / 10 > 25; // rough: >300KB and likely >25 pages
+  }
+
   // ── ANALYZE ────────────────────────────────────────────────
   function analyze() {
     if (inputMode === "file" && files.length === 0) return setError("Please upload at least one bill file.");
     if (inputMode === "text" && !billText.trim()) return setError("Please paste your bill text.");
     if (!agreed) return setError("Please agree to the Terms of Service.");
+
+    // Check if any PDF needs chunking
+    var largePdf = files.find(function(f) { return f.fileType === "pdf" && f.b64 && f.b64.length > 400000; });
+
+    if (largePdf) {
+      // ── CHUNKED ANALYSIS for large scanned PDFs ──
+      setError(""); setScreen("analyzing"); setAnalysisProgress("Preparing large bill for analysis...");
+      renderPdfPagesToImages(largePdf.b64, 1, 999).then(function(result) {
+        var totalPages = result.totalPages;
+        var allImages = result.images;
+        var numChunks = Math.ceil(allImages.length / CHUNK_PAGES);
+        setAnalysisProgress("Splitting " + totalPages + " pages into " + numChunks + " sections...");
+
+        // Process chunks sequentially
+        var allLineItems = [];
+        var hospital = "", state = "", city = "";
+        var chunkIndex = 0;
+
+        function processNextChunk() {
+          if (chunkIndex >= numChunks) {
+            // All chunks done — merge results
+            setAnalysisProgress("Combining results and generating report...");
+            return analyzeMerge({
+              hospital: hospital, state: state, city: city,
+              line_items: allLineItems, chunks: numChunks,
+            }).then(function(report) {
+              setReport(report);
+              setAnalysisProgress("");
+              setAnalyzeDone(true);
+              setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
+            });
+          }
+
+          var start = chunkIndex * CHUNK_PAGES;
+          var end = Math.min(start + CHUNK_PAGES, allImages.length);
+          var chunkImages = allImages.slice(start, end);
+          setAnalysisProgress("Analyzing section " + (chunkIndex + 1) + " of " + numChunks + " (pages " + (start + 1) + "-" + end + " of " + totalPages + ")...");
+
+          return analyzeChunk(chunkImages).then(function(chunkResult) {
+            if (chunkResult.line_items) allLineItems = allLineItems.concat(chunkResult.line_items);
+            if (chunkResult.hospital && !hospital) hospital = chunkResult.hospital;
+            if (chunkResult.state && !state) state = chunkResult.state;
+            if (chunkResult.city && !city) city = chunkResult.city;
+            chunkIndex++;
+            return processNextChunk();
+          });
+        }
+
+        return processNextChunk();
+      }).catch(function(err) {
+        setAnalysisProgress("");
+        setError("Analysis failed: " + (err.message || "Unknown error"));
+        setAnalyzeDone(false);
+        setScreen("upload");
+      });
+      return;
+    }
+
+    // ── STANDARD ANALYSIS for small PDFs, images, text ──
     const msgs = buildMessages();
     if (!msgs) return setError("No bill data found.");
-    setError(""); setScreen("analyzing");
+    setError(""); setScreen("analyzing"); setAnalysisProgress("");
     callApi(SYS_PROMPT, msgs, 8000)
       .then(data => {
-        if (data.error) throw new Error(data.error.message);
+        if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || JSON.stringify(data.error));
         let raw = (data.content || []).map(b => b.text || "").join("");
         let clean = raw.replace(/```json|```/g, "").trim();
         const s = clean.indexOf("{"), e = clean.lastIndexOf("}");
@@ -2320,10 +2487,12 @@ function BillXM() {
       })
       .catch(err => {
         const msg = err.message || "";
-        if (msg.includes("too long") || msg.includes("200000") || msg.includes("context")) {
-          setError("This bill is too large to analyze — it exceeds the AI context limit. Please paste the key line items as text instead, or contact us at contact@billxm.com for assistance with large bills.");
+        if (msg.includes("timed out") || msg.includes("AbortError")) {
+          setError("Analysis timed out — please try again. If this persists, try pasting the bill as text instead.");
+        } else if (msg.includes("too long") || msg.includes("200000") || msg.includes("context")) {
+          setError("This bill exceeds the AI context limit. Please try again — the system will automatically split large bills.");
         } else {
-          setError("Analysis failed: " + msg);
+          setError("Analysis failed: " + (msg || "Unknown error. Please try again."));
         }
         setAnalyzeDone(false);
         setScreen("upload");
@@ -3038,10 +3207,10 @@ function BillXM() {
               <div style={{ height: "100%", background: C.blue, borderRadius: 4, animation: "bx-bar 30s ease-out forwards" }} />
             </div>
             <p style={{ fontSize: 12, color: "#94a3b8", animation: "bx-pulse 1.8s ease-in-out infinite" }}>
-              Analyzing your bill — 15 to 60 seconds for large bills…
+              {analysisProgress || "Analyzing your bill — 15 to 60 seconds for large bills…"}
             </p>
             <p style={{ fontSize: 11, color: "#cbd5e1", marginTop: 8 }}>
-              Large bills with many line items take longer. Please don't close this tab.
+              {analysisProgress ? "Large bills are analyzed in sections then combined. Please don't close this tab." : "Large bills with many line items take longer. Please don't close this tab."}
             </p>
           </>
         )}

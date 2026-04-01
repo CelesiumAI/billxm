@@ -160,6 +160,26 @@ Return ONLY valid JSON, no markdown:
 }
 Grade: A=clean, B=minor <10% over, C=moderate 10-20% over, D=significant >20% over, F=severe violations.`;
 
+// ── Chunk extraction prompt — for partial bill pages ────────
+const CHUNK_PROMPT = `You are a medical billing code extractor reading a section of a larger hospital bill. Extract every CPT/HCPCS code, description, quantity, and billed amount visible on these pages.
+
+Return ONLY valid JSON. No markdown. No backticks:
+{"hospital":"name if visible","state":"2-letter state","city":"city","line_items":[{"code":"CPT/HCPCS code or empty string","description":"service description","quantity":1,"billed":0.00}],"section_total":0}
+If a line has no CPT code, still include it with code as "". Be precise with dollar amounts.`;
+
+// ── Merge prompt — combine chunk results into final report ──
+const MERGE_PROMPT = `You are BillXM AI. You have been given pre-extracted line items from a large hospital bill (analyzed in chunks) with CMS fair rates already calculated. Generate the final analysis report.
+
+For inpatient stays, Medicare pays a single DRG lump sum covering ALL facility services. Chargemaster prices do NOT reflect actual payments. Estimate the applicable DRG and populate drg_benchmark. Set estimated_fair_value = sum of CPT fair rates + DRG payment.
+
+NCCI BUNDLING RULES: 93005+93010 bundle into 93000. 36415 bundles into most procedures same day. 96360 bundles supplies. Surgical supplies bundle into OR codes. E&M codes bundle with minor same-day procedures unless modifier -25/-57.
+
+SEVERITY: HIGH = >300% markup or CMS rule violation. MEDIUM = 150-300%. LOW = 100-150%.
+CONFIDENCE: 95-100 = definitive. 80-94 = very likely. 60-79 = probable. Below 60 = flag only.
+
+Return ONLY valid JSON. No markdown. No backticks:
+{"grade":"A-F","grade_rationale":"one sentence","summary":"2-3 friendly sentences","total_billed":0,"estimated_fair_value":0,"potential_savings":0,"drg_benchmark":{"drg":"code","description":"name","medicare_payment":0,"explanation":"what Medicare would pay vs billed"},"issues":[{"type":"EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED|UNWARRANTED|DRUG_OVERCHARGE|BUNDLING_VIOLATION|WRONG_QUANTITY","severity":"HIGH|MEDIUM|LOW","confidence":95,"code":"CPT","description":"plain English","billed":0,"fair_value":0,"savings":0,"cms_rule":"rule citation","dispute_basis":"legal grounds"}],"line_items":[{"code":"code","description":"service","billed":0,"quantity":1,"fair_rate":0,"total_fair":0,"markup_pct":"Xx","status":"OK|FLAG|ERROR|NO_CPT","note":"explanation"}],"next_steps":["actionable step"],"nsa_eligible":false,"appeal_recommended":false}`;
+
 // ── Check if messages contain a PDF document block ──────────
 function hasPdfDocument(messages) {
   if (!messages || !messages.length) return false;
@@ -192,12 +212,103 @@ function parseJsonResponse(raw, label) {
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { messages, tier, hasExtractedPdf } = req.body;
-  if (!messages || !tier) return res.status(400).json({ error: 'Missing messages or tier' });
+  const { messages, tier, hasExtractedPdf, mergeData } = req.body;
+  if (!tier) return res.status(400).json({ error: 'Missing tier' });
 
   try {
     loadCMSData();
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    // ═══════════════════════════════════════════════════════════
+    // CHUNK PATH: Extract codes from a partial bill (subset of pages)
+    // ═══════════════════════════════════════════════════════════
+    if (tier === 'chunk') {
+      console.log('Chunk extraction — processing partial bill pages');
+      var chunkResponse = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: CHUNK_PROMPT,
+        messages: messages,
+      });
+      var chunkRaw = chunkResponse.content.map(function(b) { return b.text || ''; }).join('');
+      var chunkResult = parseJsonResponse(chunkRaw, 'Chunk extraction');
+      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(chunkResult) }] });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // MERGE PATH: Combine chunk results into final report
+    // ═══════════════════════════════════════════════════════════
+    if (tier === 'merge' && mergeData) {
+      console.log('Merge — combining ' + mergeData.chunks + ' chunks, ' + mergeData.line_items.length + ' total items');
+
+      // Look up CMS fair rates for all extracted line items
+      var mState = mergeData.state || '';
+      var mCity = mergeData.city || '';
+      var mTotalFair = 0, mTotalBilled = 0;
+
+      var mEnriched = mergeData.line_items.map(function(item) {
+        var qty = item.quantity || 1;
+        var billed = item.billed || 0;
+        var lookup = item.code ? getFairRate(item.code, mState, mCity) : null;
+        var fairRate = lookup ? lookup.rate : null;
+        var totalFairItem = fairRate ? Math.round(fairRate * qty * 100) / 100 : null;
+        var markupPct = (fairRate && fairRate > 0) ? Math.round((billed / (fairRate * qty) - 1) * 100) : null;
+        mTotalBilled += billed;
+        if (totalFairItem) mTotalFair += totalFairItem;
+        return {
+          code: item.code || '', description: item.description || '',
+          billed: billed, quantity: qty, fair_rate: fairRate, total_fair: totalFairItem,
+          markup_pct: markupPct !== null ? markupPct + '%' : 'N/A',
+          status: markupPct !== null && markupPct > 150 ? 'FLAG' : (item.code ? 'OK' : 'NO_CPT'),
+          type: lookup ? lookup.type : 'unknown',
+        };
+      });
+
+      // Add DRG estimate to fair value
+      var mDrgFairValue = 0;
+      var mCandidateDRGs = [];
+      if (CMS_DRG && CMS_DRG.drgs) {
+        mCandidateDRGs = ['313', '292', '291', '287', '280', '470', '871', '194'].map(function(code) {
+          var drg = CMS_DRG.drgs[code];
+          return drg ? { code: code, desc: drg.desc, payment: drg.national_payment, avg_los: drg.geo_los } : null;
+        }).filter(Boolean);
+        var mPayments = mCandidateDRGs.map(function(d) { return d.payment; }).sort(function(a, b) { return a - b; });
+        mDrgFairValue = mPayments[Math.floor(mPayments.length / 2)] || 0;
+        mTotalFair += mDrgFairValue;
+      }
+
+      // Send top items + all flagged to Sonnet for final report
+      var mFlagged = mEnriched.filter(function(i) { return i.status === 'FLAG'; });
+      var mSorted = mEnriched.slice().sort(function(a, b) { return b.billed - a.billed; });
+      var mTop25 = mSorted.slice(0, 25);
+      var mMerged = {};
+      mFlagged.concat(mTop25).forEach(function(i) { mMerged[i.code + '|' + i.description] = i; });
+      var mReportItems = Object.values(mMerged).sort(function(a, b) { return b.billed - a.billed; });
+
+      var mergeInput = {
+        hospital: mergeData.hospital || '', state: mState, city: mCity,
+        total_billed: mTotalBilled, estimated_fair_value: mTotalFair,
+        potential_savings: Math.max(0, Math.round((mTotalBilled - mTotalFair) * 100) / 100),
+        line_items: mReportItems, all_items_count: mEnriched.length,
+        drg_estimate: { total_billed: mTotalBilled, drg_fair_value: mDrgFairValue,
+          candidate_drgs: mCandidateDRGs,
+          instruction: 'IMPORTANT: Populate drg_benchmark. Set estimated_fair_value = CPT fair rates + DRG payment.' },
+      };
+
+      console.log('Sending ' + mReportItems.length + ' of ' + mEnriched.length + ' items to Sonnet for merge');
+      var mergeResponse = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        system: MERGE_PROMPT,
+        messages: [{ role: 'user', content: 'Generate final billing analysis report:\n' + JSON.stringify(mergeInput) }],
+      });
+      var mergeRaw = mergeResponse.content.map(function(b) { return b.text || ''; }).join('');
+      var mergeReport = parseJsonResponse(mergeRaw, 'Merge report');
+      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(mergeReport) }] });
+    }
+
+    if (!messages) return res.status(400).json({ error: 'Missing messages' });
+
     const isPdf = hasPdfDocument(messages);
 
     // ═══════════════════════════════════════════════════════════
