@@ -1930,8 +1930,88 @@ function parseExcel(file) {
     return allText.join("\n\n");
   });
 }
-// PDFs are sent directly to Claude as native documents (no client-side extraction needed)
-// Claude's API natively reads PDF documents via the document content type
+// ── pdf.js for large PDF text extraction ────────────────────
+const PDF_NATIVE_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
+const PDF_NATIVE_MAX_PAGES = 50;
+
+function loadPdfJs() {
+  return new Promise(function(resolve, reject) {
+    if (window.pdfjsLib) return resolve(window.pdfjsLib);
+    var script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.onload = function() {
+      var lib = window.pdfjsLib;
+      lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      resolve(lib);
+    };
+    script.onerror = function() { reject(new Error("Failed to load PDF library")); };
+    document.head.appendChild(script);
+  });
+}
+
+function extractPdfText(buffer) {
+  return loadPdfJs().then(function(pdfjsLib) {
+    return pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+  }).then(function(pdf) {
+    var numPages = pdf.numPages;
+    var chain = Promise.resolve("");
+    for (var p = 1; p <= numPages; p++) {
+      (function(pageNum) {
+        chain = chain.then(function(acc) {
+          return pdf.getPage(pageNum).then(function(page) {
+            return page.getTextContent();
+          }).then(function(content) {
+            var pageText = content.items.map(function(item) { return item.str; }).join(" ");
+            return acc + "\n--- Page " + pageNum + " of " + numPages + " ---\n" + pageText;
+          });
+        });
+      })(p);
+    }
+    return chain.then(function(allText) {
+      return { text: allText.trim(), numPages: numPages };
+    });
+  });
+}
+
+// Process a PDF: native document for small PDFs, text extraction for large ones
+function processPdf(file) {
+  return readFileAsArrayBuffer(file).then(function(buffer) {
+    var isLarge = file.size > PDF_NATIVE_MAX_SIZE;
+    // Quick page count check for borderline files
+    if (!isLarge) {
+      return loadPdfJs().then(function(pdfjsLib) {
+        return pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+      }).then(function(pdf) {
+        if (pdf.numPages > PDF_NATIVE_MAX_PAGES) {
+          // Too many pages — extract text instead
+          console.log(file.name + ": " + pdf.numPages + " pages, using text extraction");
+          return extractPdfText(buffer).then(function(result) {
+            return { name: file.name, fileType: "text", textContent: result.text,
+              note: "Extracted " + result.numPages + " pages via pdf.js" };
+          });
+        }
+        // Small enough — send natively
+        return readFileAsBase64(file).then(function(b64) {
+          return { name: file.name, fileType: "pdf", b64: b64, mimeType: "application/pdf" };
+        });
+      });
+    }
+    // Large file — always extract text
+    console.log(file.name + ": " + (file.size / 1024 / 1024).toFixed(1) + " MB, using text extraction");
+    return extractPdfText(buffer).then(function(result) {
+      if (result.text.length < 100) {
+        // Scanned PDF with no extractable text — fall back to native document
+        console.log(file.name + ": scanned PDF detected, sending as native document");
+        return readFileAsBase64(file).then(function(b64) {
+          return { name: file.name, fileType: "pdf", b64: b64, mimeType: "application/pdf" };
+        });
+      }
+      return { name: file.name, fileType: "text", textContent: result.text,
+        note: "Extracted " + result.numPages + " pages via pdf.js" };
+    });
+  });
+}
+
 function getFileType(file) {
   const n = (file.name || "").toLowerCase();
   const t = (file.type || "").toLowerCase();
@@ -2132,20 +2212,42 @@ function BillXM() {
   function goIntake() { reset(); setPortal(null); setScreen("intake"); }
 
   // ── FILE HANDLING ──────────────────────────────────────────
-  // Load demo PDF as a native document (same as a user uploading a PDF)
+  // Load demo PDF — try real PDF first, fall back to text demo
   function loadDemoPdf() {
     setError(""); setProcessing(true); setInputMode("file"); setScreen("upload"); setUsingDemo(true);
     fetch("/samplebills/Memorial%20Herman%20Hospital%20Bill.pdf")
-      .then(r => { if (!r.ok) throw new Error("Failed to load demo PDF"); return r.arrayBuffer(); })
-      .then(buf => {
-        const bytes = new Uint8Array(buf);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        const b64 = btoa(binary);
-        setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "pdf", b64: b64, mimeType: "application/pdf" }]);
-        setProcessing(false);
+      .then(function(r) { if (!r.ok) throw new Error("PDF not available"); return r.arrayBuffer(); })
+      .then(function(buf) {
+        var size = buf.byteLength;
+        if (size <= PDF_NATIVE_MAX_SIZE) {
+          // Small enough to send natively — check page count
+          return loadPdfJs().then(function(pdfjsLib) {
+            return pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+          }).then(function(pdf) {
+            if (pdf.numPages <= PDF_NATIVE_MAX_PAGES) {
+              var bytes = new Uint8Array(buf);
+              var binary = "";
+              for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+              var b64 = btoa(binary);
+              setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "pdf", b64: b64, mimeType: "application/pdf" }]);
+            } else {
+              return extractPdfText(buf).then(function(result) {
+                setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "text", textContent: result.text, note: result.numPages + " pages extracted" }]);
+              });
+            }
+          });
+        } else {
+          return extractPdfText(buf).then(function(result) {
+            setFiles([{ name: "Memorial Herman Hospital Bill.pdf", fileType: "text", textContent: result.text, note: result.numPages + " pages extracted" }]);
+          });
+        }
       })
-      .catch(err => { setError("Could not load demo bill: " + err.message); setProcessing(false); });
+      .then(function() { setProcessing(false); })
+      .catch(function() {
+        // PDF not accessible — fall back to text demo
+        console.log("Demo PDF not available, using text fallback");
+        setBillText(SAMPLE_BILL); setInputMode("text"); setProcessing(false);
+      });
   }
 
   function handleFiles(fileList) {
@@ -2161,8 +2263,8 @@ function BillXM() {
       if (fType === "image") {
         pending.push(readFileAsBase64(f).then(b64 => ({ name: f.name, fileType: "image", b64, preview: `data:${f.type};base64,${b64}`, mimeType: f.type })));
       } else if (fType === "pdf") {
-        // Send PDFs directly as native documents — Claude reads them natively, no client-side extraction needed
-        pending.push(readFileAsBase64(f).then(b64 => ({ name: f.name, fileType: "pdf", b64, mimeType: "application/pdf" })));
+        // Smart PDF handling: native for small PDFs, text extraction for large ones
+        pending.push(processPdf(f));
       } else if (fType === "excel") {
         pending.push(parseExcel(f).then(text => ({ name: f.name, fileType: "excel", textContent: text })));
       } else {
@@ -2876,7 +2978,7 @@ function BillXM() {
                       <span style={{ fontSize: 18 }}>{FILE_ICONS[f.fileType] || "📄"}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>{f.name}</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8" }}>{FILE_LABELS[f.fileType] || f.fileType}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8" }}>{f.note || FILE_LABELS[f.fileType] || f.fileType}</div>
                       </div>
                       <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "2px 6px" }}>×</button>
                     </div>
