@@ -59,6 +59,12 @@ function getFairRate(code, state, city) {
     return { rate: lab.r, desc: lab.d, type: 'lab' };
   }
 
+  // Check drug codes (J-codes, etc.)
+  if (CMS_RVUS.drugs && CMS_RVUS.drugs[trimmed]) {
+    const drug = CMS_RVUS.drugs[trimmed];
+    return { rate: drug.r, desc: drug.d, dose: drug.dose, type: 'drug' };
+  }
+
   // Check physician RVUs
   if (CMS_RVUS.rvus && CMS_RVUS.rvus[trimmed]) {
     const rvu  = CMS_RVUS.rvus[trimmed];
@@ -133,7 +139,7 @@ Generate a complete analysis report. Return ONLY valid JSON, no markdown:
       "fair_rate": 0,
       "total_fair": 0,
       "markup_pct": "Xx",
-      "status": "OK|FLAG|ERROR",
+      "status": "OK|FLAG|ERROR|NO_CPT",
       "note": "explanation"
     }
   ],
@@ -143,6 +149,21 @@ Generate a complete analysis report. Return ONLY valid JSON, no markdown:
   "insurance_notes": "insurance info if relevant",
   "appeal_recommended": false
 }
+
+Common drug (J-code) reference rates (CMS ASP, per unit):
+J1100 Dexamethasone 1mg = $0.11
+J2270 Morphine 10mg = $4.45
+J0696 Ceftriaxone 250mg = $0.43
+J1642 Heparin 10 units = $0.018
+J2785 Regadenoson 0.1mg = $2.90
+J0881 Darbepoetin 1mcg = $3.07
+J0129 Abatacept 10mg = $44.72
+
+Facility charges without CPT codes:
+Line items like room and board, OR/recovery room fees, pharmacy charges, and supply charges
+typically have no CPT code. These are standard facility charges. List them with status "NO_CPT"
+and do NOT flag them as issues. Include them in totals but note that fair rate is not available
+for facility-only charges.
 
 Severity guidelines:
 HIGH = markup over 300% OR definitive coding violation

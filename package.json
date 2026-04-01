@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",
-    "stripe": "^21.0.1"
+    "stripe": "^21.0.1",
+    "xlsx": "^0.18.5"
   }
 }

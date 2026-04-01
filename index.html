@@ -1769,31 +1769,42 @@ const { useState, useRef, useEffect } = React;
 /* ═══════════════════════════════════════════════════════════════
    DEMO BILL — Memorial Hermann case study
 ═══════════════════════════════════════════════════════════════ */
-const SAMPLE_BILL = `MEMORIAL HERMANN HOSPITAL - HOUSTON, TX
-Patient: Jane Doe | DOS: 01/15/2026 | Acct #: MH-2026-44891
+const SAMPLE_BILL = `MEMORIAL HERMANN TEXAS MEDICAL CENTER
+6411 Fannin Street, Houston TX 77030
+Admission: 01/08/2026 | Discharge: 01/11/2026
+Diagnosis: Acute chest pain, rule out MI
 
-EMERGENCY DEPARTMENT SERVICES
-Code      Description                              Qty   Charge
-99285     ED Visit Level 5 - High Complexity        1    $4,250.00
-99285     ED Visit Level 5 - High Complexity        1    $4,250.00
-36415     Venipuncture                               1      $175.00
-85025     CBC with Differential                      1      $385.00
-80053     Comprehensive Metabolic Panel              1      $690.00
-80061     Lipid Panel                                1      $425.00
-71046     Chest X-Ray 2 Views                        1      $980.00
-93010     ECG Interpretation                         1      $650.00
-93005     ECG Tracing Only                           1      $385.00
-96374     IV Push, Single Drug                       1      $890.00
-J1100     Dexamethasone 1mg (billed 10mg)           10      $450.00
-96360     IV Infusion, First Hour                    1    $1,250.00
-96361     IV Infusion, Each Additional Hour          3    $2,100.00
-99152     Moderate Sedation, First 15 min            1    $1,800.00
+ITEMIZED STATEMENT OF CHARGES
 
-FACILITY FEES
-G0390     Trauma Activation Fee                      1   $18,000.00
-                                           TOTAL:        $36,680.00
+EMERGENCY DEPARTMENT
+99285  Emergency Dept Visit - High Medical Complexity     4  $5,403.50   $21,614.00
+99291  Critical Care - First 30-74 Minutes               1  $8,097.75    $8,097.75
 
-Insurance: Blue Cross Blue Shield TX | Policy: BCB-992841`;
+CARDIAC MONITORING & TESTING
+93005  ECG Tracing - 12 Lead Technical Component        24  $1,038.75   $24,930.00
+93306  TTE with Doppler - Complete Study                 4  $5,551.00   $22,204.00
+93017  Cardiovascular Stress Test - Tracing Only         1  $4,804.00    $4,804.00
+
+LABORATORY SERVICES
+80048  Basic Metabolic Panel                            46    $640.00   $29,440.00
+85025  CBC with Automated Differential WBC              37    $301.25   $11,146.25
+84484  Troponin Assay - Quantitative                    12    $734.75    $8,817.00
+87633  Respiratory Virus Panel 12-25 Targets             4  $3,037.63   $12,150.50
+
+RADIOLOGY & IMAGING
+74177  CT Abdomen & Pelvis with Contrast                 3  $9,732.92   $29,198.75
+71275  CT Angiography Chest                              3  $4,875.42   $14,626.25
+71045  Chest X-Ray Single View                          14  $1,010.54   $14,147.50
+70450  CT Head without Contrast                         2   $3,209.00    $6,418.00
+
+PROCEDURES
+36556  Insert Non-Tunneled Central Venous Catheter       1  $7,820.50    $7,820.50
+36410  Venipuncture / Catheter Procedure                 2  $8,274.00   $16,548.00
+96374  IV Push - Single Drug Administration             24    $890.00   $21,360.00
+94640  Airway Inhalation Treatment - Nebulizer         156     $93.25   $14,547.00
+94760  Pulse Oximetry Measurement                       24    $127.00    $3,048.00
+
+                             TOTAL THIS STATEMENT:          $270,917.50`;
 
 /* ═══════════════════════════════════════════════════════════════
    SYSTEM PROMPTS
