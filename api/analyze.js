@@ -5,14 +5,17 @@ const path = require('path');
 // ── Load CMS data once at startup ────────────────────────────
 let CMS_RVUS = null;
 let CMS_GPCI = null;
+let CMS_DRG  = null;
 
 function loadCMSData() {
-  if (CMS_RVUS && CMS_GPCI) return;
+  if (CMS_RVUS && CMS_GPCI && CMS_DRG) return;
   try {
     const rvuData  = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_rvus.json'),  'utf8'));
     const gpciData = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_gpci.json'), 'utf8'));
+    const drgData  = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_drg.json'),  'utf8'));
     CMS_RVUS = rvuData;
     CMS_GPCI = gpciData.localities;
+    CMS_DRG  = drgData;
   } catch (err) {
     console.error('Failed to load CMS data:', err.message);
   }
@@ -63,6 +66,23 @@ function getFairRate(code, state, city) {
   if (CMS_RVUS.drugs && CMS_RVUS.drugs[trimmed]) {
     const drug = CMS_RVUS.drugs[trimmed];
     return { rate: drug.r, desc: drug.d, dose: drug.dose, type: 'drug' };
+  }
+
+  // Check DRG codes (inpatient)
+  const drgMatch = trimmed.replace(/^DRG\s*/, '').replace(/^0+/, '');
+  if (CMS_DRG && CMS_DRG.drgs) {
+    // Try both stripped and zero-padded keys (e.g. "470" and "470")
+    const padded = drgMatch.padStart(3, '0');
+    const drg = CMS_DRG.drgs[drgMatch] || CMS_DRG.drgs[padded];
+    if (drg) {
+      return {
+        rate: drg.national_payment,
+        desc: drg.desc,
+        type: 'drg',
+        weight: drg.weight,
+        avg_los: drg.geo_los,
+      };
+    }
   }
 
   // Check physician RVUs
