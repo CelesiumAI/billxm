@@ -2190,14 +2190,26 @@ function BillXM() {
         }).catch(function() {});
       }
     } catch(e) {}
-    // Check payment return
+    // Check payment return — restore report after Stripe redirect
     if (window.location.hash.indexOf("payment-success") >= 0) {
       var pe = localStorage.getItem("billxm_email");
       if (pe) {
         fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "register", email: pe }) })
           .then(function(r) { return r.json(); }).then(function(data) { localStorage.setItem("billxm_user", JSON.stringify(data)); });
       }
-      try { window.location.hash = "#analyze"; } catch(e2) {}
+      // Restore saved report
+      try {
+        var savedReport = localStorage.getItem("billxm_pending_report");
+        if (savedReport) {
+          var restored = JSON.parse(savedReport);
+          setReport(restored);
+          setTier("report"); // unlock all tabs
+          setScreen("report");
+          setActiveTab("overview");
+          localStorage.removeItem("billxm_pending_report");
+        }
+      } catch(e2) {}
+      try { window.location.hash = "#analyze"; } catch(e3) {}
     }
     return () => {};
   }, []);
@@ -2248,6 +2260,10 @@ function BillXM() {
   function startCheckout(checkoutTier) {
     var email = localStorage.getItem("billxm_email");
     if (!email) { setShowGate(true); return; }
+    // Save current report so we can restore it after Stripe redirect
+    if (report) {
+      try { localStorage.setItem("billxm_pending_report", JSON.stringify(report)); } catch(e) {}
+    }
     fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tier: checkoutTier, email: email }) })
       .then(function(r) { return r.json(); })
       .then(function(data) { if (data.url) window.location.href = data.url; else alert("Payment error: " + (data.error || "Unknown")); })
@@ -2786,9 +2802,7 @@ function BillXM() {
               ))}
               <button
                 onClick={() => {
-                  // In standalone: trigger Stripe checkout here
-                  // For demo: use unlock code flow
-                  setUnlockError("Payment coming soon. Use an access code below or email contact@billxm.com for access.");
+                  startCheckout("single_report");
                 }}
                 style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 8, background: plan.color, color: "white", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}
               >
