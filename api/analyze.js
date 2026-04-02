@@ -308,6 +308,123 @@ module.exports = async function handler(req, res) {
 
   try {
     loadCMSData();
+
+    // ════════════════════════════════════════════════════════════
+    // DEMO BILL: Return cached result with artificial delay (no API cost)
+    // ════════════════════════════════════════════════════════════
+    if (body.demo === true) {
+      console.log('Demo bill detected — returning cached result');
+      // Artificial delay: 10-15 seconds to mimic real analysis
+      var delay = 10000 + Math.floor(Math.random() * 5000);
+      await new Promise(function(resolve) { setTimeout(resolve, delay); });
+
+      var cachedReport = {
+        bill_type: 'INPATIENT',
+        grade: 'C',
+        grade_rationale: 'The bill is approximately 46% above Medicare fair value, with multiple services priced well above government rates.',
+        summary: 'This 2-day pneumonia hospitalization bill from Jackson Purchase Medical Center is overcharging you by $4,709 (46% of the total). The most egregious overcharges include an arterial puncture billed at $372 when the fair rate is $13, lab tests marked up by over 2,500% (like a basic blood count billed at $221 versus a fair rate of $8), and an EKG charged at $288 when it should cost $6. Your DRG-based fair payment for this pneumonia treatment should be $5,442, not the $10,151 being charged.',
+        hospital: 'JACKSON PURCHASE MED CTR',
+        state: 'TN',
+        city: 'NASHVILLE',
+        date_of_service: '10/11/2022-10/12/2022',
+        total_billed: 10150.87,
+        estimated_fair_value: 5441.93,
+        potential_savings: 4708.94,
+        drg_estimate: {
+          drg_code: '194',
+          drg_description: 'SIMPLE PNEUMONIA AND PLEURISY WITH CC',
+          drg_payment: 5441.93,
+          markup_multiplier: '1.9x'
+        },
+        apc_estimate: null,
+        issues: [
+          {
+            type: 'EXCESSIVE_MARKUP',
+            severity: 'HIGH',
+            confidence: 95,
+            code: '36600',
+            description: 'Arterial puncture (blood draw from artery) billed at $372.28 when Medicare pays only $13.26 — a 2,709% markup.',
+            billed: 372.28,
+            fair_value: 13.26,
+            savings: 359.02,
+            cms_rule: 'CMS Physician Fee Schedule 2026, CPT 36600',
+            dispute_basis: 'Charge exceeds Medicare allowable rate by over 27x'
+          },
+          {
+            type: 'EXCESSIVE_MARKUP',
+            severity: 'HIGH',
+            confidence: 95,
+            code: '85025',
+            description: 'Basic blood count (CBC) billed at $220.95 per test when Medicare pays approximately $8.07 — a 2,639% markup. This test was performed twice.',
+            billed: 441.90,
+            fair_value: 16.14,
+            savings: 425.76,
+            cms_rule: 'CMS Clinical Lab Fee Schedule 2026, CPT 85025',
+            dispute_basis: 'Charge exceeds Medicare clinical lab fee schedule rate by over 27x'
+          },
+          {
+            type: 'EXCESSIVE_MARKUP',
+            severity: 'HIGH',
+            confidence: 95,
+            code: '93005',
+            description: 'EKG (heart rhythm test) billed at $287.68 when Medicare pays only $6.38 — a 4,408% markup.',
+            billed: 287.68,
+            fair_value: 6.38,
+            savings: 281.30,
+            cms_rule: 'CMS Physician Fee Schedule 2026, CPT 93005',
+            dispute_basis: 'Charge exceeds Medicare allowable rate by over 45x'
+          },
+          {
+            type: 'EXCESSIVE_MARKUP',
+            severity: 'HIGH',
+            confidence: 92,
+            code: '80048',
+            description: 'Basic metabolic panel (blood chemistry) billed at $286.15 when Medicare pays approximately $8.46 — a 3,282% markup.',
+            billed: 286.15,
+            fair_value: 8.46,
+            savings: 277.69,
+            cms_rule: 'CMS Clinical Lab Fee Schedule 2026, CPT 80048',
+            dispute_basis: 'Charge exceeds Medicare clinical lab fee schedule rate by over 33x'
+          }
+        ],
+        line_items: [
+          { code: '', description: 'Room and Care', billed: 1545.34, quantity: 1, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Facility charge, covered by DRG' },
+          { code: '36600', description: 'Arterial Puncture', billed: 372.28, quantity: 1, fair_rate: 13.26, total_fair: 13.26, markup_pct: '2709%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 3.44, markup_pct: '1906%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 3.44, markup_pct: '1906%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '82805', description: 'ABG with Meas O2 Sat', billed: 270.31, quantity: 1, fair_rate: 16.17, total_fair: 16.17, markup_pct: '1572%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '80053', description: 'Comp Metabolic Panel', billed: 434.60, quantity: 1, fair_rate: 10.56, total_fair: 10.56, markup_pct: '4015%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '80048', description: 'Basic Metabolic Panel', billed: 286.15, quantity: 1, fair_rate: 8.46, total_fair: 8.46, markup_pct: '3282%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 8.07, markup_pct: '2639%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 8.07, markup_pct: '2639%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '71045', description: 'XR Chest Sgl View', billed: 256.78, quantity: 1, fair_rate: 20.41, total_fair: 20.41, markup_pct: '1158%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '94640', description: 'Inhalation TX', billed: 132.78, quantity: 1, fair_rate: 11.54, total_fair: 11.54, markup_pct: '1051%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '94640', description: 'Hand Held Neb SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 11.54, markup_pct: '910%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '94668', description: 'Chest Physio SubsQ', billed: 49.68, quantity: 5, fair_rate: 7.65, total_fair: 38.25, markup_pct: '549%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '94640', description: 'MDI SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 11.54, markup_pct: '910%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '94640', description: 'Hand Held Neb SubQ', billed: 233.10, quantity: 2, fair_rate: 11.54, total_fair: 23.08, markup_pct: '910%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '', description: 'Albuterol 8.5GM INH', billed: 119.86, quantity: 1, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Drug charge, no CPT code on bill' },
+          { code: '', description: 'Pot Cl 20MEQ SRT', billed: 6.73, quantity: 2, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Drug charge, no CPT code on bill' },
+          { code: '', description: 'Fluticasone/Vilant 200/25', billed: 779.93, quantity: 1, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Drug charge, no CPT code on bill' },
+          { code: '93005', description: 'EKG', billed: 287.68, quantity: 1, fair_rate: 6.38, total_fair: 6.38, markup_pct: '4408%', status: 'FLAG', note: 'Exceeds Medicare rate' },
+          { code: '', description: 'No Charge items', billed: 0, quantity: 3, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'No charge' }
+        ],
+        next_steps: [
+          'Request an itemized bill with CPT codes if you have not already',
+          'Call the hospital billing department and reference the Medicare rates for each overcharged service',
+          'Ask about financial assistance programs and charity care policies',
+          'File a formal dispute using the dispute letter provided in this report',
+          'Contact your insurance company to verify what they paid versus what you were billed'
+        ],
+        nsa_eligible: false,
+        financial_assistance_note: 'Jackson Purchase Medical Center may offer financial assistance or charity care programs. Ask the billing department about income-based discounts.',
+        insurance_notes: 'Insurance paid $1,839.41. Remaining patient balance: $8,311.46. Review your EOB to ensure all covered services were applied correctly.',
+        appeal_recommended: true
+      };
+
+      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(cachedReport) }] });
+    }
+
     var client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     // ════════════════════════════════════════════════════════════

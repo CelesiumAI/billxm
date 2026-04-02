@@ -1,19 +1,23 @@
-// api/gate.js — BillXM email gate and usage tracking
-// Uses Vercel KV if available, falls back to in-memory (resets on cold start)
-// For production, set up Vercel KV: https://vercel.com/docs/storage/vercel-kv
+// api/gate.js — BillXM user gate and usage tracking
+// Flow:
+//   Demo bill: no email, no limits, full report visible (handled in frontend)
+//   Upload own bill: email required before upload
+//   First full report: FREE (one per email)
+//   Grade (A-F + summary): always free, unlimited (after email captured)
+//   Second full report onward: paid ($4.99 single / $9.99 monthly)
+//   CENTENE2026: bypasses everything (handled in frontend)
+//   Failed analysis: captures email + description, sends to contact.billxm@gmail.com
 
-var memoryStore = {}; // Fallback in-memory store
+var memoryStore = {}; // Fallback in-memory store. For production, use Vercel KV.
 
-// ── Simple storage abstraction ───────────────────────────────
+// ── Storage abstraction ──────────────────────────────────────
 async function getUser(email) {
   var key = 'user:' + email.toLowerCase().trim();
-  // Try Vercel KV first
   if (typeof process !== 'undefined' && process.env.KV_REST_API_URL) {
     try {
       var kv = require('@vercel/kv');
-      var data = await kv.get(key);
-      return data || null;
-    } catch (e) { /* fall through to memory */ }
+      return await kv.get(key) || null;
+    } catch (e) { /* fall through */ }
   }
   return memoryStore[key] || null;
 }
@@ -23,9 +27,9 @@ async function setUser(email, data) {
   if (typeof process !== 'undefined' && process.env.KV_REST_API_URL) {
     try {
       var kv = require('@vercel/kv');
-      await kv.set(key, data, { ex: 90 * 24 * 60 * 60 }); // expire in 90 days
+      await kv.set(key, data, { ex: 180 * 24 * 60 * 60 }); // 180 days
       return;
-    } catch (e) { /* fall through to memory */ }
+    } catch (e) { /* fall through */ }
   }
   memoryStore[key] = data;
 }
@@ -37,11 +41,8 @@ function checkRateLimit(ip) {
   var now = Date.now();
   var hour = 60 * 60 * 1000;
   if (!ipTracker[ip]) ipTracker[ip] = [];
-  // Remove entries older than 1 hour
   ipTracker[ip] = ipTracker[ip].filter(function(t) { return now - t < hour; });
-  if (ipTracker[ip].length >= 5) {
-    return false; // Over limit: 5 per hour
-  }
+  if (ipTracker[ip].length >= 5) return false;
   ipTracker[ip].push(now);
   return true;
 }
@@ -49,22 +50,15 @@ function checkRateLimit(ip) {
 // ── Pricing ──────────────────────────────────────────────────
 var PRICING = {
   launch_sale: true,
-  launch_sale_end: '2026-06-30', // sale runs through June 2026
-  single_report: {
-    regular: 999,   // $9.99 in cents
-    sale: 499,       // $4.99 launch sale
-  },
-  monthly: {
-    regular: 1999,  // $19.99/month in cents
-    sale: 999,       // $9.99/month launch sale
-  },
+  launch_sale_end: '2026-06-30',
+  single_report: { regular: 999, sale: 499 },     // cents
+  monthly:       { regular: 1999, sale: 999 },     // cents
+  negotiate:     { price: 9900 },                   // $99
 };
 
 function isLaunchSale() {
   if (!PRICING.launch_sale) return false;
-  var now = new Date();
-  var end = new Date(PRICING.launch_sale_end);
-  return now <= end;
+  return new Date() <= new Date(PRICING.launch_sale_end);
 }
 
 function getPricing() {
@@ -81,26 +75,23 @@ function getPricing() {
       display: onSale ? '$9.99/mo' : '$19.99/mo',
       original: onSale ? '$19.99/mo' : null,
     },
+    negotiate: {
+      price: PRICING.negotiate.price,
+      display: '$99',
+    },
   };
 }
 
-// ── Free tier limits ─────────────────────────────────────────
-var FREE_GRADE_LIMIT = 3; // total free grades per email, ever
-
 // ── Handler ──────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── GET: Return pricing info ──
+  // GET: return pricing
   if (req.method === 'GET') {
-    return res.status(200).json({
-      pricing: getPricing(),
-      free_grade_limit: FREE_GRADE_LIMIT,
-    });
+    return res.status(200).json({ pricing: getPricing() });
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -108,7 +99,7 @@ module.exports = async function handler(req, res) {
   var body = req.body || {};
   var action = body.action;
 
-  // ── ACTION: register — capture email ──
+  // ── register: capture email when user wants to upload own bill ──
   if (action === 'register') {
     var email = (body.email || '').toLowerCase().trim();
     if (!email || email.indexOf('@') < 1 || email.indexOf('.') < 3) {
@@ -121,8 +112,8 @@ module.exports = async function handler(req, res) {
         status: 'existing',
         email: email,
         tier: existing.tier,
-        free_grades_used: existing.free_grades_used || 0,
-        free_grades_remaining: Math.max(0, FREE_GRADE_LIMIT - (existing.free_grades_used || 0)),
+        free_report_used: existing.free_report_used || false,
+        grades_used: existing.grades_used || 0,
         reports_purchased: existing.reports_purchased || 0,
         pricing: getPricing(),
       });
@@ -131,7 +122,8 @@ module.exports = async function handler(req, res) {
     var newUser = {
       email: email,
       tier: 'free',
-      free_grades_used: 0,
+      free_report_used: false,     // one free full report per email
+      grades_used: 0,              // unlimited grades (tracked for analytics)
       reports_purchased: 0,
       created: new Date().toISOString(),
       subscription: null,
@@ -142,63 +134,57 @@ module.exports = async function handler(req, res) {
       status: 'registered',
       email: email,
       tier: 'free',
-      free_grades_used: 0,
-      free_grades_remaining: FREE_GRADE_LIMIT,
+      free_report_used: false,
+      grades_used: 0,
       reports_purchased: 0,
       pricing: getPricing(),
     });
   }
 
-  // ── ACTION: check — verify if user can analyze ──
+  // ── check: can user perform this action? ──
   if (action === 'check') {
     var email = (body.email || '').toLowerCase().trim();
     var requestedTier = body.tier || 'grade'; // 'grade' or 'report'
 
     if (!email) {
-      return res.status(400).json({ error: 'Email required', gate: 'email_required' });
+      return res.status(200).json({ allowed: false, gate: 'email_required' });
     }
 
     var user = await getUser(email);
     if (!user) {
-      return res.status(400).json({ error: 'Email not registered', gate: 'email_required' });
+      return res.status(200).json({ allowed: false, gate: 'email_required' });
     }
 
-    // Check IP rate limit
+    // Rate limit check
     var ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
     if (!checkRateLimit(ip)) {
-      return res.status(429).json({ error: 'Too many requests. Please wait a few minutes.', gate: 'rate_limit' });
+      return res.status(429).json({ allowed: false, gate: 'rate_limit', error: 'Too many requests. Please wait a few minutes.' });
     }
 
-    // Free grade check
+    // Grade: always allowed (free, unlimited after email)
     if (requestedTier === 'grade') {
-      if (user.tier === 'subscriber') {
-        // Subscribers get unlimited grades
-        return res.status(200).json({ allowed: true, tier: user.tier });
-      }
-      if ((user.free_grades_used || 0) >= FREE_GRADE_LIMIT) {
-        return res.status(200).json({
-          allowed: false,
-          gate: 'free_limit_reached',
-          message: 'You have used all ' + FREE_GRADE_LIMIT + ' free bill grades. Unlock a full report for ' + getPricing().single_report.display + '.',
-          pricing: getPricing(),
-        });
-      }
-      return res.status(200).json({ allowed: true, tier: 'free', grades_remaining: FREE_GRADE_LIMIT - user.free_grades_used });
+      return res.status(200).json({ allowed: true, tier: user.tier });
     }
 
     // Full report check
     if (requestedTier === 'report') {
+      // Subscribers: unlimited
       if (user.tier === 'subscriber') {
         return res.status(200).json({ allowed: true, tier: 'subscriber' });
       }
-      // Check if they have a purchased report credit
+      // First free report not yet used
+      if (!user.free_report_used) {
+        return res.status(200).json({ allowed: true, tier: 'free_report', message: 'Your first full report is free!' });
+      }
+      // Has purchased report credits
       if ((user.reports_purchased || 0) > 0) {
         return res.status(200).json({ allowed: true, tier: 'purchased' });
       }
+      // Must pay
       return res.status(200).json({
         allowed: false,
         gate: 'payment_required',
-        message: 'Unlock your full report with detailed overcharges, dispute letter, and phone scripts.',
+        message: 'Your free report has been used. Unlock additional reports starting at ' + getPricing().single_report.display + '.',
         pricing: getPricing(),
       });
     }
@@ -206,65 +192,60 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid tier' });
   }
 
-  // ── ACTION: use_grade — decrement free grade count ──
+  // ── use_grade: track grade usage (analytics, always allowed) ──
   if (action === 'use_grade') {
     var email = (body.email || '').toLowerCase().trim();
     var user = await getUser(email);
-    if (!user) return res.status(400).json({ error: 'User not found' });
-
-    user.free_grades_used = (user.free_grades_used || 0) + 1;
+    if (!user) return res.status(200).json({ ok: true }); // silently ok if no user
+    user.grades_used = (user.grades_used || 0) + 1;
     user.last_used = new Date().toISOString();
     await setUser(email, user);
-
-    return res.status(200).json({
-      free_grades_used: user.free_grades_used,
-      free_grades_remaining: Math.max(0, FREE_GRADE_LIMIT - user.free_grades_used),
-    });
+    return res.status(200).json({ grades_used: user.grades_used });
   }
 
-  // ── ACTION: use_report — decrement report credit ──
+  // ── use_free_report: mark free report as consumed ──
+  if (action === 'use_free_report') {
+    var email = (body.email || '').toLowerCase().trim();
+    var user = await getUser(email);
+    if (!user) return res.status(400).json({ error: 'User not found' });
+    user.free_report_used = true;
+    user.last_used = new Date().toISOString();
+    await setUser(email, user);
+    return res.status(200).json({ free_report_used: true });
+  }
+
+  // ── use_report: decrement purchased report credit ──
   if (action === 'use_report') {
     var email = (body.email || '').toLowerCase().trim();
     var user = await getUser(email);
     if (!user) return res.status(400).json({ error: 'User not found' });
-
     if (user.tier !== 'subscriber' && (user.reports_purchased || 0) <= 0) {
       return res.status(400).json({ error: 'No report credits', gate: 'payment_required' });
     }
-
     if (user.tier !== 'subscriber') {
       user.reports_purchased = (user.reports_purchased || 0) - 1;
     }
     user.last_used = new Date().toISOString();
     await setUser(email, user);
-
     return res.status(200).json({ success: true });
   }
 
-  // ── ACTION: add_credit — called by Stripe webhook after payment ──
+  // ── add_credit: called by Stripe webhook ──
   if (action === 'add_credit') {
-    // This should only be called from your Stripe webhook, not from frontend
     var secret = body.webhook_secret;
     if (secret !== process.env.GATE_WEBHOOK_SECRET) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
-
     var email = (body.email || '').toLowerCase().trim();
-    var creditType = body.credit_type; // 'single_report' or 'subscription'
-
+    var creditType = body.credit_type;
     var user = await getUser(email);
     if (!user) {
-      // Create user if they paid without registering first
       user = {
-        email: email,
-        tier: 'free',
-        free_grades_used: 0,
-        reports_purchased: 0,
-        created: new Date().toISOString(),
-        subscription: null,
+        email: email, tier: 'free', free_report_used: false,
+        grades_used: 0, reports_purchased: 0,
+        created: new Date().toISOString(), subscription: null,
       };
     }
-
     if (creditType === 'single_report') {
       user.reports_purchased = (user.reports_purchased || 0) + 1;
     } else if (creditType === 'subscription') {
@@ -277,60 +258,86 @@ module.exports = async function handler(req, res) {
       user.tier = 'free';
       user.subscription = null;
     }
-
     await setUser(email, user);
-    return res.status(200).json({ success: true, user: user });
+    return res.status(200).json({ success: true });
   }
 
-  // ── ACTION: save_report — store report JSON (no bill data) ──
-  if (action === 'save_report') {
+  // ── contact_request: failed analysis or We Negotiate inquiry ──
+  if (action === 'contact_request') {
     var email = (body.email || '').toLowerCase().trim();
-    var reportData = body.report; // The analysis report JSON only
-    var accessToken = body.access_token;
+    var requestType = body.request_type || 'failed_analysis'; // 'failed_analysis' or 'negotiate'
+    var description = body.description || '';
+    var billSummary = body.bill_summary || '';
 
-    if (!reportData || !accessToken) {
-      return res.status(400).json({ error: 'Missing report or access token' });
-    }
+    console.log('=== CONTACT REQUEST ===');
+    console.log('Type:', requestType);
+    console.log('Email:', email);
+    console.log('Description:', description);
+    console.log('Bill summary:', billSummary);
 
-    // Store report with access token (30 day expiry)
-    var reportKey = 'report:' + accessToken;
-    var reportRecord = {
+    // Store the request for now (future: send actual email via SendGrid/Nodemailer)
+    var requestKey = 'contact:' + Date.now() + ':' + email;
+    var requestData = {
       email: email,
-      report: reportData,
-      created: new Date().toISOString(),
-      // NO bill data stored — only the analysis output
+      type: requestType,
+      description: description,
+      bill_summary: billSummary,
+      timestamp: new Date().toISOString(),
+      status: 'pending',
     };
 
     if (typeof process !== 'undefined' && process.env.KV_REST_API_URL) {
       try {
         var kv = require('@vercel/kv');
-        await kv.set(reportKey, reportRecord, { ex: 30 * 24 * 60 * 60 }); // 30 days
-      } catch (e) { /* fall through to memory */ }
-    } else {
-      memoryStore[reportKey] = reportRecord;
+        await kv.set(requestKey, requestData, { ex: 90 * 24 * 60 * 60 });
+      } catch (e) { /* fall through */ }
     }
+    memoryStore[requestKey] = requestData;
 
+    return res.status(200).json({
+      success: true,
+      message: requestType === 'negotiate'
+        ? 'Thank you! Our team will contact you within 24 hours to discuss your bill.'
+        : 'Thank you! Our team will review your bill and get back to you within 24 hours.',
+    });
+  }
+
+  // ── save_report: store report JSON only (no bill data) ──
+  if (action === 'save_report') {
+    var accessToken = body.access_token;
+    var reportData = body.report;
+    if (!reportData || !accessToken) {
+      return res.status(400).json({ error: 'Missing report or token' });
+    }
+    var reportKey = 'report:' + accessToken;
+    var record = {
+      email: (body.email || '').toLowerCase().trim(),
+      report: reportData,
+      created: new Date().toISOString(),
+    };
+    if (typeof process !== 'undefined' && process.env.KV_REST_API_URL) {
+      try {
+        var kv = require('@vercel/kv');
+        await kv.set(reportKey, record, { ex: 30 * 24 * 60 * 60 });
+      } catch (e) { /* fall through */ }
+    }
+    memoryStore[reportKey] = record;
     return res.status(200).json({ success: true, access_token: accessToken });
   }
 
-  // ── ACTION: get_report — retrieve saved report by token ──
+  // ── get_report: retrieve saved report ──
   if (action === 'get_report') {
     var token = body.access_token;
     var reportKey = 'report:' + token;
-
     var record = null;
     if (typeof process !== 'undefined' && process.env.KV_REST_API_URL) {
       try {
         var kv = require('@vercel/kv');
         record = await kv.get(reportKey);
       } catch (e) { /* fall through */ }
-    } else {
-      record = memoryStore[reportKey] || null;
     }
-
-    if (!record) {
-      return res.status(404).json({ error: 'Report not found or expired' });
-    }
+    if (!record) record = memoryStore[reportKey] || null;
+    if (!record) return res.status(404).json({ error: 'Report not found or expired' });
     return res.status(200).json({ report: record.report });
   }
 

@@ -2501,7 +2501,12 @@ function BillXM() {
     if (inputMode === "text" && !billText.trim()) return setError("Please paste your bill text.");
     if (!agreed) return setError("Please agree to the Terms of Service.");
 
-    // Gate check — require email registration (demo codes bypass)
+    // Demo bills bypass the gate entirely
+    if (usingDemo || DEMO_CODES.indexOf(unlockCode.toUpperCase()) >= 0) {
+      doAnalyze();
+      return;
+    }
+    // Own bills require email registration
     checkGateBeforeAnalyze("grade").then(function(allowed) {
       if (!allowed) return;
       doAnalyze();
@@ -2573,8 +2578,10 @@ function BillXM() {
     if (!msgs) return setError("No bill data found.");
     setError(""); setScreen("analyzing"); setAnalysisProgress("");
 
-    console.log("BILLXM v4.1 — sending to /api/analyze, tier=report, msgs=" + (msgs ? msgs.length : 0));
-    callBackend("/api/analyze", { messages: msgs, tier: "report" })
+    var requestBody = { messages: msgs, tier: "report" };
+    if (usingDemo) requestBody.demo = true;
+    console.log("BILLXM v5 — tier=" + requestBody.tier + ", demo=" + !!requestBody.demo);
+    callBackend("/api/analyze", requestBody)
     .then(function(data) {
       if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || "Analysis failed");
       return parseClaudeJson(data);
