@@ -1,0 +1,563 @@
+{
+  "generated": "2026-04-02T00:37:19.349Z",
+  "fy": "CY2026",
+  "conversion_factor": 92.492,
+  "total_apcs": 30,
+  "total_hcpcs_mapped": 42,
+  "apcs": {
+    "5011": {
+      "desc": "Level 1 Clinic Visit",
+      "hcpcs": [
+        "99211"
+      ],
+      "payment": 48,
+      "weight": 0.52
+    },
+    "5012": {
+      "desc": "Level 2 Clinic Visit",
+      "hcpcs": [
+        "99212"
+      ],
+      "payment": 103,
+      "weight": 1.11
+    },
+    "5013": {
+      "desc": "Level 3 Clinic Visit",
+      "hcpcs": [
+        "99213"
+      ],
+      "payment": 143,
+      "weight": 1.55
+    },
+    "5014": {
+      "desc": "Level 4 Clinic Visit",
+      "hcpcs": [
+        "99214"
+      ],
+      "payment": 213,
+      "weight": 2.3
+    },
+    "5015": {
+      "desc": "Level 5 Clinic Visit",
+      "hcpcs": [
+        "99215"
+      ],
+      "payment": 303,
+      "weight": 3.28
+    },
+    "5021": {
+      "desc": "Level 1 ED Visit",
+      "hcpcs": [
+        "99281"
+      ],
+      "payment": 73,
+      "weight": 0.79
+    },
+    "5022": {
+      "desc": "Level 2 ED Visit",
+      "hcpcs": [
+        "99282"
+      ],
+      "payment": 183,
+      "weight": 1.98
+    },
+    "5023": {
+      "desc": "Level 3 ED Visit",
+      "hcpcs": [
+        "99283"
+      ],
+      "payment": 319,
+      "weight": 3.45
+    },
+    "5024": {
+      "desc": "Level 4 ED Visit",
+      "hcpcs": [
+        "99284"
+      ],
+      "payment": 533,
+      "weight": 5.76
+    },
+    "5025": {
+      "desc": "Level 5 ED Visit",
+      "hcpcs": [
+        "99285"
+      ],
+      "payment": 795,
+      "weight": 8.59
+    },
+    "5041": {
+      "desc": "Lab Tests (packaged)",
+      "hcpcs": [
+        "80048",
+        "85025",
+        "84484",
+        "80053"
+      ],
+      "payment": 0,
+      "weight": 0,
+      "note": "Labs packaged into visit APC under OPPS"
+    },
+    "5042": {
+      "desc": "Level 2 Trauma/Emergency Critical Care",
+      "hcpcs": [
+        "99291"
+      ],
+      "payment": 1106,
+      "weight": 11.96
+    },
+    "5043": {
+      "desc": "Level 3 Trauma/Emergency Critical Care",
+      "hcpcs": [
+        "99292"
+      ],
+      "payment": 305,
+      "weight": 3.3
+    },
+    "5071": {
+      "desc": "Level 1 Minor Procedures",
+      "hcpcs": [
+        "36415",
+        "36410"
+      ],
+      "payment": 0,
+      "weight": 0,
+      "note": "Packaged"
+    },
+    "5161": {
+      "desc": "Level 1 ENT Procedures",
+      "hcpcs": [
+        "94640"
+      ],
+      "payment": 86,
+      "weight": 0.93
+    },
+    "5183": {
+      "desc": "Level 3 Echocardiogram",
+      "hcpcs": [
+        "93306"
+      ],
+      "payment": 365,
+      "weight": 3.95
+    },
+    "5184": {
+      "desc": "Level 4 Vascular Access Procedures",
+      "hcpcs": [
+        "36556"
+      ],
+      "payment": 1892,
+      "weight": 20.46
+    },
+    "5191": {
+      "desc": "Observation Services - Level 1",
+      "hcpcs": [
+        "G0378"
+      ],
+      "payment": 2350,
+      "weight": 25.41
+    },
+    "5192": {
+      "desc": "Observation Services - Level 2",
+      "hcpcs": [
+        "G0379"
+      ],
+      "payment": 3891,
+      "weight": 42.07
+    },
+    "5195": {
+      "desc": "Trauma Team Activation",
+      "hcpcs": [
+        "G0390"
+      ],
+      "payment": 5047,
+      "weight": 54.57
+    },
+    "5521": {
+      "desc": "Level 1 Imaging without Contrast",
+      "hcpcs": [
+        "71045",
+        "71046",
+        "73030"
+      ],
+      "payment": 68,
+      "weight": 0.74
+    },
+    "5522": {
+      "desc": "Level 2 Imaging without Contrast",
+      "hcpcs": [
+        "70450",
+        "73552"
+      ],
+      "payment": 194,
+      "weight": 2.1
+    },
+    "5523": {
+      "desc": "Level 3 Imaging without Contrast",
+      "hcpcs": [
+        "74177",
+        "71275"
+      ],
+      "payment": 364,
+      "weight": 3.94
+    },
+    "5571": {
+      "desc": "Level 1 CT and CTA without Contrast",
+      "hcpcs": [
+        "70450"
+      ],
+      "payment": 207,
+      "weight": 2.24
+    },
+    "5572": {
+      "desc": "Level 2 CT and CTA with Contrast",
+      "hcpcs": [
+        "74177",
+        "71275"
+      ],
+      "payment": 379,
+      "weight": 4.1
+    },
+    "5601": {
+      "desc": "Level 1 Pulmonary Treatment",
+      "hcpcs": [
+        "94640",
+        "94760"
+      ],
+      "payment": 86,
+      "weight": 0.93
+    },
+    "5691": {
+      "desc": "Level 1 Drug Administration",
+      "hcpcs": [
+        "96374",
+        "96360",
+        "96361"
+      ],
+      "payment": 168,
+      "weight": 1.82
+    },
+    "5692": {
+      "desc": "Level 2 Drug Administration",
+      "hcpcs": [
+        "96365",
+        "96413"
+      ],
+      "payment": 467,
+      "weight": 5.05
+    },
+    "5731": {
+      "desc": "Level 1 Cardiac Diagnostic/Monitoring",
+      "hcpcs": [
+        "93005",
+        "93010",
+        "93000"
+      ],
+      "payment": 85,
+      "weight": 0.92
+    },
+    "5734": {
+      "desc": "Stress Tests",
+      "hcpcs": [
+        "93017",
+        "93015"
+      ],
+      "payment": 422,
+      "weight": 4.56
+    }
+  },
+  "hcpcs_to_apc": {
+    "36410": {
+      "apc": "5071",
+      "desc": "Level 1 Minor Procedures",
+      "payment": 0,
+      "weight": 0,
+      "note": "Packaged"
+    },
+    "36415": {
+      "apc": "5071",
+      "desc": "Level 1 Minor Procedures",
+      "payment": 0,
+      "weight": 0,
+      "note": "Packaged"
+    },
+    "36556": {
+      "apc": "5184",
+      "desc": "Level 4 Vascular Access Procedures",
+      "payment": 1892,
+      "weight": 20.46,
+      "note": null
+    },
+    "70450": {
+      "apc": "5571",
+      "desc": "Level 1 CT and CTA without Contrast",
+      "payment": 207,
+      "weight": 2.24,
+      "note": null
+    },
+    "71045": {
+      "apc": "5521",
+      "desc": "Level 1 Imaging without Contrast",
+      "payment": 68,
+      "weight": 0.74,
+      "note": null
+    },
+    "71046": {
+      "apc": "5521",
+      "desc": "Level 1 Imaging without Contrast",
+      "payment": 68,
+      "weight": 0.74,
+      "note": null
+    },
+    "71275": {
+      "apc": "5572",
+      "desc": "Level 2 CT and CTA with Contrast",
+      "payment": 379,
+      "weight": 4.1,
+      "note": null
+    },
+    "73030": {
+      "apc": "5521",
+      "desc": "Level 1 Imaging without Contrast",
+      "payment": 68,
+      "weight": 0.74,
+      "note": null
+    },
+    "73552": {
+      "apc": "5522",
+      "desc": "Level 2 Imaging without Contrast",
+      "payment": 194,
+      "weight": 2.1,
+      "note": null
+    },
+    "74177": {
+      "apc": "5572",
+      "desc": "Level 2 CT and CTA with Contrast",
+      "payment": 379,
+      "weight": 4.1,
+      "note": null
+    },
+    "80048": {
+      "apc": "5041",
+      "desc": "Lab Tests (packaged)",
+      "payment": 0,
+      "weight": 0,
+      "note": "Labs packaged into visit APC under OPPS"
+    },
+    "80053": {
+      "apc": "5041",
+      "desc": "Lab Tests (packaged)",
+      "payment": 0,
+      "weight": 0,
+      "note": "Labs packaged into visit APC under OPPS"
+    },
+    "84484": {
+      "apc": "5041",
+      "desc": "Lab Tests (packaged)",
+      "payment": 0,
+      "weight": 0,
+      "note": "Labs packaged into visit APC under OPPS"
+    },
+    "85025": {
+      "apc": "5041",
+      "desc": "Lab Tests (packaged)",
+      "payment": 0,
+      "weight": 0,
+      "note": "Labs packaged into visit APC under OPPS"
+    },
+    "93000": {
+      "apc": "5731",
+      "desc": "Level 1 Cardiac Diagnostic/Monitoring",
+      "payment": 85,
+      "weight": 0.92,
+      "note": null
+    },
+    "93005": {
+      "apc": "5731",
+      "desc": "Level 1 Cardiac Diagnostic/Monitoring",
+      "payment": 85,
+      "weight": 0.92,
+      "note": null
+    },
+    "93010": {
+      "apc": "5731",
+      "desc": "Level 1 Cardiac Diagnostic/Monitoring",
+      "payment": 85,
+      "weight": 0.92,
+      "note": null
+    },
+    "93015": {
+      "apc": "5734",
+      "desc": "Stress Tests",
+      "payment": 422,
+      "weight": 4.56,
+      "note": null
+    },
+    "93017": {
+      "apc": "5734",
+      "desc": "Stress Tests",
+      "payment": 422,
+      "weight": 4.56,
+      "note": null
+    },
+    "93306": {
+      "apc": "5183",
+      "desc": "Level 3 Echocardiogram",
+      "payment": 365,
+      "weight": 3.95,
+      "note": null
+    },
+    "94640": {
+      "apc": "5161",
+      "desc": "Level 1 ENT Procedures",
+      "payment": 86,
+      "weight": 0.93,
+      "note": null
+    },
+    "94760": {
+      "apc": "5601",
+      "desc": "Level 1 Pulmonary Treatment",
+      "payment": 86,
+      "weight": 0.93,
+      "note": null
+    },
+    "96360": {
+      "apc": "5691",
+      "desc": "Level 1 Drug Administration",
+      "payment": 168,
+      "weight": 1.82,
+      "note": null
+    },
+    "96361": {
+      "apc": "5691",
+      "desc": "Level 1 Drug Administration",
+      "payment": 168,
+      "weight": 1.82,
+      "note": null
+    },
+    "96365": {
+      "apc": "5692",
+      "desc": "Level 2 Drug Administration",
+      "payment": 467,
+      "weight": 5.05,
+      "note": null
+    },
+    "96374": {
+      "apc": "5691",
+      "desc": "Level 1 Drug Administration",
+      "payment": 168,
+      "weight": 1.82,
+      "note": null
+    },
+    "96413": {
+      "apc": "5692",
+      "desc": "Level 2 Drug Administration",
+      "payment": 467,
+      "weight": 5.05,
+      "note": null
+    },
+    "99211": {
+      "apc": "5011",
+      "desc": "Level 1 Clinic Visit",
+      "payment": 48,
+      "weight": 0.52,
+      "note": null
+    },
+    "99212": {
+      "apc": "5012",
+      "desc": "Level 2 Clinic Visit",
+      "payment": 103,
+      "weight": 1.11,
+      "note": null
+    },
+    "99213": {
+      "apc": "5013",
+      "desc": "Level 3 Clinic Visit",
+      "payment": 143,
+      "weight": 1.55,
+      "note": null
+    },
+    "99214": {
+      "apc": "5014",
+      "desc": "Level 4 Clinic Visit",
+      "payment": 213,
+      "weight": 2.3,
+      "note": null
+    },
+    "99215": {
+      "apc": "5015",
+      "desc": "Level 5 Clinic Visit",
+      "payment": 303,
+      "weight": 3.28,
+      "note": null
+    },
+    "99281": {
+      "apc": "5021",
+      "desc": "Level 1 ED Visit",
+      "payment": 73,
+      "weight": 0.79,
+      "note": null
+    },
+    "99282": {
+      "apc": "5022",
+      "desc": "Level 2 ED Visit",
+      "payment": 183,
+      "weight": 1.98,
+      "note": null
+    },
+    "99283": {
+      "apc": "5023",
+      "desc": "Level 3 ED Visit",
+      "payment": 319,
+      "weight": 3.45,
+      "note": null
+    },
+    "99284": {
+      "apc": "5024",
+      "desc": "Level 4 ED Visit",
+      "payment": 533,
+      "weight": 5.76,
+      "note": null
+    },
+    "99285": {
+      "apc": "5025",
+      "desc": "Level 5 ED Visit",
+      "payment": 795,
+      "weight": 8.59,
+      "note": null
+    },
+    "99291": {
+      "apc": "5042",
+      "desc": "Level 2 Trauma/Emergency Critical Care",
+      "payment": 1106,
+      "weight": 11.96,
+      "note": null
+    },
+    "99292": {
+      "apc": "5043",
+      "desc": "Level 3 Trauma/Emergency Critical Care",
+      "payment": 305,
+      "weight": 3.3,
+      "note": null
+    },
+    "G0378": {
+      "apc": "5191",
+      "desc": "Observation Services - Level 1",
+      "payment": 2350,
+      "weight": 25.41,
+      "note": null
+    },
+    "G0379": {
+      "apc": "5192",
+      "desc": "Observation Services - Level 2",
+      "payment": 3891,
+      "weight": 42.07,
+      "note": null
+    },
+    "G0390": {
+      "apc": "5195",
+      "desc": "Trauma Team Activation",
+      "payment": 5047,
+      "weight": 54.57,
+      "note": null
+    }
+  }
+}

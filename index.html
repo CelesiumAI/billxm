@@ -2272,30 +2272,18 @@ function BillXM() {
     return [{ role: "user", content: contentParts }];
   }
 
-  // ── API CALL — routes through backend proxy ─────────────────
-  function callApi(system, messages, maxTokens, tier) {
-    const controller = new AbortController();
-    // Large PDFs need more time — up to 3 minutes
-    const hasLargePdf = files.some(f => f.fileType === "pdf" && f.b64 && f.b64.length > 200000);
-    const timeout = setTimeout(() => controller.abort(), hasLargePdf ? 300000 : 180000);
-    return fetch("/api/analyze", {
+  // ── API CALL — all calls go through backend proxy ─────────────
+  function callBackend(endpoint, body) {
+    return fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({ messages, tier: tier || "report", hasExtractedPdf: files.some(f => f.fileType === "text" && f.note) }),
+      body: JSON.stringify(body),
     }).then(function(r) {
-      clearTimeout(timeout);
       if (!r.ok) {
-        if (r.status === 504) throw new Error("Analysis timed out on the server. The bill may be too large. Try pasting key charge pages as text instead.");
-        return r.text().then(function(txt) {
-          throw new Error("Server error (" + r.status + "): " + (txt || "").slice(0, 200));
-        });
+        if (r.status === 504) throw new Error("Analysis timed out. Try a smaller bill or paste as text.");
+        return r.text().then(function(t) { throw new Error("Server error (" + r.status + "): " + t.slice(0, 200)); });
       }
-      return r.json().catch(function() { throw new Error("Server returned invalid response. Please try again."); });
-    }).catch(function(err) {
-      clearTimeout(timeout);
-      if (err.name === "AbortError") throw new Error("Analysis timed out — the bill may be too large. Try pasting key charge pages as text instead.");
-      throw err;
+      return r.json();
     });
   }
 
@@ -2313,7 +2301,7 @@ function BillXM() {
   }
 
   const [analysisProgress, setAnalysisProgress] = useState("");
-  const CHUNK_PAGES = 8; // pages per chunk — keeps payload under 4.5MB
+  const CHUNK_PAGES = 5; // pages per chunk — keeps payload well under limits
 
   // Render PDF pages to images using pdf.js
   function renderPdfPagesToImages(b64Data, startPage, endPage) {
@@ -2330,15 +2318,17 @@ function BillXM() {
         (function(pageNum) {
           chain = chain.then(function() {
             return pdf.getPage(pageNum).then(function(page) {
-              var scale = 1.0;
-              var viewport = page.getViewport({ scale: scale });
+              var viewport = page.getViewport({ scale: 1.0 });
+              // Cap at 1200px wide to keep images small
+              var scale = Math.min(1.0, 1200 / viewport.width);
+              var scaled = page.getViewport({ scale: scale });
               var canvas = document.createElement("canvas");
-              canvas.width = viewport.width;
-              canvas.height = viewport.height;
+              canvas.width = scaled.width;
+              canvas.height = scaled.height;
               var ctx = canvas.getContext("2d");
-              return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
-                var dataUrl = canvas.toDataURL("image/jpeg", 0.6);
-                images.push({ page: pageNum, b64: dataUrl.split(",")[1] });
+              return page.render({ canvasContext: ctx, viewport: scaled }).promise.then(function() {
+                var dataUrl = canvas.toDataURL("image/jpeg", 0.5);
+                images.push({ page: pageNum, b64: dataUrl.split(",")[1].replace(/\s/g, "") });
               });
             });
           });
@@ -2358,13 +2348,22 @@ function BillXM() {
     return [{ role: "user", content: contentParts }];
   }
 
-  // Send a chunk to the backend
+  // Send chunk through /api/chunk proxy (bodyParser disabled, raw passthrough)
   function analyzeChunk(images) {
     var msgs = buildChunkMessages(images);
-    return fetch("/api/analyze", {
+    // Build complete Anthropic API request as a single JS object, stringify once
+    var apiRequest = {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4000,
+      system: "Extract every CPT/HCPCS code, description, quantity, and billed amount from these bill pages. Return ONLY valid JSON: {\"hospital\":\"name\",\"state\":\"XX\",\"city\":\"city\",\"line_items\":[{\"code\":\"\",\"description\":\"\",\"quantity\":1,\"billed\":0}],\"section_total\":0}",
+      messages: msgs,
+    };
+    var payload = JSON.stringify(apiRequest);
+    console.log("Chunk: " + images.length + " pages, " + (payload.length / 1024).toFixed(0) + " KB via /api/chunk");
+    return fetch("/api/chunk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: msgs, tier: "chunk" }),
+      body: payload,
     }).then(function(r) {
       if (!r.ok) return r.text().then(function(t) { throw new Error("Chunk error (" + r.status + "): " + t.slice(0, 200)); });
       return r.json();
@@ -2406,48 +2405,56 @@ function BillXM() {
     return sizeKB > 300 && sizeKB / 10 > 25; // rough: >300KB and likely >25 pages
   }
 
+  // ── Parse JSON from Claude response ─────────────────────────
+  function parseClaudeJson(data) {
+    var raw = (data.content || []).map(function(b) { return b.text || ""; }).join("");
+    var clean = raw.replace(/```json|```/g, "").trim();
+    var s = clean.indexOf("{"), e = clean.lastIndexOf("}");
+    if (s < 0 || e < 0) throw new Error("No JSON found in AI response.");
+    clean = clean.slice(s, e + 1).replace(/,\s*([}\]])/g, "$1").replace(/[\x00-\x1f\x7f]/g, " ");
+    return JSON.parse(clean);
+  }
+
   // ── ANALYZE ────────────────────────────────────────────────
   function analyze() {
     if (inputMode === "file" && files.length === 0) return setError("Please upload at least one bill file.");
     if (inputMode === "text" && !billText.trim()) return setError("Please paste your bill text.");
     if (!agreed) return setError("Please agree to the Terms of Service.");
 
-    // Check if any PDF needs chunking
-    var largePdf = files.find(function(f) { return f.fileType === "pdf" && f.b64 && f.b64.length > 400000; });
+    // Check for large PDF that needs chunking (>400KB base64 ≈ >300KB file ≈ >25 scanned pages)
+    // Only chunk PDFs over 3MB base64 (~2.25MB file). Smaller PDFs go through Haiku extraction directly.
+    var largePdf = files.find(function(f) { return f.fileType === "pdf" && f.b64 && f.b64.length > 3000000; });
 
     if (largePdf) {
-      // ── CHUNKED ANALYSIS for large scanned PDFs ──
-      setError(""); setScreen("analyzing"); setAnalysisProgress("Preparing large bill for analysis...");
+      // ── CHUNKED ANALYSIS — render pages to images, analyze in chunks, merge ──
+      setError(""); setScreen("analyzing"); setAnalysisProgress("Rendering bill pages...");
       renderPdfPagesToImages(largePdf.b64, 1, 999).then(function(result) {
         var totalPages = result.totalPages;
         var allImages = result.images;
         var numChunks = Math.ceil(allImages.length / CHUNK_PAGES);
-        setAnalysisProgress("Splitting " + totalPages + " pages into " + numChunks + " sections...");
+        setAnalysisProgress("Analyzing " + totalPages + " pages in " + numChunks + " sections...");
 
-        // Process chunks sequentially
         var allLineItems = [];
         var hospital = "", state = "", city = "";
         var chunkIndex = 0;
 
         function processNextChunk() {
           if (chunkIndex >= numChunks) {
-            // All chunks done — merge results
-            setAnalysisProgress("Combining results and generating report...");
-            return analyzeMerge({
-              hospital: hospital, state: state, city: city,
-              line_items: allLineItems, chunks: numChunks,
-            }).then(function(report) {
-              setReport(report);
-              setAnalysisProgress("");
-              setAnalyzeDone(true);
-              setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
+            // All chunks done — merge via backend (text only, uses CMS database)
+            setAnalysisProgress("Looking up CMS rates and generating report...");
+            return callBackend("/api/analyze", {
+              tier: "merge",
+              mergeData: { hospital: hospital, state: state, city: city, line_items: allLineItems, chunks: numChunks },
+            }).then(function(data) {
+              if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message);
+              return parseClaudeJson(data);
             });
           }
 
           var start = chunkIndex * CHUNK_PAGES;
           var end = Math.min(start + CHUNK_PAGES, allImages.length);
           var chunkImages = allImages.slice(start, end);
-          setAnalysisProgress("Analyzing section " + (chunkIndex + 1) + " of " + numChunks + " (pages " + (start + 1) + "-" + end + " of " + totalPages + ")...");
+          setAnalysisProgress("Section " + (chunkIndex + 1) + " of " + numChunks + " (pages " + (start + 1) + "-" + end + " of " + totalPages + ")...");
 
           return analyzeChunk(chunkImages).then(function(chunkResult) {
             if (chunkResult.line_items) allLineItems = allLineItems.concat(chunkResult.line_items);
@@ -2460,37 +2467,38 @@ function BillXM() {
         }
 
         return processNextChunk();
+      }).then(function(report) {
+        setReport(report); setAnalysisProgress("");
+        setAnalyzeDone(true);
+        setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
       }).catch(function(err) {
         setAnalysisProgress("");
         setError("Analysis failed: " + (err.message || "Unknown error"));
-        setAnalyzeDone(false);
-        setScreen("upload");
+        setAnalyzeDone(false); setScreen("upload");
       });
       return;
     }
 
-    // ── STANDARD ANALYSIS for small PDFs, images, text ──
-    const msgs = buildMessages();
+    // ── SINGLE-PASS ANALYSIS — send bill to backend, Sonnet handles everything ──
+    var msgs = buildMessages();
     if (!msgs) return setError("No bill data found.");
     setError(""); setScreen("analyzing"); setAnalysisProgress("");
-    callApi(SYS_PROMPT, msgs, 8000)
-      .then(data => {
-        if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || JSON.stringify(data.error));
-        let raw = (data.content || []).map(b => b.text || "").join("");
-        let clean = raw.replace(/```json|```/g, "").trim();
-        const s = clean.indexOf("{"), e = clean.lastIndexOf("}");
-        if (s < 0 || e < 0) throw new Error("No JSON found in response.");
-        clean = clean.slice(s, e + 1).replace(/,\s*([}\]])/g, "$1").replace(/[\x00-\x1f\x7f]/g, " ");
-        setReport(JSON.parse(clean));
+
+    console.log("BILLXM v4.1 — sending to /api/analyze, tier=report, msgs=" + (msgs ? msgs.length : 0));
+    callBackend("/api/analyze", { messages: msgs, tier: "report" })
+    .then(function(data) {
+      if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || "Analysis failed");
+      return parseClaudeJson(data);
+    })
+      .then(function(report) {
+        setReport(report);
         setAnalyzeDone(true);
-        setTimeout(() => { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
+        setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
       })
-      .catch(err => {
-        const msg = err.message || "";
-        if (msg.includes("timed out") || msg.includes("AbortError")) {
-          setError("Analysis timed out — please try again. If this persists, try pasting the bill as text instead.");
-        } else if (msg.includes("too long") || msg.includes("200000") || msg.includes("context")) {
-          setError("This bill exceeds the AI context limit. Please try again — the system will automatically split large bills.");
+      .catch(function(err) {
+        var msg = err.message || "";
+        if (msg.includes("too long") || msg.includes("200000") || msg.includes("context")) {
+          setError("This bill exceeds the AI context limit. Try uploading a shorter section or pasting as text.");
         } else {
           setError("Analysis failed: " + (msg || "Unknown error. Please try again."));
         }
@@ -3277,7 +3285,12 @@ function BillXM() {
             </div>
             {report.drg_benchmark && report.drg_benchmark.medicare_payment > 0 && (
               <div style={{ padding: "8px 14px", background: "rgba(96,165,250,0.1)", borderRadius: 8, border: "1px solid rgba(96,165,250,0.2)", fontSize: 11, color: "#93c5fd", lineHeight: 1.5 }}>
-                Fair value includes Medicare DRG estimate of {fmt(report.drg_benchmark.medicare_payment)} for facility charges + CPT-coded service rates. See DRG Benchmark in Overview for details.
+                Fair value includes Medicare DRG estimate of {fmt(report.drg_benchmark.medicare_payment)} for inpatient facility charges. See DRG Benchmark in Overview.
+              </div>
+            )}
+            {report.apc_benchmark && report.apc_benchmark.total_apc_payment > 0 && (
+              <div style={{ padding: "8px 14px", background: "rgba(96,165,250,0.1)", borderRadius: 8, border: "1px solid rgba(96,165,250,0.2)", fontSize: 11, color: "#93c5fd", lineHeight: 1.5 }}>
+                Fair value based on Medicare APC (outpatient) rates of {fmt(report.apc_benchmark.total_apc_payment)} for facility services. See APC Benchmark in Overview.
               </div>
             )}
           </div>
@@ -3327,6 +3340,36 @@ function BillXM() {
                   </div>
                   <div style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, padding: "10px 14px", background: "rgba(59,130,246,0.06)", borderRadius: 8 }}>
                     {report.drg_benchmark.explanation || `Medicare would pay this hospital approximately ${fmt(report.drg_benchmark.medicare_payment)} for this entire stay under DRG ${report.drg_benchmark.drg}. The hospital billed ${fmt(report.total_billed)} — that's ${Math.round(report.total_billed / report.drg_benchmark.medicare_payment)}x the Medicare rate.`}
+                  </div>
+                </Card>
+              )}
+
+              {/* APC Benchmark Card — for outpatient/ER bills */}
+              {report.apc_benchmark && report.apc_benchmark.total_apc_payment > 0 && (
+                <Card style={{ padding: 20, marginBottom: 16, border: "2px solid #0891b2", background: "linear-gradient(135deg, #ecfeff 0%, #f0fdfa 100%)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 20 }}>🏥</span>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#164e63" }}>APC Benchmark: What Medicare Actually Pays for Outpatient</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+                    <div style={{ flex: 1, minWidth: 180, padding: "14px 16px", background: "white", borderRadius: 10, border: "1px solid #a5f3fc" }}>
+                      <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>CMS Payment System</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#0e7490", marginTop: 4 }}>OPPS / APC</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>Ambulatory Payment Classification</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 180, padding: "14px 16px", background: "white", borderRadius: 10, border: "1px solid #a5f3fc" }}>
+                      <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Medicare Would Pay</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: "#0891b2", marginTop: 4 }}>{fmt(report.apc_benchmark.total_apc_payment)}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>for this ER/outpatient visit</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 180, padding: "14px 16px", background: "white", borderRadius: 10, border: "1px solid #a5f3fc" }}>
+                      <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Hospital Billed</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: "#dc2626", marginTop: 4 }}>{fmt(report.total_billed)}</div>
+                      <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{report.total_billed && report.apc_benchmark.total_apc_payment ? Math.round(report.total_billed / report.apc_benchmark.total_apc_payment) + "x what Medicare pays" : ""}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, padding: "10px 14px", background: "rgba(8,145,178,0.06)", borderRadius: 8 }}>
+                    {report.apc_benchmark.explanation || `Under Medicare's Outpatient Prospective Payment System (OPPS), this visit would be reimbursed approximately ${fmt(report.apc_benchmark.total_apc_payment)} based on APC classification. The hospital billed ${fmt(report.total_billed)} — that's ${Math.round(report.total_billed / report.apc_benchmark.total_apc_payment)}x the Medicare APC rate.`}
                   </div>
                 </Card>
               )}

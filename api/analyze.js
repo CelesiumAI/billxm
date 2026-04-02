@@ -5,427 +5,323 @@ const path = require('path');
 // ── Load CMS data once at startup ────────────────────────────
 let CMS_RVUS = null;
 let CMS_GPCI = null;
-let CMS_DRG  = null;
+let CMS_DRG = null;
+let CMS_APC = null;
 
 function loadCMSData() {
-  if (CMS_RVUS && CMS_GPCI && CMS_DRG) return;
+  if (CMS_RVUS) return;
   try {
-    const rvuData  = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_rvus.json'),  'utf8'));
-    const gpciData = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_gpci.json'), 'utf8'));
-    const drgData  = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_drg.json'),  'utf8'));
-    CMS_RVUS = rvuData;
-    CMS_GPCI = gpciData.localities;
-    CMS_DRG  = drgData;
-  } catch (err) {
-    console.error('Failed to load CMS data:', err.message);
+    CMS_RVUS = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_rvus.json'), 'utf8'));
+    CMS_GPCI = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_gpci.json'), 'utf8'));
+  } catch (err) { console.error('Failed to load CMS RVU/GPCI data:', err.message); }
+  try {
+    CMS_DRG = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_drg.json'), 'utf8'));
+  } catch (e) { console.log('No DRG data, continuing without it'); }
+  try {
+    CMS_APC = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_apc.json'), 'utf8'));
+  } catch (e) { console.log('No APC data, continuing without it'); }
+}
+
+// ── Normalize a code from a hospital bill ────────────────────
+function normalizeCode(code) {
+  if (!code) return '';
+  var c = code.toString().trim().toUpperCase();
+  if (/^0+$/.test(c)) return '';
+  if (c.length === 6 && c[0] === '0' && /^\d+$/.test(c)) {
+    c = c.slice(1);
   }
+  return c;
 }
 
 // ── Look up GPCI for a state/city ────────────────────────────
 function getGPCI(state, city) {
-  if (!CMS_GPCI || !state) return CMS_RVUS ? CMS_RVUS.national_avg_gpci : { work: 1.02, pe: 1.042, mp: 0.848 };
-
-  const stateUpper = state.toUpperCase().trim();
-  const cityUpper  = city ? city.toUpperCase().trim() : '';
-
-  // Find all localities for this state
-  const stateLocalities = Object.keys(CMS_GPCI)
+  if (!CMS_GPCI || !CMS_GPCI.localities || !state) {
+    return CMS_RVUS ? CMS_RVUS.national_avg_gpci : { work: 1.02, pe: 1.042, mp: 0.848 };
+  }
+  var stateUpper = state.toUpperCase().trim();
+  var cityUpper = city ? city.toUpperCase().trim() : '';
+  var stateLocalities = Object.keys(CMS_GPCI.localities)
     .filter(function(k) { return k.startsWith(stateUpper + '_'); })
-    .map(function(k) { return CMS_GPCI[k]; });
-
+    .map(function(k) { return CMS_GPCI.localities[k]; });
   if (stateLocalities.length === 0) return CMS_RVUS.national_avg_gpci;
-
-  // Try to match by city name
   if (cityUpper) {
     for (var i = 0; i < stateLocalities.length; i++) {
-      const loc = stateLocalities[i];
-      if (loc.name && loc.name.indexOf(cityUpper) >= 0) {
-        return { work: loc.work, pe: loc.pe, mp: loc.mp };
+      if (stateLocalities[i].name && stateLocalities[i].name.indexOf(cityUpper) >= 0) {
+        return { work: stateLocalities[i].work, pe: stateLocalities[i].pe, mp: stateLocalities[i].mp };
       }
     }
   }
-
-  // Fall back to first locality in state (usually statewide)
-  const first = stateLocalities[0];
+  var first = stateLocalities[0];
   return { work: first.work, pe: first.pe, mp: first.mp };
 }
 
-// ── Calculate fair rate for a CPT code ───────────────────────
+// ── Look up fair rate for a normalized code ──────────────────
 function getFairRate(code, state, city) {
-  if (!CMS_RVUS) return null;
-
-  const trimmed = (code || '').trim().toUpperCase();
-
-  // Check lab rates first (national, no locality adjustment)
-  if (CMS_RVUS.labs && CMS_RVUS.labs[trimmed]) {
-    const lab = CMS_RVUS.labs[trimmed];
+  if (!CMS_RVUS || !code) return null;
+  if (CMS_RVUS.labs && CMS_RVUS.labs[code]) {
+    var lab = CMS_RVUS.labs[code];
     return { rate: lab.r, desc: lab.d, type: 'lab' };
   }
-
-  // Check drug codes (J-codes, etc.)
-  if (CMS_RVUS.drugs && CMS_RVUS.drugs[trimmed]) {
-    const drug = CMS_RVUS.drugs[trimmed];
+  if (CMS_RVUS.drugs && CMS_RVUS.drugs[code]) {
+    var drug = CMS_RVUS.drugs[code];
     return { rate: drug.r, desc: drug.d, dose: drug.dose, type: 'drug' };
   }
-
-  // Check DRG codes (inpatient)
-  const drgMatch = trimmed.replace(/^DRG\s*/, '').replace(/^0+/, '');
-  if (CMS_DRG && CMS_DRG.drgs) {
-    // Try both stripped and zero-padded keys (e.g. "470" and "470")
-    const padded = drgMatch.padStart(3, '0');
-    const drg = CMS_DRG.drgs[drgMatch] || CMS_DRG.drgs[padded];
-    if (drg) {
-      return {
-        rate: drg.national_payment,
-        desc: drg.desc,
-        type: 'drg',
-        weight: drg.weight,
-        avg_los: drg.geo_los,
-      };
-    }
-  }
-
-  // Check physician RVUs
-  if (CMS_RVUS.rvus && CMS_RVUS.rvus[trimmed]) {
-    const rvu  = CMS_RVUS.rvus[trimmed];
-    const gpci = getGPCI(state, city);
-    const CF   = CMS_RVUS.conversion_factor || 33.4009;
-    const rate = Math.round(
+  if (CMS_RVUS.rvus && CMS_RVUS.rvus[code]) {
+    var rvu = CMS_RVUS.rvus[code];
+    var gpci = getGPCI(state, city);
+    var CF = CMS_RVUS.conversion_factor || 33.4009;
+    var rate = Math.round(
       ((rvu.w * gpci.work) + (rvu.p * gpci.pe) + (rvu.m * gpci.mp)) * CF * 100
     ) / 100;
-    return { rate: rate, desc: rvu.d, type: 'physician', gpci: gpci };
+    return { rate: rate, desc: rvu.d, type: 'physician' };
   }
-
   return null;
 }
 
-// ── Haiku prompt: extract codes from bill ────────────────────
-const EXTRACT_PROMPT = `You are a medical billing code extractor.
-Extract every CPT/HCPCS code and charge from this medical bill.
-Return ONLY valid JSON, no markdown, no explanation:
-{
-  "hospital": "hospital name",
-  "state": "2-letter state code e.g. TX",
-  "city": "city name",
-  "date_of_service": "date or date range",
-  "patient_name": "patient name if visible",
-  "line_items": [
-    {"code": "CPT code", "description": "service description", "quantity": 1, "billed": 0.00}
-  ],
-  "total_billed": 0.00
+// ── Detect bill type from extraction ─────────────────────────
+function detectBillType(extracted) {
+  var text = (extracted.bill_type_text || '').toLowerCase();
+  if (text.indexOf('inpatient') >= 0) return 'INPATIENT';
+  if (text.indexOf('outpatient') >= 0) return 'OUTPATIENT';
+  if (text.indexOf('emergency') >= 0) return 'OUTPATIENT';
+  if (text.indexOf('observation') >= 0) return 'OUTPATIENT';
+  var hasER = false;
+  (extracted.line_items || []).forEach(function(item) {
+    var c = normalizeCode(item.code);
+    if (['99281','99282','99283','99284','99285'].indexOf(c) >= 0) hasER = true;
+  });
+  if (hasER) return 'OUTPATIENT';
+  var dos = extracted.date_of_service || '';
+  if (dos.indexOf('-') >= 0 || dos.indexOf('to') >= 0 || dos.indexOf('thru') >= 0) {
+    return 'INPATIENT';
+  }
+  return 'OUTPATIENT';
 }
-If a line item has no CPT code, still include it with code as "".
-Be precise with dollar amounts.`;
 
-// ── Sonnet prompt: generate full report ──────────────────────
-const REPORT_PROMPT = `You are BillXM AI, an expert medical billing analyst specializing in CPT/HCPCS codes, CMS Medicare rates, NCCI bundling rules, No Surprises Act compliance, DRG validation, and revenue cycle auditing.
-
-TASK: Analyze every line item on this medical bill. Find ALL billing issues: duplicate charges, unbundling violations, upcoding, excessive markups vs Medicare, unwarranted charges, drug overcharges, wrong quantities, bundling violations. Each line item has a pre-calculated CMS fair rate from our database — use those rates as the primary benchmark.
-
-NCCI BUNDLING RULES (critical):
-- 93005 + 93010 ALWAYS bundle into 93000 — never bill both separately
-- 36415 (venipuncture) bundles into most procedures same day without modifier
-- IV infusion (96360) bundles supplies; additional hours must be 96361 not repeat 96360
-- 99152 sedation includes monitoring; 99153 for each additional 15 min
-- Surgical supplies bundle into OR codes
-- E&M codes (99XXX) bundle with minor same-day procedures unless modifier -25 or -57
-
-DRG INPATIENT CONTEXT:
-For inpatient stays, Medicare pays a single DRG lump sum covering ALL facility services (room, nursing, supplies, OR, recovery). Chargemaster prices do NOT reflect actual payments. Common DRGs: 313 chest pain $4,862, 292 heart failure CC $5,733, 291 heart failure MCC $8,669, 280 AMI MCC $10,832, 470 hip/knee replacement $13,025, 871 sepsis MCC $13,117. If data includes drg_estimate, you MUST populate drg_benchmark. Line items without CPT codes (room, OR, pharmacy) are facility charges — list as "NO_CPT", do not flag as issues.
-
-IMPORTANT for estimated_fair_value: Include BOTH the sum of CPT fair rates AND the DRG payment estimate for facility charges. This gives a realistic total fair value for the entire stay. Do not report only CPT fair values — that understates the true fair value.
-
-SEVERITY: HIGH = >300% markup or definitive CMS rule violation. MEDIUM = 150-300% or likely error. LOW = 100-150% or suspicious pattern.
-CONFIDENCE: 95-100 = definitive rule violation with CMS citation. 80-94 = very likely error. 60-79 = probable issue worth disputing. Below 60 = flag for review.
-
-Return ONLY valid JSON. No markdown. No backticks:
-{"grade":"A-F","grade_rationale":"one sentence","summary":"2-3 friendly sentences a patient can understand","total_billed":0,"estimated_fair_value":0,"potential_savings":0,"drg_benchmark":{"drg":"code","description":"name","medicare_payment":0,"explanation":"what Medicare would pay vs what was billed"},"issues":[{"type":"EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED|UNWARRANTED|DRUG_OVERCHARGE|BUNDLING_VIOLATION|WRONG_QUANTITY","severity":"HIGH|MEDIUM|LOW","confidence":95,"code":"CPT","description":"plain English","billed":0,"fair_value":0,"savings":0,"cms_rule":"specific rule citation","dispute_basis":"legal grounds"}],"line_items":[{"code":"code","description":"service","billed":0,"quantity":1,"fair_rate":0,"total_fair":0,"markup_pct":"Xx","status":"OK|FLAG|ERROR|NO_CPT","note":"explanation"}],"next_steps":["specific actionable step"],"nsa_eligible":false,"appeal_recommended":false}`;
-
-// ── Haiku prompt for free grade only ────────────────────────
-const GRADE_PROMPT = `You are a medical billing analyst.
-Given this bill analysis data (codes extracted and fair rates calculated), 
-assign an overall grade and provide a brief summary.
-Return ONLY valid JSON, no markdown:
-{
-  "grade": "A-F",
-  "grade_rationale": "one sentence",
-  "summary": "2 sentences max for the patient",
-  "total_billed": 0,
-  "estimated_fair_value": 0,
-  "potential_savings": 0,
-  "issue_count": 0,
-  "high_count": 0,
-  "medium_count": 0,
-  "low_count": 0
-}
-Grade: A=clean, B=minor <10% over, C=moderate 10-20% over, D=significant >20% over, F=severe violations.`;
-
-// ── Chunk extraction prompt — for partial bill pages ────────
-const CHUNK_PROMPT = `You are a medical billing code extractor reading a section of a larger hospital bill. Extract every CPT/HCPCS code, description, quantity, and billed amount visible on these pages.
-
-Return ONLY valid JSON. No markdown. No backticks:
-{"hospital":"name if visible","state":"2-letter state","city":"city","line_items":[{"code":"CPT/HCPCS code or empty string","description":"service description","quantity":1,"billed":0.00}],"section_total":0}
-If a line has no CPT code, still include it with code as "". Be precise with dollar amounts.`;
-
-// ── Merge prompt — combine chunk results into final report ──
-const MERGE_PROMPT = `You are BillXM AI. You have been given pre-extracted line items from a large hospital bill (analyzed in chunks) with CMS fair rates already calculated. Generate the final analysis report.
-
-For inpatient stays, Medicare pays a single DRG lump sum covering ALL facility services. Chargemaster prices do NOT reflect actual payments. Estimate the applicable DRG and populate drg_benchmark. Set estimated_fair_value = sum of CPT fair rates + DRG payment.
-
-NCCI BUNDLING RULES: 93005+93010 bundle into 93000. 36415 bundles into most procedures same day. 96360 bundles supplies. Surgical supplies bundle into OR codes. E&M codes bundle with minor same-day procedures unless modifier -25/-57.
-
-SEVERITY: HIGH = >300% markup or CMS rule violation. MEDIUM = 150-300%. LOW = 100-150%.
-CONFIDENCE: 95-100 = definitive. 80-94 = very likely. 60-79 = probable. Below 60 = flag only.
-
-Return ONLY valid JSON. No markdown. No backticks:
-{"grade":"A-F","grade_rationale":"one sentence","summary":"2-3 friendly sentences","total_billed":0,"estimated_fair_value":0,"potential_savings":0,"drg_benchmark":{"drg":"code","description":"name","medicare_payment":0,"explanation":"what Medicare would pay vs billed"},"issues":[{"type":"EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED|UNWARRANTED|DRUG_OVERCHARGE|BUNDLING_VIOLATION|WRONG_QUANTITY","severity":"HIGH|MEDIUM|LOW","confidence":95,"code":"CPT","description":"plain English","billed":0,"fair_value":0,"savings":0,"cms_rule":"rule citation","dispute_basis":"legal grounds"}],"line_items":[{"code":"code","description":"service","billed":0,"quantity":1,"fair_rate":0,"total_fair":0,"markup_pct":"Xx","status":"OK|FLAG|ERROR|NO_CPT","note":"explanation"}],"next_steps":["actionable step"],"nsa_eligible":false,"appeal_recommended":false}`;
-
-// ── Check if messages contain a PDF document block ──────────
-function hasPdfDocument(messages) {
-  if (!messages || !messages.length) return false;
-  for (var i = 0; i < messages.length; i++) {
-    var content = messages[i].content;
-    if (Array.isArray(content)) {
-      for (var j = 0; j < content.length; j++) {
-        if (content[j].type === 'document' && content[j].source &&
-            content[j].source.media_type === 'application/pdf') {
-          return true;
-        }
-      }
+// ── Estimate DRG from services on the bill ───────────────────
+function estimateDRG(extracted) {
+  if (!CMS_DRG || !CMS_DRG.drgs) return null;
+  var text = '';
+  (extracted.line_items || []).forEach(function(item) {
+    text += ' ' + (item.description || '').toLowerCase();
+    text += ' ' + (item.category || '').toLowerCase();
+  });
+  var candidates = [];
+  if (text.indexOf('pneumonia') >= 0 || (text.indexOf('respiratory') >= 0 && text.indexOf('inhalation') >= 0)) {
+    candidates.push('194', '193', '192');
+  }
+  if (text.indexOf('heart failure') >= 0 || text.indexOf('cardiac') >= 0) {
+    candidates.push('293', '292', '291');
+  }
+  if (text.indexOf('sepsis') >= 0 || text.indexOf('septicemia') >= 0) {
+    candidates.push('872', '871');
+  }
+  if (text.indexOf('chest pain') >= 0) {
+    candidates.push('313');
+  }
+  if (text.indexOf('copd') >= 0 || text.indexOf('obstructive pulmonary') >= 0 || text.indexOf('bronchitis') >= 0 || text.indexOf('asthma') >= 0) {
+    candidates.push('192', '193', '194', '203', '202');
+  }
+  if (candidates.length === 0 && (text.indexOf('inhalation') >= 0 || text.indexOf('nebuliz') >= 0 || text.indexOf('chest physio') >= 0)) {
+    candidates.push('194', '193', '192');
+  }
+  if (candidates.length === 0) {
+    candidates.push('194');
+  }
+  for (var i = 0; i < candidates.length; i++) {
+    var drg = CMS_DRG.drgs[candidates[i]];
+    if (drg) {
+      return {
+        code: candidates[i],
+        desc: drg.desc || drg.d || '',
+        payment: drg.national_payment || drg.n || 0,
+        los: drg.geo_los || drg.l || 0
+      };
     }
   }
-  return false;
+  return null;
 }
 
-// ── Parse JSON from LLM response text ───────────────────────
-function parseJsonResponse(raw, label) {
-  raw = raw.replace(/```json|```/g, '').trim();
-  var s = raw.indexOf('{'), e = raw.lastIndexOf('}');
-  if (s === -1 || e === -1) {
-    console.error(label + ' did not return JSON. Raw:', raw.slice(0, 500));
-    throw new Error(label + ' returned invalid response. Please try again.');
-  }
-  return JSON.parse(raw.slice(s, e + 1));
-}
+// ── Prompts ──────────────────────────────────────────────────
+var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charge from this bill into structured JSON.\n\nRules:\n- Include EVERY line item on the bill, even $0.00 items\n- Preserve the exact code shown on the bill (including leading zeros like 036600)\n- Use the exact dollar amounts shown on the bill\n- Your total_billed MUST equal the bill\'s stated total. Look for "Total Amount for Hospital Services", "Total Charges", "Amount You Owe", "Total", or similar\n- If the bill shows subtotals by category, make sure all items from every category are included\n- Count line items carefully. If a service appears multiple times on different dates, each is a separate line item\n- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n- For drugs with code 00000, set code to "" and include the drug name in description\n- Include adjustments/discounts if shown on the bill\n\nReturn ONLY valid JSON, no markdown, no explanation:\n{\n  "hospital": "hospital name",\n  "state": "2-letter state code",\n  "city": "city name",\n  "date_of_service": "date or date range",\n  "bill_type_text": "exact text from bill describing patient type, e.g. INPATIENT SERVICES",\n  "line_items": [\n    {"code": "036600", "description": "ARTERIAL PUNCTURE", "quantity": 1, "billed": 372.28, "date": "10/10/22", "category": "LABORATORY"}\n  ],\n  "adjustments": 0,\n  "total_before_adjustments": 0,\n  "total_billed": 0\n}\n\nCRITICAL: Count all line items from ALL pages and ALL categories. The sum of all line item billed amounts should approximately equal total_before_adjustments. Missing line items is the worst error you can make.\n\nMULTI-PAGE BILLS: Hospital bills often span 3-5 pages with categories like:\n- Room and Care (rev code 0110)\n- Laboratory (rev codes 0300-0319)\n- Lab-Chemistry (rev code 0301)\n- Lab-Hematology (rev code 0305)\n- Radiology/Diagnostic (rev codes 0320-0329)\n- Respiratory/Respiratory SVC (rev codes 0410-0419)\n- Drugs/Pharmacy (rev codes 0250-0259, 0636-0637)\n- EKG/EEG (rev codes 0730-0739)\n- Other/Convenience items (rev code 0999)\nYou MUST scan every page and capture items from every category.';
+
+var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\nYou will receive pre-analyzed medical bill data. Each line item already has its government fair rate looked up. The bill type (INPATIENT or OUTPATIENT) is already determined. If inpatient, a DRG benchmark is provided.\n\nYour job is to write the analysis report. The data work is done. You focus on:\n1. Writing a clear, patient-friendly summary with specific dollar examples\n2. Identifying issues (overcharges, duplicates, suspicious patterns)\n3. Assigning a grade based on the overcharge data provided\n4. Providing actionable next steps\n\nGRADING (based on potential_savings / total_billed):\n- A = savings < 10% of billed (reasonable bill)\n- B = savings 10-25%\n- C = savings 25-50%\n- D = savings 50-75%\n- F = savings >75% OR definitive coding violations\n\nISSUES - only flag items where billed significantly exceeds fair rate:\n- EXCESSIVE_MARKUP: billed > 2x fair rate. Severity: HIGH if >300%, MEDIUM if 150-300%, LOW if 100-150%\n- DUPLICATE: same code on same date without justification\n- Do NOT flag NO_CPT items or items without fair rates\n\nReturn ONLY valid JSON. No markdown, no backticks:\n{\n  "grade": "A-F",\n  "grade_rationale": "one sentence",\n  "summary": "2-3 sentences in plain English with specific dollar examples of overcharges",\n  "issues": [\n    {\n      "type": "EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED",\n      "severity": "HIGH|MEDIUM|LOW",\n      "confidence": 95,\n      "code": "CPT code",\n      "description": "plain English explanation",\n      "billed": 0,\n      "fair_value": 0,\n      "savings": 0,\n      "cms_rule": "fee schedule citation",\n      "dispute_basis": "grounds for dispute"\n    }\n  ],\n  "next_steps": ["actionable step"],\n  "nsa_eligible": false,\n  "financial_assistance_note": "guidance if applicable",\n  "insurance_notes": "info if relevant",\n  "appeal_recommended": false\n}\n\nCRITICAL: Use the total_billed, estimated_fair_value, and potential_savings exactly as provided. Do not recalculate them.\nWrite in plain English a patient can understand.';
+
+var GRADE_PROMPT = 'You are BillXM AI. Quickly assess this medical bill data and return a grade.\n\nGrade based on the overcharge percentage provided:\n- A = overcharge < 10%\n- B = overcharge 10-25%\n- C = overcharge 25-50%\n- D = overcharge 50-75%\n- F = overcharge >75% or billing violations\n\nIf potential_savings is $0, grade MUST be A.\n\nReturn ONLY valid JSON:\n{"grade":"A-F","grade_rationale":"one sentence","summary":"2 sentences for patient","total_billed":0,"estimated_fair_value":0,"potential_savings":0,"issue_count":0,"high_count":0,"medium_count":0,"low_count":0}';
 
 // ── Main handler ─────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { messages, tier, hasExtractedPdf, mergeData } = req.body;
+  var body = req.body || {};
+  var messages = body.messages;
+  var tier = body.tier;
+
+  // Debug logging
+  console.log('=== REQUEST RECEIVED ===');
+  console.log('Body keys:', Object.keys(body));
+  console.log('Tier:', tier);
+  console.log('Messages type:', typeof messages, 'isArray:', Array.isArray(messages));
+  if (messages && messages[0]) {
+    console.log('First msg role:', messages[0].role);
+    console.log('First msg content type:', typeof messages[0].content, 'isArray:', Array.isArray(messages[0].content));
+    if (Array.isArray(messages[0].content) && messages[0].content[0]) {
+      console.log('First content block type:', messages[0].content[0].type);
+    }
+  }
+
   if (!tier) return res.status(400).json({ error: 'Missing tier' });
+  if (!messages && tier !== 'merge') return res.status(400).json({ error: 'Missing messages' });
+
+  // Handle merge requests — skip extraction, go straight to enrichment + report
+  if (tier === 'merge' && body.mergeData) {
+    // Fall through to the main try block but skip Step 1
+  }
+
+  // Normalize messages to ensure valid Anthropic API format
+  if (!Array.isArray(messages)) {
+    messages = [{ role: 'user', content: String(messages) }];
+  }
+  messages = messages.map(function(msg) {
+    if (!msg.role) msg.role = 'user';
+    if (msg.content === undefined || msg.content === null) msg.content = '';
+    if (typeof msg.content !== 'string' && !Array.isArray(msg.content)) {
+      msg.content = JSON.stringify(msg.content);
+    }
+    return msg;
+  });
 
   try {
     loadCMSData();
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    var client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    // ═══════════════════════════════════════════════════════════
-    // CHUNK PATH: Extract codes from a partial bill (subset of pages)
-    // ═══════════════════════════════════════════════════════════
-    if (tier === 'chunk') {
-      console.log('Chunk extraction — processing partial bill pages');
-      var chunkResponse = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        system: CHUNK_PROMPT,
-        messages: messages,
-      });
-      var chunkRaw = chunkResponse.content.map(function(b) { return b.text || ''; }).join('');
-      var chunkResult = parseJsonResponse(chunkRaw, 'Chunk extraction');
-      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(chunkResult) }] });
-    }
+    // ════════════════════════════════════════════════════════════
+    // STEP 1: Extract structured data with Haiku (or use merge data)
+    // ════════════════════════════════════════════════════════════
+    var extracted;
+    var extractedTotal;
 
-    // ═══════════════════════════════════════════════════════════
-    // MERGE PATH: Combine chunk results into final report
-    // ═══════════════════════════════════════════════════════════
-    if (tier === 'merge' && mergeData) {
-      console.log('Merge — combining ' + mergeData.chunks + ' chunks, ' + mergeData.line_items.length + ' total items');
-
-      // Look up CMS fair rates for all extracted line items
-      var mState = mergeData.state || '';
-      var mCity = mergeData.city || '';
-      var mTotalFair = 0, mTotalBilled = 0;
-
-      var mEnriched = mergeData.line_items.map(function(item) {
-        var qty = item.quantity || 1;
-        var billed = item.billed || 0;
-        var lookup = item.code ? getFairRate(item.code, mState, mCity) : null;
-        var fairRate = lookup ? lookup.rate : null;
-        var totalFairItem = fairRate ? Math.round(fairRate * qty * 100) / 100 : null;
-        var markupPct = (fairRate && fairRate > 0) ? Math.round((billed / (fairRate * qty) - 1) * 100) : null;
-        mTotalBilled += billed;
-        if (totalFairItem) mTotalFair += totalFairItem;
-        return {
-          code: item.code || '', description: item.description || '',
-          billed: billed, quantity: qty, fair_rate: fairRate, total_fair: totalFairItem,
-          markup_pct: markupPct !== null ? markupPct + '%' : 'N/A',
-          status: markupPct !== null && markupPct > 150 ? 'FLAG' : (item.code ? 'OK' : 'NO_CPT'),
-          type: lookup ? lookup.type : 'unknown',
-        };
-      });
-
-      // Add DRG estimate to fair value
-      var mDrgFairValue = 0;
-      var mCandidateDRGs = [];
-      if (CMS_DRG && CMS_DRG.drgs) {
-        mCandidateDRGs = ['313', '292', '291', '287', '280', '470', '871', '194'].map(function(code) {
-          var drg = CMS_DRG.drgs[code];
-          return drg ? { code: code, desc: drg.desc, payment: drg.national_payment, avg_los: drg.geo_los } : null;
-        }).filter(Boolean);
-        var mPayments = mCandidateDRGs.map(function(d) { return d.payment; }).sort(function(a, b) { return a - b; });
-        mDrgFairValue = mPayments[Math.floor(mPayments.length / 2)] || 0;
-        mTotalFair += mDrgFairValue;
-      }
-
-      // Send top items + all flagged to Sonnet for final report
-      var mFlagged = mEnriched.filter(function(i) { return i.status === 'FLAG'; });
-      var mSorted = mEnriched.slice().sort(function(a, b) { return b.billed - a.billed; });
-      var mTop25 = mSorted.slice(0, 25);
-      var mMerged = {};
-      mFlagged.concat(mTop25).forEach(function(i) { mMerged[i.code + '|' + i.description] = i; });
-      var mReportItems = Object.values(mMerged).sort(function(a, b) { return b.billed - a.billed; });
-
-      var mergeInput = {
-        hospital: mergeData.hospital || '', state: mState, city: mCity,
-        total_billed: mTotalBilled, estimated_fair_value: mTotalFair,
-        potential_savings: Math.max(0, Math.round((mTotalBilled - mTotalFair) * 100) / 100),
-        line_items: mReportItems, all_items_count: mEnriched.length,
-        drg_estimate: { total_billed: mTotalBilled, drg_fair_value: mDrgFairValue,
-          candidate_drgs: mCandidateDRGs,
-          instruction: 'IMPORTANT: Populate drg_benchmark. Set estimated_fair_value = CPT fair rates + DRG payment.' },
+    if (tier === 'merge' && body.mergeData) {
+      // Skip Haiku — use pre-extracted data from chunking
+      console.log('Step 1: Using merge data (' + (body.mergeData.line_items || []).length + ' items)');
+      extracted = {
+        hospital: body.mergeData.hospital || '',
+        state: body.mergeData.state || '',
+        city: body.mergeData.city || '',
+        date_of_service: body.mergeData.date_of_service || '',
+        bill_type_text: body.mergeData.bill_type_text || '',
+        line_items: body.mergeData.line_items || [],
+        total_billed: 0,
       };
+      (extracted.line_items).forEach(function(item) { extracted.total_billed += (item.billed || 0); });
+      extractedTotal = extracted.total_billed;
+    } else {
+      // Normal path — extract with Haiku
+      console.log('Step 1: Extracting bill data with Haiku...');
+      console.log('Sending ' + messages.length + ' message(s) to Haiku');
 
-      console.log('Sending ' + mReportItems.length + ' of ' + mEnriched.length + ' items to Sonnet for merge');
-      var mergeResponse = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 8000,
-        system: MERGE_PROMPT,
-        messages: [{ role: 'user', content: 'Generate final billing analysis report:\n' + JSON.stringify(mergeInput) }],
-      });
-      var mergeRaw = mergeResponse.content.map(function(b) { return b.text || ''; }).join('');
-      var mergeReport = parseJsonResponse(mergeRaw, 'Merge report');
-      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(mergeReport) }] });
-    }
-
-    if (!messages) return res.status(400).json({ error: 'Missing messages' });
-
-    const isPdf = hasPdfDocument(messages);
-
-    // ═══════════════════════════════════════════════════════════
-    // DIRECT PATH: Native PDFs or large text-extracted PDFs
-    // Send directly to Sonnet — no Haiku pre-extraction
-    // ═══════════════════════════════════════════════════════════
-    if (isPdf || hasExtractedPdf) {
-      console.log((isPdf ? 'Native PDF' : 'Extracted PDF text') + ' — sending directly to Sonnet (skipping Haiku)');
-
-      // Build DRG candidate list
-      var drgList = '';
-      if (CMS_DRG && CMS_DRG.drgs) {
-        drgList = '\nDRG rates (FY2026 IPPS national): ' +
-          ['313', '292', '291', '287', '280', '470', '871', '194', '065'].map(function(code) {
-            var drg = CMS_DRG.drgs[code];
-            return drg ? ('DRG ' + code + '=' + drg.desc + ' $' + drg.national_payment) : null;
-          }).filter(Boolean).join(', ') + '.';
-      }
-
-      // Self-contained PDF analysis prompt modeled on medbillpilot's proven approach
-      var pdfSystemPrompt = 'You are BillXM AI, an expert medical billing analyst specializing in CPT/HCPCS codes, CMS Medicare rates, NCCI bundling rules, No Surprises Act compliance, DRG validation, and revenue cycle auditing.\n' +
-        '\nTASK: Read this PDF medical bill and analyze every single line item. Extract ALL CPT/HCPCS codes, descriptions, quantities, and billed amounts from every page. Find ALL billing issues: duplicate charges, unbundling violations, upcoding, excessive markups vs Medicare, unwarranted charges, drug overcharges, wrong quantities, bundling violations.\n' +
-        '\nMEDICARE RATES (2026 CMS MPFS — use as benchmarks):\n' +
-        'ED Visits (facility): 99281=$48, 99282=$88, 99283=$162, 99284=$272, 99285=$521\n' +
-        'Labs: 36415(venipuncture)=$5-13, 85025(CBC)=$12-19, 80053(CMP)=$15-23, 80048(BMP)=$15-22, 80061(lipid)=$19-32, 84484(troponin)=$15-24, 84443(TSH)=$19-30, 87633(resp virus panel)=$143-220\n' +
-        'Imaging (facility): 71046(CXR 2-view)=$29-51, 71045(CXR 1-view)=$20-35, 74177(CT abd/pel w/)=$172-274, 71275(CTA chest)=$200-320, 70450(CT head w/o)=$95-155, 93306(echo w/Doppler)=$172-260\n' +
-        'Cardiac: 93005(ECG tracing)=$10-17, 93010(ECG interp)=$9-15, 93000(ECG complete)=$17-26, 93017(stress test tracing)=$25-40\n' +
-        'IV/Infusion: 96374(IV push)=$51-79, 96360(infusion 1st hr)=$60-93, 96361(infusion addl hr)=$26-42\n' +
-        'Procedures: 36556(insert central venous cath)=$350-550, 36410(venipuncture)=$5-13, 94640(nebulizer)=$15-25, 94760(pulse ox)=$3-8\n' +
-        'Sedation: 99152(mod sedation 1st 15min)=$79-121, 99153(addl 15min)=$59-88\n' +
-        'Drugs (per unit, ASP-based): J1100(dexamethasone/mg)=$0.11, J2270(morphine/10mg)=$4.45, J0696(ceftriaxone/250mg)=$0.43, J1642(heparin/10u)=$0.018, J1171(hydromorphone/4mg)=$1-3, J7030(NaCl 0.9%)=$1-3, J7120(LR)=$1-3\n' +
-        'Facility charges: inpatient room=$1800-2500/day, ICU=$3000-5000/day, OR=$1500-4000, recovery=$200-500/hr\n' +
-        'Critical Care: 99291(first 30-74 min)=$250-400, 99292(each addl 30 min)=$120-190\n' +
-        'Therapy: 97530(therapeutic activity/15min)=$25-40, 97535(self-care training/15min)=$25-40, 97163(PT eval high)=$100-160, 97167(OT eval high)=$100-160\n' +
-        '\nNCCI BUNDLING RULES (critical):\n' +
-        '- 93005 + 93010 ALWAYS bundle into 93000 — never bill both separately\n' +
-        '- 36415 (venipuncture) bundles into most procedures same day without modifier\n' +
-        '- IV infusion (96360) bundles supplies; additional hours must be 96361 not repeat 96360\n' +
-        '- Surgical supplies bundle into OR codes\n' +
-        '- E&M codes bundle with minor same-day procedures unless modifier -25 or -57\n' +
-        '\nDRG INPATIENT CONTEXT:\n' +
-        'For inpatient stays, Medicare pays a single DRG lump sum covering ALL facility services (room, nursing, supplies, OR). Chargemaster prices do NOT reflect actual payments. You MUST estimate the applicable DRG and populate drg_benchmark. estimated_fair_value = sum of individual CPT fair rates + DRG payment for facility charges.\n' +
-        drgList + '\n' +
-        '\nSEVERITY: HIGH = >300% markup or definitive CMS rule violation. MEDIUM = 150-300% or likely error. LOW = 100-150% or suspicious.\n' +
-        'CONFIDENCE: 95-100 = definitive CMS citation. 80-94 = very likely error. 60-79 = probable issue. Below 60 = flag only.\n' +
-        '\nLine items without CPT codes (room, board, OR, pharmacy, supplies) are facility charges — list as status "NO_CPT", do not flag as issues.\n' +
-        '\nReturn ONLY valid JSON. No markdown. No backticks:\n' +
-        '{"grade":"A-F","grade_rationale":"one sentence","summary":"2-3 friendly sentences a patient can understand","total_billed":0,"estimated_fair_value":0,"potential_savings":0,"drg_benchmark":{"drg":"code","description":"name","medicare_payment":0,"explanation":"what Medicare would pay vs what was billed"},"issues":[{"type":"EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED|UNWARRANTED|DRUG_OVERCHARGE|BUNDLING_VIOLATION|WRONG_QUANTITY","severity":"HIGH|MEDIUM|LOW","confidence":95,"code":"CPT","description":"plain English","billed":0,"fair_value":0,"savings":0,"cms_rule":"specific rule citation","dispute_basis":"legal grounds"}],"line_items":[{"code":"code","description":"service","billed":0,"quantity":1,"fair_rate":0,"total_fair":0,"markup_pct":"Xx","status":"OK|FLAG|ERROR|NO_CPT","note":"explanation"}],"next_steps":["specific actionable step"],"nsa_eligible":false,"appeal_recommended":false}';
-
-      var reportResponse;
+      var extractResponse;
       try {
-        reportResponse = await client.messages.create({
-          model: 'claude-sonnet-4-20250514',
+        extractResponse = await client.messages.create({
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 8000,
-          system: pdfSystemPrompt,
+          system: EXTRACT_PROMPT,
           messages: messages,
         });
       } catch (apiErr) {
-        console.error('Sonnet PDF API error:', apiErr.message);
-        throw new Error('PDF analysis failed: ' + (apiErr.message || 'API error'));
+        console.error('Haiku API error:', apiErr.status, apiErr.message);
+        throw new Error(apiErr.status + ' ' + JSON.stringify(apiErr.error || apiErr.message));
       }
 
-      var reportRaw = reportResponse.content.map(function(b) { return b.text || ''; }).join('');
-      console.log('Sonnet PDF response length: ' + reportRaw.length + ' chars');
-      var report = parseJsonResponse(reportRaw, 'Sonnet PDF analysis');
+      try {
+        var raw = extractResponse.content.map(function(b) { return b.text || ''; }).join('');
+        raw = raw.replace(/```json|```/g, '').trim();
+        var s = raw.indexOf('{');
+        var e = raw.lastIndexOf('}');
+        if (s === -1 || e === -1) throw new Error('No JSON found');
+        extracted = JSON.parse(raw.slice(s, e + 1));
+      } catch (err) {
+        throw new Error('Failed to parse bill extraction: ' + err.message);
+      }
 
-      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(report) }] });
+      extractedTotal = extracted.total_billed || 0;
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // TEXT/IMAGE PATH: Haiku extraction → CMS lookup → Sonnet report
-    // ═══════════════════════════════════════════════════════════
-    console.log('Text/image bill — using Haiku extraction pipeline');
+    var itemCount = (extracted.line_items || []).length;
+    console.log('Extracted: ' + itemCount + ' items, total: $' + extractedTotal.toFixed(2));
 
-    // ── STEP 1: Extract CPT codes with Haiku ─────────────────
-    console.log('Step 1: Extracting codes with Haiku...');
-    const extractResponse = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
-      system: EXTRACT_PROMPT,
-      messages: messages,
+    // ── Validate: do line items sum match stated total? ──
+    var lineItemSum = 0;
+    (extracted.line_items || []).forEach(function(item) {
+      lineItemSum += (item.billed || 0);
     });
+    var totalDiff = Math.abs(lineItemSum - extractedTotal);
+    var totalPct = extractedTotal > 0 ? (totalDiff / extractedTotal) : 0;
 
-    var extractRaw = extractResponse.content.map(function(b) { return b.text || ''; }).join('');
-    var extracted = parseJsonResponse(extractRaw, 'Haiku extraction');
+    if (totalPct > 0.15 && extractedTotal > 0) {
+      console.log('WARNING: Items sum $' + lineItemSum.toFixed(2) + ' vs total $' + extractedTotal.toFixed(2) + ' (gap ' + Math.round(totalPct * 100) + '%). Retrying...');
+      var retryResponse = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 8000,
+        system: EXTRACT_PROMPT + '\n\nPREVIOUS ATTEMPT MISSED LINE ITEMS. Bill total is $' + extractedTotal.toFixed(2) + ' but only $' + lineItemSum.toFixed(2) + ' captured. Include ALL items from ALL pages and ALL categories.',
+        messages: messages,
+      });
+      try {
+        var retryRaw = retryResponse.content.map(function(b) { return b.text || ''; }).join('');
+        retryRaw = retryRaw.replace(/```json|```/g, '').trim();
+        var rs = retryRaw.indexOf('{');
+        var re2 = retryRaw.lastIndexOf('}');
+        if (rs !== -1 && re2 !== -1) {
+          var retryExtracted = JSON.parse(retryRaw.slice(rs, re2 + 1));
+          var retrySum = 0;
+          (retryExtracted.line_items || []).forEach(function(item) { retrySum += (item.billed || 0); });
+          var retryDiff = Math.abs(retrySum - (retryExtracted.total_billed || extractedTotal));
+          if (retryDiff < totalDiff) {
+            console.log('Retry improved: $' + retrySum.toFixed(2) + ' (was $' + lineItemSum.toFixed(2) + ')');
+            extracted = retryExtracted;
+            extractedTotal = extracted.total_billed || extractedTotal;
+          }
+        }
+      } catch (retryErr) { console.log('Retry parse failed, keeping original'); }
+    }
 
-    const state = extracted.state || '';
-    const city  = extracted.city  || '';
-    console.log('Extracted: ' + (extracted.line_items || []).length + ' line items from ' + city + ', ' + state);
-
-    // ── STEP 2: Look up fair rates from CMS database ──────────
+    // ════════════════════════════════════════════════════════════
+    // STEP 2: JavaScript enrichment — normalize codes, look up rates
+    // ════════════════════════════════════════════════════════════
     console.log('Step 2: Looking up CMS rates...');
-    let totalFair = 0;
-    let totalBilled = 0;
-    let highCount = 0, medCount = 0, lowCount = 0;
+    var state = extracted.state || '';
+    var city = extracted.city || '';
+    var billType = detectBillType(extracted);
+    console.log('Bill type: ' + billType);
 
-    const enrichedItems = (extracted.line_items || []).map(function(item) {
-      const qty     = item.quantity || 1;
-      const billed  = item.billed   || 0;
-      const lookup  = item.code ? getFairRate(item.code, state, city) : null;
-      const fairRate = lookup ? lookup.rate : null;
-      const totalFairItem = fairRate ? Math.round(fairRate * qty * 100) / 100 : null;
-      const savings = (fairRate && billed > totalFairItem) ? Math.round((billed - totalFairItem) * 100) / 100 : 0;
-      const markupPct = (fairRate && fairRate > 0) ? Math.round((billed / totalFairItem - 1) * 100) : null;
+    var totalBilled = extractedTotal;
+    var totalFairCPT = 0;
+    var highCount = 0, medCount = 0, lowCount = 0;
 
-      totalBilled += billed;
-      if (totalFairItem) totalFair += totalFairItem;
+    var enrichedItems = (extracted.line_items || []).map(function(item) {
+      var code = normalizeCode(item.code);
+      var qty = item.quantity || 1;
+      var billed = item.billed || 0;
+      var lookup = code ? getFairRate(code, state, city) : null;
+      var fairRate = lookup ? lookup.rate : null;
+      var totalFairItem = fairRate ? Math.round(fairRate * qty * 100) / 100 : null;
+      var savings = (fairRate && billed > totalFairItem) ? Math.round((billed - totalFairItem) * 100) / 100 : 0;
+      var markupPct = (totalFairItem && totalFairItem > 0) ? Math.round((billed / totalFairItem - 1) * 100) : null;
 
-      let status = 'OK';
-      if (markupPct !== null) {
+      if (totalFairItem) totalFairCPT += totalFairItem;
+
+      var status = 'OK';
+      if (!code) {
+        status = 'NO_CPT';
+      } else if (markupPct !== null && markupPct > 0) {
         if (markupPct > 300) { status = 'FLAG'; highCount++; }
         else if (markupPct > 150) { status = 'FLAG'; medCount++; }
         else if (markupPct > 100) { status = 'FLAG'; lowCount++; }
       }
 
       return {
-        code: item.code || '',
+        code: code,
+        original_code: item.code || '',
         description: item.description || '',
         billed: billed,
         quantity: qty,
@@ -434,128 +330,178 @@ module.exports = async function handler(req, res) {
         markup_pct: markupPct !== null ? markupPct + '%' : 'N/A',
         savings: savings,
         status: status,
-        type: lookup ? lookup.type : 'unknown',
+        type: lookup ? lookup.type : (code ? 'unknown' : 'no_code'),
+        date: item.date || '',
+        category: item.category || ''
       };
     });
 
-    const overallSavings = Math.max(0, Math.round((totalBilled - totalFair) * 100) / 100);
-    const issueCount = highCount + medCount + lowCount;
+    // ── Determine fair value based on bill type ──
+    var estimatedFairValue = 0;
+    var drgEstimate = null;
+    var apcEstimate = null;
 
-    // ── STEP 3a: Free grade — use Haiku only ─────────────────
+    if (billType === 'INPATIENT') {
+      var drg = estimateDRG(extracted);
+      if (drg) {
+        estimatedFairValue = drg.payment;
+        var drgMarkup = totalBilled > 0 && drg.payment > 0 ? (totalBilled / drg.payment).toFixed(1) : '0';
+        drgEstimate = {
+          drg_code: drg.code,
+          drg_description: drg.desc,
+          drg_payment: drg.payment,
+          markup_multiplier: drgMarkup + 'x'
+        };
+        console.log('DRG ' + drg.code + ': $' + drg.payment.toFixed(2) + ' (billed $' + totalBilled.toFixed(2) + ' = ' + drgMarkup + 'x)');
+      } else {
+        estimatedFairValue = totalFairCPT;
+        console.log('No DRG match, using CPT sum: $' + totalFairCPT.toFixed(2));
+      }
+    } else {
+      estimatedFairValue = totalFairCPT;
+      if (CMS_APC && CMS_APC.apcs) {
+        var hasER = enrichedItems.some(function(item) {
+          return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0;
+        });
+        if (hasER) {
+          var erLevel = enrichedItems.find(function(item) {
+            return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0;
+          });
+          var apcCode = null;
+          if (erLevel && erLevel.code === '99285') apcCode = '5025';
+          else if (erLevel && erLevel.code === '99284') apcCode = '5024';
+          else if (erLevel && erLevel.code === '99283') apcCode = '5023';
+          else if (erLevel && erLevel.code === '99282') apcCode = '5022';
+          else if (erLevel && erLevel.code === '99281') apcCode = '5021';
+
+          if (apcCode && CMS_APC.apcs[apcCode]) {
+            var apc = CMS_APC.apcs[apcCode];
+            var apcPayment = apc.payment || apc.r || 0;
+            estimatedFairValue += apcPayment;
+            apcEstimate = {
+              apc_description: (apc.desc || apc.d || 'ER facility fee') + ' (APC ' + apcCode + ')',
+              apc_payment: apcPayment
+            };
+          }
+        }
+      }
+      console.log('Outpatient fair value (CPT + APC): $' + estimatedFairValue.toFixed(2));
+    }
+
+    var potentialSavings = Math.max(0, Math.round((totalBilled - estimatedFairValue) * 100) / 100);
+    var overchargePct = totalBilled > 0 ? Math.round((potentialSavings / totalBilled) * 100) : 0;
+    var issueCount = highCount + medCount + lowCount;
+
+    console.log('Summary: Billed $' + totalBilled.toFixed(2) + ', Fair $' + estimatedFairValue.toFixed(2) + ', Savings $' + potentialSavings.toFixed(2) + ' (' + overchargePct + '%), Issues: ' + issueCount);
+
+    // ════════════════════════════════════════════════════════════
+    // STEP 3a: Free grade (Haiku)
+    // ════════════════════════════════════════════════════════════
     if (tier === 'grade') {
-      console.log('Step 3a: Generating free grade with Haiku...');
-      const gradeInput = {
+      console.log('Step 3a: Free grade with Haiku...');
+      var gradeInput = {
+        bill_type: billType,
         total_billed: totalBilled,
-        estimated_fair_value: totalFair,
-        potential_savings: overallSavings,
+        estimated_fair_value: estimatedFairValue,
+        potential_savings: potentialSavings,
+        overcharge_pct: overchargePct,
         issue_count: issueCount,
         high_count: highCount,
         medium_count: medCount,
         low_count: lowCount,
-        line_item_summary: enrichedItems.map(function(i) {
-          return { code: i.code, billed: i.billed, fair_rate: i.fair_rate, markup_pct: i.markup_pct, status: i.status };
-        }),
+        hospital: extracted.hospital || '',
+        top_overcharges: enrichedItems
+          .filter(function(i) { return i.status === 'FLAG'; })
+          .slice(0, 5)
+          .map(function(i) { return i.description + ': billed $' + i.billed + ' vs fair $' + (i.total_fair || 'N/A'); })
       };
 
-      const gradeResponse = await client.messages.create({
+      var gradeResponse = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
         system: GRADE_PROMPT,
-        messages: [{ role: 'user', content: 'Grade this bill: ' + JSON.stringify(gradeInput) }],
+        messages: [{ role: 'user', content: 'Grade this bill:\n' + JSON.stringify(gradeInput) }],
       });
 
       var gradeRaw = gradeResponse.content.map(function(b) { return b.text || ''; }).join('');
-      var grade = parseJsonResponse(gradeRaw, 'Grade');
+      gradeRaw = gradeRaw.replace(/```json|```/g, '').trim();
+      var gs = gradeRaw.indexOf('{');
+      var ge = gradeRaw.lastIndexOf('}');
+      var grade = JSON.parse(gradeRaw.slice(gs, ge + 1));
+
+      grade.total_billed = totalBilled;
+      grade.estimated_fair_value = estimatedFairValue;
+      grade.potential_savings = potentialSavings;
 
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(grade) }] });
     }
 
-    // ── STEP 3b: Full report — use Sonnet ────────────────────
-    console.log('Step 3b: Generating full report with Sonnet...');
+    // ════════════════════════════════════════════════════════════
+    // STEP 3b: Full report (Sonnet — no rate tables needed)
+    // ════════════════════════════════════════════════════════════
+    console.log('Step 3b: Generating report with Sonnet...');
 
-    // Build DRG context
-    let facilityTotal = 0;
-    let hasNoCptItems = false;
-    enrichedItems.forEach(function(item) {
-      if (item.type === 'unknown' || !item.code) {
-        facilityTotal += item.billed;
-        hasNoCptItems = true;
-      }
-    });
-
-    let drgEstimate = null;
-    let drgFairValue = 0;
-    if (CMS_DRG && CMS_DRG.drgs && (hasNoCptItems || totalBilled > 10000)) {
-      const candidateCodes = ['313', '292', '291', '287', '280', '470', '871', '194'];
-      const candidateDRGs = candidateCodes.map(function(code) {
-        const drg = CMS_DRG.drgs[code];
-        if (!drg) return null;
-        return { code: code, desc: drg.desc, payment: drg.national_payment, avg_los: drg.geo_los };
-      }).filter(Boolean);
-
-      // Use median DRG as facility fair value estimate (Sonnet will refine in drg_benchmark)
-      var payments = candidateDRGs.map(function(d) { return d.payment; }).sort(function(a, b) { return a - b; });
-      drgFairValue = payments[Math.floor(payments.length / 2)] || 0;
-
-      // Add DRG estimate to total fair value so the numbers make sense
-      totalFair += drgFairValue;
-
-      drgEstimate = {
-        total_facility_billed: facilityTotal,
-        total_billed: totalBilled,
-        drg_facility_estimate: drgFairValue,
-        candidate_drgs: candidateDRGs,
-        instruction: 'IMPORTANT: You MUST populate the drg_benchmark field. Pick the best DRG match. Set estimated_fair_value = sum of CPT fair rates + DRG payment.',
-      };
-    }
-
-    // Recalculate savings with DRG-adjusted fair value
-    const adjustedSavings = Math.max(0, Math.round((totalBilled - totalFair) * 100) / 100);
-
-    // Limit line items: top 20 by billed amount + all flagged
-    const flagged = enrichedItems.filter(function(i) { return i.status === 'FLAG'; });
-    const sorted = enrichedItems.slice().sort(function(a, b) { return b.billed - a.billed; });
-    const top20 = sorted.slice(0, 20);
-    const merged = {};
-    flagged.concat(top20).forEach(function(i) { merged[i.code + '|' + i.description] = i; });
-    const reportItems = Object.values(merged).sort(function(a, b) { return b.billed - a.billed; });
-
-    const reportInput = {
+    var reportInput = {
+      bill_type: billType,
       hospital: extracted.hospital || '',
       state: state,
       city: city,
       date_of_service: extracted.date_of_service || '',
       total_billed: totalBilled,
-      estimated_fair_value: totalFair,
-      potential_savings: adjustedSavings,
-      cpt_fair_value: totalFair - drgFairValue,
-      drg_fair_value: drgFairValue,
-      line_items: reportItems,
-      all_items_count: enrichedItems.length,
-      locality_used: state ? (city + ', ' + state) : 'National Average',
+      estimated_fair_value: estimatedFairValue,
+      potential_savings: potentialSavings,
+      overcharge_pct: overchargePct,
       drg_estimate: drgEstimate,
+      apc_estimate: apcEstimate,
+      line_items: enrichedItems,
+      issue_counts: { high: highCount, medium: medCount, low: lowCount, total: issueCount },
     };
 
-    console.log('Sending ' + reportItems.length + ' of ' + enrichedItems.length + ' items to Sonnet');
+    var reportResponse = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8000,
+      system: REPORT_PROMPT,
+      messages: [{
+        role: 'user',
+        content: 'Write the analysis report for this pre-analyzed bill data:\n\n' + JSON.stringify(reportInput, null, 2)
+      }],
+    });
 
-    let sonnetResponse;
-    try {
-      sonnetResponse = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 8000,
-        system: REPORT_PROMPT,
-        messages: [{ role: 'user', content: 'Generate a full billing analysis report for this data: ' + JSON.stringify(reportInput) }],
-      });
-    } catch (apiErr) {
-      console.error('Sonnet API error:', apiErr.message);
-      throw new Error('Report generation failed: ' + (apiErr.message || 'API error'));
-    }
+    var reportRaw = reportResponse.content.map(function(b) { return b.text || ''; }).join('');
+    reportRaw = reportRaw.replace(/```json|```/g, '').trim();
+    var rStart = reportRaw.indexOf('{');
+    var rEnd = reportRaw.lastIndexOf('}');
+    if (rStart === -1 || rEnd === -1) throw new Error('No JSON in report response');
+    var report = JSON.parse(reportRaw.slice(rStart, rEnd + 1));
 
-    var sonnetRaw = sonnetResponse.content.map(function(b) { return b.text || ''; }).join('');
-    console.log('Sonnet response length: ' + sonnetRaw.length + ' chars');
-    var sonnetReport = parseJsonResponse(sonnetRaw, 'Sonnet report');
+    report.bill_type = billType;
+    report.total_billed = totalBilled;
+    report.estimated_fair_value = estimatedFairValue;
+    report.potential_savings = potentialSavings;
+    report.hospital = extracted.hospital || report.hospital;
+    report.state = state || report.state;
+    report.city = city || report.city;
+    report.date_of_service = extracted.date_of_service || report.date_of_service;
+    if (drgEstimate) report.drg_estimate = drgEstimate;
+    if (apcEstimate) report.apc_estimate = apcEstimate;
 
-    return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(sonnetReport) }] });
+    report.line_items = enrichedItems.map(function(item) {
+      return {
+        code: item.code,
+        description: item.description,
+        billed: item.billed,
+        quantity: item.quantity,
+        fair_rate: item.fair_rate,
+        total_fair: item.total_fair,
+        markup_pct: item.markup_pct,
+        status: item.status,
+        note: item.type === 'no_code' ? 'Facility charge, no CPT code' :
+              item.type === 'unknown' ? 'Code not found in CMS database' :
+              item.status === 'FLAG' ? 'Exceeds Medicare rate' : 'Within expected range'
+      };
+    });
+
+    return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(report) }] });
 
   } catch (err) {
     console.error('analyze error:', err.message);
