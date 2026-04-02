@@ -2122,6 +2122,13 @@ function BillXM() {
   const [unlockCode, setUnlockCode] = useState("");
   const [unlockError, setUnlockError] = useState("");
   const [analyzeDone, setAnalyzeDone] = useState(false);
+  const [gateEmail, setGateEmail] = useState("");
+  const [showGate, setShowGate] = useState(false);
+  const [gateConsent, setGateConsent] = useState(false);
+  const [gateError, setGateError] = useState("");
+  const [gateLoading, setGateLoading] = useState(false);
+  const [freeGradesRemaining, setFreeGradesRemaining] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const fileRef = useRef(null);
 
   // DEMO CODES: "CELESIUM" (internal), "CENTENE2026" (Centene/Superior HealthPlan presentation)
@@ -2166,13 +2173,86 @@ function BillXM() {
       window._billxmLaunchEnterprise = false;
       setScreen("intake");
     }
-    // Restore saved API key from localStorage
+    // Restore saved API key and gate email from localStorage
     try {
       const saved = localStorage.getItem("billxm_api_key");
       if (saved) setApiKey(saved);
+      const savedEmail = localStorage.getItem("billxm_email");
+      if (savedEmail) {
+        setGateEmail(savedEmail);
+        // Refresh gate status
+        fetch("/api/gate", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "register", email: savedEmail }),
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (data.free_grades_remaining !== undefined) setFreeGradesRemaining(data.free_grades_remaining);
+          localStorage.setItem("billxm_user", JSON.stringify(data));
+        }).catch(function() {});
+      }
     } catch(e) {}
+    // Check payment return
+    if (window.location.hash.indexOf("payment-success") >= 0) {
+      var pe = localStorage.getItem("billxm_email");
+      if (pe) {
+        fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "register", email: pe }) })
+          .then(function(r) { return r.json(); }).then(function(data) { localStorage.setItem("billxm_user", JSON.stringify(data)); });
+      }
+      try { window.location.hash = "#analyze"; } catch(e2) {}
+    }
     return () => {};
   }, []);
+
+  // ── Email Gate Functions ──────────────────────────────────
+  function submitEmailGate() {
+    if (!gateEmail || gateEmail.indexOf("@") < 1) { setGateError("Please enter a valid email."); return; }
+    if (!gateConsent) { setGateError("Please agree to the terms."); return; }
+    setGateError(""); setGateLoading(true);
+    fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "register", email: gateEmail }) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { setGateError(data.error); return; }
+        localStorage.setItem("billxm_email", gateEmail);
+        localStorage.setItem("billxm_user", JSON.stringify(data));
+        if (data.free_grades_remaining !== undefined) setFreeGradesRemaining(data.free_grades_remaining);
+        setShowGate(false);
+      })
+      .catch(function() { setGateError("Connection error. Please try again."); })
+      .finally(function() { setGateLoading(false); });
+  }
+
+  function checkGateBeforeAnalyze(analysisTier) {
+    // Demo codes bypass gate
+    if (DEMO_CODES.indexOf(unlockCode.toUpperCase()) >= 0) return Promise.resolve(true);
+    var email = localStorage.getItem("billxm_email");
+    if (!email) { setShowGate(true); return Promise.resolve(false); }
+    return fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "check", email: email, tier: analysisTier }) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.allowed) return true;
+        if (data.gate === "free_limit_reached" || data.gate === "payment_required") { setShowPaymentModal(true); return false; }
+        if (data.gate === "email_required") { setShowGate(true); return false; }
+        return false;
+      })
+      .catch(function() { return true; }); // fail open
+  }
+
+  function recordGradeUsed() {
+    var email = localStorage.getItem("billxm_email");
+    if (!email) return;
+    fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "use_grade", email: email }) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { if (data.free_grades_remaining !== undefined) setFreeGradesRemaining(data.free_grades_remaining); })
+      .catch(function() {});
+  }
+
+  function startCheckout(checkoutTier) {
+    var email = localStorage.getItem("billxm_email");
+    if (!email) { setShowGate(true); return; }
+    fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tier: checkoutTier, email: email }) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { if (data.url) window.location.href = data.url; else alert("Payment error: " + (data.error || "Unknown")); })
+      .catch(function() { alert("Connection error. Please try again."); });
+  }
 
   function reset() {
     setReport(null); setBillText(""); setFiles([]); setError(""); setLetter("");
@@ -2421,6 +2501,15 @@ function BillXM() {
     if (inputMode === "text" && !billText.trim()) return setError("Please paste your bill text.");
     if (!agreed) return setError("Please agree to the Terms of Service.");
 
+    // Gate check — require email registration (demo codes bypass)
+    checkGateBeforeAnalyze("grade").then(function(allowed) {
+      if (!allowed) return;
+      doAnalyze();
+    });
+  }
+
+  function doAnalyze() {
+
     // Check for large PDF that needs chunking (>400KB base64 ≈ >300KB file ≈ >25 scanned pages)
     // Only chunk PDFs over 3MB base64 (~2.25MB file). Smaller PDFs go through Haiku extraction directly.
     var largePdf = files.find(function(f) { return f.fileType === "pdf" && f.b64 && f.b64.length > 3000000; });
@@ -2492,6 +2581,7 @@ function BillXM() {
     })
       .then(function(report) {
         setReport(report);
+        recordGradeUsed(); // Track free grade usage
         setAnalyzeDone(true);
         setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
       })
@@ -2796,6 +2886,68 @@ function BillXM() {
     </div>
   ) : null;
 
+  // ── Email Gate Modal ──────────────────────────────────────
+  const GateModal = showGate ? (
+    <div onClick={() => setShowGate(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.navy, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, maxWidth: 440, width: "90%", textAlign: "center", fontFamily: C.font }}>
+        <h2 style={{ color: "white", fontSize: 24, marginBottom: 8 }}>Get Your Free Bill Grade</h2>
+        <p style={{ color: "#93c5fd", fontSize: 15, marginBottom: 24 }}>Enter your email to analyze up to 3 bills for free.<br />We'll send your report here too.</p>
+        <input type="email" value={gateEmail} onChange={e => setGateEmail(e.target.value)} placeholder="your@email.com"
+          style={{ width: "100%", padding: "14px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.07)", color: "white", fontSize: 16, marginBottom: 16, boxSizing: "border-box", fontFamily: C.font }} />
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left", marginBottom: 24, cursor: "pointer" }}>
+          <input type="checkbox" checked={gateConsent} onChange={e => setGateConsent(e.target.checked)} style={{ marginTop: 3, minWidth: 18 }} />
+          <span style={{ color: "#93c5fd", fontSize: 13, lineHeight: 1.5 }}>
+            I understand that I am voluntarily uploading my own medical bill. BillXM uses AI to compare charges against U.S. government Medicare rates. This is not legal, medical, or financial advice. My bill is processed in real-time and is <strong style={{ color: "white" }}>NOT stored</strong> on BillXM servers.
+          </span>
+        </label>
+        <button onClick={submitEmailGate} disabled={gateLoading}
+          style={{ width: "100%", padding: 14, borderRadius: 8, background: C.blue, color: "white", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer", opacity: gateLoading ? 0.7 : 1, fontFamily: C.font }}>
+          {gateLoading ? "Registering..." : "Continue — It's Free"}
+        </button>
+        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 16 }}>Your bill is processed in real-time and immediately discarded.</p>
+        {gateError && <p style={{ color: "#ff6b6b", fontSize: 14, marginTop: 12 }}>{gateError}</p>}
+      </div>
+    </div>
+  ) : null;
+
+  // ── Payment Modal ─────────────────────────────────────────
+  const PaymentModal = showPaymentModal ? (
+    <div onClick={() => setShowPaymentModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.navy, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, maxWidth: 560, width: "90%", fontFamily: C.font }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <span style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", padding: "6px 16px", borderRadius: 20, fontSize: 14, fontWeight: 600 }}>LAUNCH SALE — Save 50%!</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 24, textAlign: "center" }}>
+            <h3 style={{ color: "white", marginBottom: 4 }}>Single Report</h3>
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ color: "#4ade80", fontSize: 32, fontWeight: 700 }}>$4.99</span>
+              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 14, display: "block" }}>$9.99</span>
+            </div>
+            <ul style={{ color: "#93c5fd", fontSize: 13, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 20 }}>
+              {["Full analysis report", "All overcharges identified", "Phone scripts included", "Dispute letter ready"].map(function(t) { return <li key={t} style={{ marginBottom: 6 }}>{"✓ " + t}</li>; })}
+            </ul>
+            <button onClick={() => startCheckout("single_report")} style={{ width: "100%", padding: 12, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer" }}>Buy Report</button>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.05)", border: "2px solid #2563eb", borderRadius: 12, padding: 24, textAlign: "center", position: "relative" }}>
+            <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: C.blue, color: "white", padding: "2px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600 }}>BEST VALUE</span>
+            <h3 style={{ color: "white", marginBottom: 4 }}>Unlimited Monthly</h3>
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ color: "#4ade80", fontSize: 32, fontWeight: 700 }}>$9.99</span>
+              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>/mo</span>
+              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 14, display: "block" }}>$19.99/mo</span>
+            </div>
+            <ul style={{ color: "#93c5fd", fontSize: 13, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 20 }}>
+              {["Unlimited bill analyses", "Unlimited full reports", "All phone scripts", "Cancel anytime"].map(function(t) { return <li key={t} style={{ marginBottom: 6 }}>{"✓ " + t}</li>; })}
+            </ul>
+            <button onClick={() => startCheckout("monthly")} style={{ width: "100%", padding: 12, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer" }}>Subscribe</button>
+          </div>
+        </div>
+        <button onClick={() => setShowPaymentModal(false)} style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 14 }}>Back to results</button>
+      </div>
+    </div>
+  ) : null;
+
   // ── NAV BAR ────────────────────────────────────────────────
   function NavBar({ showSettingsBtn = true, showBackBtn = false, right }) {
     return (
@@ -2878,7 +3030,7 @@ function BillXM() {
 
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 60 }}>
-        {SettingsModal}
+        {SettingsModal}{GateModal}{PaymentModal}
         {/* NAV */}
         <div style={{ background: C.navy, padding: "0 24px" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", height: 56 }}>
@@ -2978,7 +3130,7 @@ function BillXM() {
     const info = PORTAL_LABELS[portal] || PORTAL_LABELS["enterprise"];
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        {SettingsModal}
+        {SettingsModal}{GateModal}{PaymentModal}
         <div style={{ background: "white", borderRadius: 20, border: `1px solid ${C.border}`, padding: "44px 36px", maxWidth: 480, width: "100%", textAlign: "center", boxShadow: "0 4px 32px rgba(0,0,0,0.08)" }}>
           <div style={{ fontSize: 44, marginBottom: 16 }}>{info.icon}</div>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 8, letterSpacing: "-0.02em" }}>{info.name} Portal</h2>
@@ -3011,7 +3163,7 @@ function BillXM() {
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 60 }}>
         <NavBar showSettingsBtn={true} />
-        {SettingsModal}
+        {SettingsModal}{GateModal}{PaymentModal}
 
         {/* HERO */}
         <div style={{ background: `linear-gradient(155deg, ${C.navy} 0%, #1e3a5f 100%)`, padding: "64px 24px 80px" }}>
@@ -3082,7 +3234,7 @@ function BillXM() {
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 48 }}>
         <NavBar showSettingsBtn={true} />
-        {SettingsModal}
+        {SettingsModal}{GateModal}{PaymentModal}
         <div style={{ maxWidth: 680, margin: "36px auto 0", padding: "0 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <h1 style={{ fontSize: 30, fontWeight: 800, color: C.navy, letterSpacing: "-0.02em" }}>Analyze Your Medical Bill</h1>
@@ -3165,7 +3317,12 @@ function BillXM() {
           <button onClick={analyze} disabled={processing} style={{ marginTop: 22, width: "100%", padding: 16, borderRadius: 12, background: processing ? "#94a3b8" : C.navy, color: "white", border: "none", fontSize: 16, fontWeight: 800, cursor: processing ? "not-allowed" : "pointer", fontFamily: C.font, letterSpacing: "-0.01em", boxShadow: processing ? "none" : "0 4px 20px rgba(15,36,68,0.25)", transition: "all 0.2s" }}>
             {processing ? "⏳ Processing files..." : "🔍 Analyze My Bill"}
           </button>
-          <p style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", marginTop: 10 }}>Analysis takes 15–60 seconds depending on bill size · Powered by Claude AI + U.S. government rate data</p>
+          {freeGradesRemaining !== null && (
+            <p style={{ textAlign: "center", fontSize: 13, color: freeGradesRemaining > 0 ? "#93c5fd" : "#ff6b6b", marginTop: 10, fontWeight: 600 }}>
+              {freeGradesRemaining > 0 ? freeGradesRemaining + " free grade" + (freeGradesRemaining === 1 ? "" : "s") + " remaining" : "No free grades remaining — upgrade to continue"}
+            </p>
+          )}
+          <p style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", marginTop: 6 }}>Analysis takes 15–60 seconds depending on bill size · Powered by Claude AI + U.S. government rate data</p>
           <div style={{ textAlign: "center", marginTop: 20, paddingTop: 16, borderTop: "1px solid #e2e8f0" }}>
             <span style={{ fontSize: 12, color: "#94a3b8" }}>Health plan, insurer, or law firm? </span>
             <button onClick={() => setScreen("intake")} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: C.font, textDecoration: "underline" }}>
@@ -3246,7 +3403,7 @@ function BillXM() {
 
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 48 }}>
-        {SettingsModal}
+        {SettingsModal}{GateModal}{PaymentModal}
         {PaywallModal}
         <NavBar right={
           <>
