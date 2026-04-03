@@ -359,6 +359,7 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
     <a href="#how-it-works">How It Works</a>
     <a href="#results">Results</a>
     <a href="#our-story">Our Story</a>
+    <a href="#team">Our Team</a>
     <a href="#sample-report">Sample Report</a>
     <a href="#pricing">Pricing</a>
     <a href="#" class="nav-cta" onclick="launchBillXM();return false;">Analyze My Bill</a>
@@ -374,6 +375,7 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
   <a href="#how-it-works" onclick="closeMenu()">How It Works</a>
   <a href="#results" onclick="closeMenu()">Results</a>
   <a href="#our-story" onclick="closeMenu()">Our Story</a>
+  <a href="#team" onclick="closeMenu()">Our Team</a>
   <a href="#sample-report" onclick="closeMenu()">Sample Report</a>
   <a href="#pricing" onclick="closeMenu()">Pricing</a>
   <a href="#" class="nav-cta-mobile" onclick="closeMenu();launchBillXM();return false;">Analyze My Bill</a>
@@ -1732,7 +1734,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
 </div></section>
 
 <!-- Team Section -->
-<div style="background:#0d1117; padding:80px 20px; border-top:1px solid #1a2035;">
+<div id="team" style="background:#0d1117; padding:80px 20px; border-top:1px solid #1a2035;">
   <div style="max-width:960px; margin:0 auto; text-align:center;">
     <h2 style="font-size:32px; font-weight:800; color:#e8eaf0; margin-bottom:8px;">Our Team</h2>
     <p style="color:#8b92a5; font-size:16px; margin-bottom:48px;">Healthcare technology meets medical billing expertise</p>
@@ -1820,6 +1822,37 @@ fetch('/api/counters').then(function(r) { return r.json(); }).then(function(data
     if (el3) el3.textContent = data.display.savings;
   }
 }).catch(function() {});
+
+// Stripe payment return — show success screen
+if (window.location.hash.indexOf('payment-success') >= 0 && localStorage.getItem('billxm_payment_pending')) {
+  localStorage.removeItem('billxm_payment_pending');
+  // Set a global flag that React will read on mount
+  window.__billxm_payment_success = true;
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create full-screen success overlay
+    var overlay = document.createElement('div');
+    overlay.id = 'stripeSuccess';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#0d1117;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;';
+    overlay.innerHTML = ''
+      + '<div style="width:88px;height:88px;border-radius:50%;background:#059669;display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 0 40px rgba(5,150,105,0.4);">'
+      + '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+      + '</div>'
+      + '<h1 style="color:#e8eaf0;font-size:36px;font-weight:800;margin-bottom:12px;letter-spacing:-0.02em;">Payment Successful!</h1>'
+      + '<p style="color:#8b92a5;font-size:18px;margin-bottom:36px;max-width:480px;line-height:1.6;">Your full report is unlocked. Click below to view all overcharges, phone scripts, and your dispute letter.</p>'
+      + '<button id="viewReportBtn" style="background:#2563eb;color:white;border:none;padding:18px 56px;border-radius:12px;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(37,99,235,0.4);transition:transform 0.1s;" onmouseover="this.style.transform=\'scale(1.03)\'" onmouseout="this.style.transform=\'scale(1)\'">View Your Report</button>'
+      + '<p style="color:#3d4455;font-size:13px;margin-top:32px;">BillXM LLC &middot; Powered by CMS Medicare Rate Data</p>';
+    document.body.appendChild(overlay);
+
+    // Button click handler
+    document.getElementById('viewReportBtn').onclick = function() {
+      // Remove overlay
+      overlay.remove();
+      // Launch the React app overlay
+      launchBillXM();
+      // The React app will detect __billxm_payment_success and show the report
+    };
+  });
+}
 
 /* Launch app overlay */
 function launchBillXM() {
@@ -2205,7 +2238,7 @@ function BillXM() {
   const [filterSev, setFilterSev] = useState("ALL");
   const [dragOver, setDragOver] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [tier, setTier] = useState("free");          // "free" | "report" | "full" | "demo"
+  const [tier, setTier] = useState("free");          // "free" | "report" | "full" | "demo"          // "free" | "report" | "full" | "demo"
   const [usingDemo, setUsingDemo] = useState(false);  // true only when SAMPLE_BILL is loaded
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallTarget, setPaywallTarget] = useState(null); // which tab triggered it
@@ -2286,31 +2319,31 @@ function BillXM() {
         }).catch(function() {});
       }
     } catch(e) {}
-    // Check payment return — restore report after Stripe redirect
-    if (window.location.hash.indexOf("payment-success") >= 0) {
-      var payPending = localStorage.getItem('billxm_payment_pending');
-      if (payPending) {
-        localStorage.removeItem('billxm_payment_pending');
-        var pEmail = localStorage.getItem('billxm_email');
-        if (pEmail) {
-          fetch('/api/gate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: pEmail }) })
-            .then(function(r) { return r.json(); })
-            .then(function(d) { localStorage.setItem('billxm_user', JSON.stringify(d)); })
-            .catch(function() {});
-        }
-        var savedRpt = localStorage.getItem('billxm_last_report');
-        if (savedRpt) {
-          try {
-            var rpt = JSON.parse(savedRpt);
-            setReport(rpt);
-            setTier("report");
-            setScreen("report");
-            setActiveTab("overview");
-            setShowPaywall(false);
-            localStorage.removeItem('billxm_last_report');
-          } catch(e) { console.log('Report restore failed:', e); }
-        }
-        window.location.hash = '#analyze';
+    // Payment return from Stripe
+    if (window.__billxm_payment_success) {
+      window.__billxm_payment_success = false;
+      // Restore report from localStorage
+      var saved = localStorage.getItem('billxm_last_report');
+      if (saved) {
+        try {
+          var rpt = JSON.parse(saved);
+          setReport(rpt);
+          setTier("report");
+          setScreen("report");
+          setActiveTab("overview");
+          setShowPaywall(false);
+          localStorage.removeItem('billxm_last_report');
+        } catch(e) { console.log('Restore failed:', e); }
+      }
+      window.location.hash = '#analyze';
+      // Update user credits
+      var pEmail = localStorage.getItem('billxm_email');
+      if (pEmail) {
+        fetch('/api/gate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'register', email: pEmail })
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          localStorage.setItem('billxm_user', JSON.stringify(d));
+        }).catch(function() {});
       }
     }
     return () => {};

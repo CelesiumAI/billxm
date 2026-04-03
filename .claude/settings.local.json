@@ -12,7 +12,8 @@
       "Bash(cp \"C:/Users/Phillip Phan/OneDrive/Desktop/billxm_update/gate.js\" api/gate.js)",
       "Bash(cp \"C:/Users/Phillip Phan/OneDrive/Desktop/billxm_update/checkout.js\" api/checkout.js)",
       "Bash(cp \"C:/Users/Phillip Phan/OneDrive/Desktop/billxm_update/webhook.js\" api/webhook.js)",
-      "Bash(cp \"C:/Users/Phillip Phan/OneDrive/Desktop/billxm_update/counters.js\" api/counters.js)"
+      "Bash(cp \"C:/Users/Phillip Phan/OneDrive/Desktop/billxm_update/counters.js\" api/counters.js)",
+      "Bash(cp:*)"
     ]
   }
 }
