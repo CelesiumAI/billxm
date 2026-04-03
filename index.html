@@ -2192,24 +2192,30 @@ function BillXM() {
     } catch(e) {}
     // Check payment return — restore report after Stripe redirect
     if (window.location.hash.indexOf("payment-success") >= 0) {
-      var pe = localStorage.getItem("billxm_email");
-      if (pe) {
-        fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "register", email: pe }) })
-          .then(function(r) { return r.json(); }).then(function(data) { localStorage.setItem("billxm_user", JSON.stringify(data)); });
-      }
-      // Restore saved report
-      try {
-        var savedReport = localStorage.getItem("billxm_pending_report");
-        if (savedReport) {
-          var restored = JSON.parse(savedReport);
-          setReport(restored);
-          setTier("report"); // unlock all tabs
-          setScreen("report");
-          setActiveTab("overview");
-          localStorage.removeItem("billxm_pending_report");
+      var payPending = localStorage.getItem('billxm_payment_pending');
+      if (payPending) {
+        localStorage.removeItem('billxm_payment_pending');
+        var pEmail = localStorage.getItem('billxm_email');
+        if (pEmail) {
+          fetch('/api/gate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: pEmail }) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { localStorage.setItem('billxm_user', JSON.stringify(d)); })
+            .catch(function() {});
         }
-      } catch(e2) {}
-      try { window.location.hash = "#analyze"; } catch(e3) {}
+        var savedRpt = localStorage.getItem('billxm_last_report');
+        if (savedRpt) {
+          try {
+            var rpt = JSON.parse(savedRpt);
+            setReport(rpt);
+            setTier("report");
+            setScreen("report");
+            setActiveTab("overview");
+            setShowPaywall(false);
+            localStorage.removeItem('billxm_last_report');
+          } catch(e) { console.log('Report restore failed:', e); }
+        }
+        window.location.hash = '#analyze';
+      }
     }
     return () => {};
   }, []);
@@ -2265,9 +2271,9 @@ function BillXM() {
       try { localStorage.setItem("billxm_pending_report", JSON.stringify(report)); } catch(e) {}
     }
     fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tier: checkoutTier, email: email }) })
-      .then(function(r) { return r.json(); })
-      .then(function(data) { if (data.url) window.location.href = data.url; else alert("Payment error: " + (data.error || "Unknown")); })
-      .catch(function() { alert("Connection error. Please try again."); });
+      .then(function(r) { console.log("Checkout response status:", r.status); return r.json(); })
+      .then(function(data) { console.log("Checkout response data:", JSON.stringify(data)); if (data.url) { localStorage.setItem('billxm_payment_pending', 'true'); window.location.href = data.url; } else alert("Payment error: " + (data.error || "Unknown")); })
+      .catch(function(err) { console.error("Checkout fetch error:", err); alert("Connection error: " + (err.message || "Please try again.")); });
   }
 
   function reset() {
@@ -2578,7 +2584,7 @@ function BillXM() {
 
         return processNextChunk();
       }).then(function(report) {
-        setReport(report); setAnalysisProgress("");
+        setReport(report); setAnalysisProgress(""); try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
         setAnalyzeDone(true);
         setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
       }).catch(function(err) {
@@ -2604,6 +2610,7 @@ function BillXM() {
     })
       .then(function(report) {
         setReport(report);
+        try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
         recordGradeUsed(); // Track free grade usage
         setAnalyzeDone(true);
         setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);

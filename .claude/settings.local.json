@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel --prod --force)",
+      "Bash(npm list:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel env:*)",
+      "Bash(node -e ':*)",
+      "Bash(curl:*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
