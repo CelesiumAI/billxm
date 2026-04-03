@@ -39,7 +39,7 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
 /* HERO */
 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;padding-top:68px;}
 .hero-left{display:flex;flex-direction:column;justify-content:center;padding:72px 56px 72px 72px;background:var(--white);}
-.hero-right{position:relative;overflow:hidden;background:linear-gradient(160deg,#0B1840 0%,#0F1A3A 45%,#0B1530 100%);}
+.hero-right{position:relative;overflow:visible;background:linear-gradient(135deg, #0a1628, #0d1b2a);display:flex;align-items:center;justify-content:center;}
 .hero-right-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 35% 65%,rgba(37,99,235,.13) 0%,transparent 55%),radial-gradient(ellipse at 75% 25%,rgba(37,99,235,.07) 0%,transparent 45%);}
 .hero-right-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(255,255,255,.018) 47px,rgba(255,255,255,.018) 48px),repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.012) 47px,rgba(255,255,255,.012) 48px);}
 .hero-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:32px 32px 200px;}
@@ -332,7 +332,7 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
 @media(max-width:900px){
   .hero{grid-template-columns:1fr;min-height:auto;}
   .hero-left{padding:100px 28px 56px;}
-  .hero-right{height:400px;}
+  .hero-right{height:auto;min-height:300px;}
   .steps-grid,.stories-grid,.audience-grid,.pricing-grid{grid-template-columns:1fr;}
   .problem-inner{grid-template-columns:1fr;}
   .story-layout{grid-template-columns:1fr;}
@@ -458,83 +458,27 @@ window.addEventListener('scroll',function(){
       <a href="#how-it-works" class="btn btn-outline btn-lg">See How It Works</a>
     </div>
 
-    </div>
     <p class="hero-note">Hospital, specialist, lab, urgent care, surgery center — any medical bill &nbsp;·&nbsp; PDF, photo, or paste text &nbsp;·&nbsp; No credit card required</p>
   </div>
   <div class="hero-right">
-    <div class="hero-right-glow"></div>
-    <div class="hero-right-grid"></div>
-    <!-- Counter on right side of hero -->
-    <div id="counterBar" style="background:rgba(13,17,23,0.6); border:1px solid rgba(37,99,235,0.3); border-radius:16px; padding:32px; backdrop-filter:blur(10px); margin-bottom:24px;">
-      <div style="text-align:center; margin-bottom:24px;">
-        <div style="font-size:13px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Live Platform Stats</div>
-        <div style="width:40px; height:2px; background:#2563eb; margin:0 auto;"></div>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <div style="text-align:center;">
-          <div id="counterBills" style="font-size:36px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">100+</div>
-          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em;">Bills Analyzed</div>
+    <div style="position:absolute; width:300px; height:300px; background:radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%);"></div>
+    <div style="position:relative; z-index:1; padding:48px 40px; text-align:center;">
+      <div style="font-size:13px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:6px;">Live Platform Stats</div>
+      <div style="width:40px; height:2px; background:#2563eb; margin:0 auto 32px;"></div>
+      <div style="display:flex; flex-direction:column; gap:28px;">
+        <div>
+          <div id="counterBills" style="font-size:42px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">100+</div>
+          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Bills Analyzed</div>
         </div>
-        <div style="text-align:center;">
-          <div id="counterCharges" style="font-size:36px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$2.0M+</div>
-          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em;">Charges Reviewed</div>
+        <div>
+          <div id="counterCharges" style="font-size:42px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$2.0M+</div>
+          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Charges Reviewed</div>
         </div>
-        <div style="text-align:center;">
-          <div id="counterSavings" style="font-size:36px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$500K+</div>
-          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em;">Potential Savings Found</div>
+        <div>
+          <div id="counterSavings" style="font-size:42px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$500K+</div>
+          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Potential Savings Found</div>
         </div>
       </div>
-    </div>
-    <!-- Hero illustration: phone mockup showing BillXM results UI -->
-    <div class="hero-art">
-      <svg width="320" height="420" viewBox="0 0 320 420" fill="none">
-        <!-- Phone frame -->
-        <rect x="60" y="10" width="200" height="390" rx="28" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
-        <rect x="64" y="14" width="192" height="382" rx="25" fill="#0F1A14"/>
-        <!-- Notch -->
-        <rect x="120" y="20" width="80" height="14" rx="7" fill="rgba(255,255,255,.06)"/>
-        <!-- Status bar -->
-        <text x="78" y="50" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,.4)">9:41</text>
-        <text x="234" y="50" text-anchor="end" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,.4)">100%</text>
-        <!-- App header -->
-        <rect x="64" y="56" width="192" height="44" fill="rgba(0,201,167,.12)"/>
-        <text x="160" y="83" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="13" font-weight="700" fill="white">BillXM Analysis</text>
-        <!-- Grade circle -->
-        <circle cx="160" cy="152" r="48" fill="rgba(255,107,107,.1)" stroke="rgba(255,107,107,.35)" stroke-width="2"/>
-        <circle cx="160" cy="152" r="36" fill="rgba(255,107,107,.15)" stroke="rgba(255,107,107,.5)" stroke-width="1.5"/>
-        <text x="160" y="145" text-anchor="middle" font-family="Instrument Serif,serif" font-size="38" fill="#FF8A8A" font-weight="700">D</text>
-        <text x="160" y="168" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="rgba(255,107,107,.7)" letter-spacing=".05em">SIGNIFICANT OVERCHARGES</text>
-        <!-- Key metric -->
-        <rect x="76" y="215" width="168" height="56" rx="10" fill="rgba(0,201,167,.1)" stroke="rgba(0,201,167,.25)" stroke-width="1"/>
-        <text x="160" y="237" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,.5)" letter-spacing=".06em">OVERCHARGED BY</text>
-        <text x="160" y="262" text-anchor="middle" font-family="Instrument Serif,serif" font-size="28" fill="#00C9A7" font-weight="700">$323,044</text>
-        <!-- Line items -->
-        <text x="78" y="296" font-family="DM Sans,sans-serif" font-size="9" fill="rgba(255,255,255,.35)" letter-spacing=".06em">FINDINGS</text>
-        <!-- Item 1 -->
-        <rect x="76" y="304" width="168" height="26" rx="6" fill="rgba(255,255,255,.04)"/>
-        <text x="84" y="321" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,.65)">ECG Tracings ×24</text>
-        <text x="236" y="321" text-anchor="end" font-family="DM Sans,sans-serif" font-size="10" font-weight="700" fill="#FF8A8A">-$24,704</text>
-        <!-- Item 2 -->
-        <rect x="76" y="334" width="168" height="26" rx="6" fill="rgba(255,255,255,.03)"/>
-        <text x="84" y="351" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,.6)">Lab Panels ×46</text>
-        <text x="236" y="351" text-anchor="end" font-family="DM Sans,sans-serif" font-size="10" font-weight="700" fill="#FF8A8A">-$30,391</text>
-        <!-- Item 3 -->
-        <rect x="76" y="364" width="168" height="26" rx="6" fill="rgba(255,255,255,.02)"/>
-        <text x="84" y="381" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,.5)">CT Scans ×3</text>
-        <text x="236" y="381" text-anchor="end" font-family="DM Sans,sans-serif" font-size="10" font-weight="700" fill="#FF8A8A">-$28,552</text>
-        <!-- Bottom CTA -->
-        <rect x="76" y="398" width="168" height="34" rx="10" fill="#00C9A7"/>
-        <text x="160" y="420" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="12" font-weight="700" fill="white">View Full Report</text>
-        <!-- Side glow -->
-        <circle cx="260" cy="200" r="60" fill="rgba(0,201,167,.06)"/>
-        <circle cx="60" cy="300" r="40" fill="rgba(0,201,167,.04)"/>
-      </svg>
-    </div>
-    <div class="hero-stat-cards">
-      <div class="hsc"><div class="hsc-lbl">ECG Tracing ×24 — Billed</div><div class="hsc-red">$24,855</div><div class="hsc-sub">Gov't fair rate: <strong style="color:var(--mint-dark)">$151</strong> &nbsp;·&nbsp; 16,000% markup</div></div>
-      <div class="hsc"><div class="hsc-lbl">Total overcharges found</div><div class="hsc-grn">$323,044</div><div class="hsc-sub">Memorial Hermann Hospital, Houston TX · &lt;60 sec</div></div>
-      <div class="hsc"><div class="hsc-lbl">Lab Panels ×46 — Billed</div><div class="hsc-red">$30,780</div><div class="hsc-sub">Gov't fair rate: <strong style="color:var(--mint-dark)">$389</strong> &nbsp;·&nbsp; 80× markup</div></div>
-      <div class="hsc"><div class="hsc-lbl">Government rate verification</div><div class="hsc-grn">100%</div><div class="hsc-sub">30/30 issues verified · 41-pg report</div></div>
     </div>
   </div>
 </section>
@@ -2466,7 +2410,7 @@ function BillXM() {
         try {
           var rpt = JSON.parse(saved);
           setReport(rpt);
-          setTier("report");
+          setTier(localStorage.getItem('billxm_checkout_tier') || "report");
           setScreen("report");
           setActiveTab("overview");
           setShowPaywall(false);
@@ -2515,7 +2459,7 @@ function BillXM() {
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.allowed) return true;
-        if (data.gate === "free_limit_reached" || data.gate === "payment_required") { setShowPaymentModal(true); return false; }
+        if (data.gate === "free_limit_reached" || data.gate === "payment_required") { setShowPaywall(true); return false; }
         if (data.gate === "email_required") { setShowGate(true); return false; }
         return false;
       })
@@ -2540,7 +2484,7 @@ function BillXM() {
     }
     fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tier: checkoutTier, email: email }) })
       .then(function(r) { console.log("Checkout response status:", r.status); return r.json(); })
-      .then(function(data) { console.log("Checkout response data:", JSON.stringify(data)); if (data.url) { localStorage.setItem('billxm_payment_pending', 'true'); window.location.href = data.url; } else alert("Payment error: " + (data.error || "Unknown")); })
+      .then(function(data) { console.log("Checkout response data:", JSON.stringify(data)); if (data.url) { try { if (report) localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {} localStorage.setItem('billxm_checkout_tier', (checkoutTier === 'upgrade' || checkoutTier === 'full_report') ? 'full' : 'report'); localStorage.setItem('billxm_payment_pending', 'true'); window.location.href = data.url; } else alert("Payment error: " + (data.error || "Unknown")); })
       .catch(function(err) { console.error("Checkout fetch error:", err); alert("Connection error: " + (err.message || "Please try again.")); });
   }
 
@@ -3039,114 +2983,141 @@ function BillXM() {
     },
   ];
 
-  const PaywallModal = showPaywall ? (
-    <div onClick={() => setShowPaywall(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, padding: "32px 28px", maxWidth: 600, width: "100%", boxShadow: "0 32px 80px rgba(0,0,0,0.28)", fontFamily: C.font, maxHeight: "90vh", overflowY: "auto" }}>
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: C.navy, letterSpacing: "-0.02em" }}>Unlock Your Full Report</div>
-            <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Your bill grade and savings estimate are free. Unlock the details to dispute it.</div>
-          </div>
-          <button onClick={() => setShowPaywall(false)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.muted, lineHeight: 1, padding: "0 4px" }}>×</button>
-        </div>
-
-        {/* Free teaser recap */}
-        <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Bill Grade</div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: gradeColor(report?.grade) }}>{report?.grade}</div>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.navy }}>We found {issues.length} billing issues totaling <span style={{ color: C.green }}>{fmt(report?.potential_savings)}</span> in potential overcharges.</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>Unlock to see every issue, government rate citations, phone scripts, and your dispute letter.</div>
-          </div>
-        </div>
-
-        {/* Plan cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(155px, 1fr))", gap: 10, marginBottom: 20 }}>
-          {PLANS.map(plan => (
-            <div key={plan.id} style={{ border: `2px solid ${plan.highlight ? plan.color : C.border}`, borderRadius: 12, padding: "16px 14px", background: plan.highlight ? "#f0f9ff" : "white", position: "relative" }}>
-              {plan.highlight && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: C.navy, color: "white", fontSize: 9, fontWeight: 800, padding: "2px 10px", borderRadius: 10, whiteSpace: "nowrap" }}>MOST POPULAR</div>}
-              <div style={{ fontSize: 20, fontWeight: 900, color: plan.color }}>{plan.price}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginTop: 2 }}>{plan.label}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>{plan.desc}</div>
-              {plan.features.map((f, i) => (
-                <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 4 }}>
-                  <span style={{ color: plan.color, fontWeight: 800, fontSize: 11, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 11, color: "#475569", lineHeight: 1.4 }}>{f}</span>
-                </div>
-              ))}
-              <button
-                onClick={() => {
-                  startCheckout("single_report");
-                }}
-                style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 8, background: plan.color, color: "white", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}
-              >
-                Get {plan.label} →
-              </button>
+    const PaywallModal = showPaywall ? (
+      <div onClick={() => setShowPaywall(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, padding: "32px 28px", maxWidth: 600, width: "100%", boxShadow: "0 32px 80px rgba(0,0,0,0.28)", fontFamily: C.font, maxHeight: "90vh", overflowY: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: C.navy, letterSpacing: "-0.02em" }}>
+                {tier === "report" ? "Upgrade to Dispute Kit" : "Unlock Your Full Report"}
+              </div>
+              <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
+                {tier === "report" ? "You have the Full Report. Add phone scripts and dispute letter." : "Your bill grade and savings estimate are free. Unlock the details to dispute it."}
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Access code entry */}
-        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 8 }}>Have an access code?</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              value={unlockCode}
-              onChange={e => { setUnlockCode(e.target.value.toUpperCase()); setUnlockError(""); }}
-              onKeyDown={e => e.key === "Enter" && tryUnlock()}
-              placeholder="Enter code..."
-              style={{ flex: 1, padding: "9px 12px", borderRadius: 8, border: `1px solid ${unlockError ? C.red : C.border}`, fontSize: 13, fontFamily: C.mono, outline: "none" }}
-            />
-            <button onClick={tryUnlock} style={{ padding: "9px 18px", borderRadius: 8, background: C.navy, color: "white", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>
-              Unlock
-            </button>
+            <button onClick={() => setShowPaywall(false)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.muted, lineHeight: 1, padding: "0 4px" }}>×</button>
           </div>
-          {unlockError && <div style={{ fontSize: 12, color: C.red, marginTop: 6 }}>{unlockError}</div>}
-        </div>
+          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Bill Grade</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: gradeColor(report?.grade) }}>{report?.grade}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.navy }}>We found {issues.length} billing issues totaling <span style={{ color: C.green }}>{fmt(report?.potential_savings)}</span> in potential overcharges.</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>
+                {tier === "report" ? "Upgrade to get phone scripts and a formal dispute letter." : "Unlock to see every issue, government rate citations, phone scripts, and your dispute letter."}
+              </div>
+            </div>
+          </div>
 
-        <p style={{ fontSize: 11, color: "#94a3b8", textAlign: "center", marginTop: 14 }}>
-          No subscription required · Secure payment via Stripe · For informational purposes only
-        </p>
+          {tier === "report" ? (
+            /* ── UPGRADE VIEW: user already paid $4.99 ── */
+            <div>
+              <div style={{ border: "2px solid " + C.blue, borderRadius: 12, padding: "20px", textAlign: "center", marginBottom: 16 }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: C.blue }}>$5.00</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.navy, marginTop: 2 }}>Dispute Kit Upgrade</div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>Add to your existing Full Report</div>
+                <div style={{ textAlign: "left", maxWidth: 280, margin: "0 auto 16px" }}>
+                  {["Word-for-word phone scripts", "AI-written formal dispute letter", "Legal citations (NSA, Texas law)", "Copy, download, or email ready"].map(function(f, i) {
+                    return <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 4 }}><span style={{ color: C.blue, fontWeight: 800, fontSize: 11 }}>✓</span><span style={{ fontSize: 12, color: "#475569" }}>{f}</span></div>;
+                  })}
+                </div>
+                <button onClick={function() { startCheckout("upgrade"); }} style={{ width: "100%", padding: "12px 0", borderRadius: 8, background: C.blue, color: "white", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>Upgrade for $5.00 →</button>
+              </div>
+              <div style={{ borderTop: "1px solid " + C.border, paddingTop: 14, textAlign: "center" }}>
+                <div style={{ fontSize: 13, color: C.navy, fontWeight: 700, marginBottom: 4 }}>Or: We Negotiate For You — <span style={{ color: C.green }}>$99</span></div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Our billing experts call the hospital for you. Pay only after we accept your case. Money-back guarantee.</div>
+                <button onClick={function() { setShowPaywall(false); setActiveTab("negotiate"); }} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid " + C.blue, background: "transparent", color: C.blue, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: C.font }}>Learn More</button>
+              </div>
+            </div>
+          ) : (
+            /* ── FULL PAYMENT VIEW: user hasn't paid yet ── */
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                {/* $4.99 Full Report */}
+                <div style={{ border: "2px solid " + C.border, borderRadius: 12, padding: "16px 14px" }}>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: C.blue }}>$4.99</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginTop: 2 }}>Full Report</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>Launch sale — was $9.99</div>
+                  {["All billing issues with government rate citations", "Full line item rate comparison", "Severity breakdown & action plan", "30-day report access"].map(function(f, i) {
+                    return <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 4 }}><span style={{ color: C.blue, fontWeight: 800, fontSize: 11 }}>✓</span><span style={{ fontSize: 11, color: "#475569", lineHeight: 1.4 }}>{f}</span></div>;
+                  })}
+                  <button onClick={function() { startCheckout("single_report"); }} style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 8, background: C.blue, color: "white", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>Get Full Report →</button>
+                </div>
+                {/* $9.99 Report + Dispute Kit */}
+                <div style={{ border: "2px solid " + C.navy, borderRadius: 12, padding: "16px 14px", background: "#f0f9ff", position: "relative" }}>
+                  <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: C.navy, color: "white", fontSize: 9, fontWeight: 800, padding: "2px 10px", borderRadius: 10, whiteSpace: "nowrap" }}>MOST POPULAR</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: C.navy }}>$9.99</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginTop: 2 }}>Report + Dispute Kit</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>Launch sale — was $19.99</div>
+                  {["Everything in Full Report", "Word-for-word phone scripts", "AI-written formal dispute letter", "Legal citations (NSA, Texas law)"].map(function(f, i) {
+                    return <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 4 }}><span style={{ color: C.navy, fontWeight: 800, fontSize: 11 }}>✓</span><span style={{ fontSize: 11, color: "#475569", lineHeight: 1.4 }}>{f}</span></div>;
+                  })}
+                  <button onClick={function() { startCheckout("full_report"); }} style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 8, background: C.navy, color: "white", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>Get Report + Dispute Kit →</button>
+                </div>
+              </div>
+              {/* $99 We Negotiate */}
+              <div style={{ borderTop: "1px solid " + C.border, paddingTop: 14, textAlign: "center" }}>
+                <div style={{ fontSize: 13, color: C.navy, fontWeight: 700, marginBottom: 4 }}>We Negotiate For You — <span style={{ color: C.green }}>$99</span></div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Our billing experts call the hospital for you. Pay only after we accept your case. Money-back guarantee.</div>
+                <button onClick={function() { setShowPaywall(false); setActiveTab("negotiate"); }} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid " + C.blue, background: "transparent", color: C.blue, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: C.font }}>Learn More</button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ borderTop: "1px solid " + C.border, paddingTop: 16, marginTop: 16 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+              <input value={unlockCode} onChange={e => setUnlockCode(e.target.value)} placeholder="Enter code..." style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid " + C.border, fontSize: 13, width: 160, fontFamily: C.font }} />
+              <button onClick={function() { tryUnlock(); }} style={{ padding: "8px 16px", borderRadius: 8, background: C.navy, color: "white", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>Unlock</button>
+            </div>
+            {unlockError && <div style={{ color: "#ef4444", fontSize: 12, textAlign: "center", marginTop: 8 }}>{unlockError}</div>}
+          </div>
+          <p style={{ fontSize: 11, color: "#94a3b8", textAlign: "center", marginTop: 14 }}>No subscription required · Secure payment via Stripe · For informational purposes only</p>
+        </div>
       </div>
-    </div>
-  ) : null;
+    ) : null;
 
   // ── PAYWALL CARD (shown inside locked tabs) ─────────────────
-  function PaywallCard({ title, tier: needed }) {
-    return (
-      <Card style={{ padding: "52px 24px", textAlign: "center" }}>
-        <div style={{ fontSize: 44, marginBottom: 16 }}>🔒</div>
-        <h3 style={{ fontSize: 20, fontWeight: 800, color: C.navy, marginBottom: 8, letterSpacing: "-0.02em" }}>{title}</h3>
-        <p style={{ fontSize: 14, color: C.muted, maxWidth: 400, margin: "0 auto 24px", lineHeight: 1.7 }}>
-          {needed === "full"
-            ? "Included with the Report + Dispute Kit plan ($9.99)."
-            : "Included with the Full Report plan ($4.99) or Report + Dispute Kit ($9.99)."}
-        </p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
-          {(needed === "full"
-            ? [["$9.99", "Report + Dispute Kit", C.navy]]
-            : [["$4.99", "Full Report", C.blue], ["$9.99", "Report + Dispute Kit", C.navy]]
-          ).map(([price, label, color]) => (
-            <div key={label} style={{ padding: "8px 16px", borderRadius: 10, border: `2px solid ${color}`, textAlign: "center", minWidth: 100 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color }}>{price}</div>
-              <div style={{ fontSize: 11, color: C.muted }}>{label}</div>
-            </div>
-          ))}
-        </div>
-        <button onClick={() => setShowPaywall(true)} style={{ padding: "13px 36px", borderRadius: 10, background: C.navy, color: "white", border: "none", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: C.font }}>
-          Unlock Now →
-        </button>
-        <div style={{ marginTop: 14 }}>
-          <button onClick={() => { setUnlockCode(""); setShowPaywall(true); }} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, cursor: "pointer", fontFamily: C.font }}>
-            Have an access code?
+    function PaywallCard({ title, tier: needed }) {
+      var isUpgrade = (tier === "report" && needed === "full");
+      return (
+        <Card style={{ padding: "52px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 44, marginBottom: 16 }}>{isUpgrade ? "⬆️" : "🔒"}</div>
+          <h3 style={{ fontSize: 20, fontWeight: 800, color: C.navy, marginBottom: 8, letterSpacing: "-0.02em" }}>{isUpgrade ? "Upgrade to Dispute Kit" : title}</h3>
+          <p style={{ fontSize: 14, color: C.muted, maxWidth: 400, margin: "0 auto 24px", lineHeight: 1.7 }}>
+            {isUpgrade
+              ? "You already have the Full Report. Add phone scripts and a formal dispute letter for just $5 more."
+              : needed === "full"
+              ? "Included with the Report + Dispute Kit plan ($9.99)."
+              : "Included with the Full Report plan ($4.99) or Report + Dispute Kit ($9.99)."}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
+            {isUpgrade ? (
+              <div style={{ padding: "8px 16px", borderRadius: 10, border: "2px solid " + C.blue, textAlign: "center", minWidth: 100 }}>
+                <div style={{ fontSize: 15, fontWeight: 900, color: C.blue }}>$5.00</div>
+                <div style={{ fontSize: 11, color: C.muted }}>Dispute Kit Upgrade</div>
+              </div>
+            ) : (needed === "full"
+              ? [["$9.99", "Report + Dispute Kit", C.navy]]
+              : [["$4.99", "Full Report", C.blue], ["$9.99", "Report + Dispute Kit", C.navy]]
+            ).map(function(arr) {
+              return <div key={arr[1]} style={{ padding: "8px 16px", borderRadius: 10, border: "2px solid " + arr[2], textAlign: "center", minWidth: 100 }}>
+                <div style={{ fontSize: 15, fontWeight: 900, color: arr[2] }}>{arr[0]}</div>
+                <div style={{ fontSize: 11, color: C.muted }}>{arr[1]}</div>
+              </div>;
+            })}
+          </div>
+          <button onClick={function() { if (isUpgrade) { startCheckout("upgrade"); } else { setShowPaywall(true); } }} style={{ padding: "13px 36px", borderRadius: 10, background: C.navy, color: "white", border: "none", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: C.font }}>
+            {isUpgrade ? "Upgrade for $5.00 →" : "Unlock Now →"}
           </button>
-        </div>
-      </Card>
-    );
-  }
+          <div style={{ marginTop: 14 }}>
+            <button onClick={function() { setUnlockCode(""); setShowPaywall(true); }} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, cursor: "pointer", fontFamily: C.font }}>
+              Have an access code?
+            </button>
+          </div>
+        </Card>
+      );
+    }
 
   // ── SETTINGS MODAL ─────────────────────────────────────────
   const SettingsModal = showSettings ? (
@@ -3208,57 +3179,7 @@ function BillXM() {
     </div>
   ) : null;
 
-  // ── Payment Modal ─────────────────────────────────────────
-  const PaymentModal = showPaymentModal ? (
-    <div onClick={() => setShowPaymentModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.navy, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, maxWidth: 600, width: "90%", fontFamily: C.font }}>
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <span style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", padding: "6px 16px", borderRadius: 20, fontSize: 14, fontWeight: 600 }}>LAUNCH SALE — Save 50%!</span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-          {/* $4.99 Full Report */}
-          <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 20, textAlign: "center" }}>
-            <h3 style={{ color: "white", marginBottom: 4, fontSize: 16 }}>Full Report</h3>
-            <div style={{ marginBottom: 12 }}>
-              <span style={{ color: "#2ecc8a", fontSize: 28, fontWeight: 700 }}>$4.99</span>
-              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 13, display: "block" }}>$9.99</span>
-            </div>
-            <ul style={{ color: "#93c5fd", fontSize: 12, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 16 }}>
-              {["All billing issues with gov't rate citations", "Full line item rate comparison", "Severity breakdown and action plan", "30-day report access"].map(function(t) { return <li key={t} style={{ marginBottom: 4 }}>{"\u2713 " + t}</li>; })}
-            </ul>
-            <button onClick={() => startCheckout("single_report")} style={{ width: "100%", padding: 10, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer", fontSize: 14 }}>Get Full Report</button>
-          </div>
-          {/* $9.99 Report + Dispute Kit */}
-          <div style={{ background: "rgba(255,255,255,0.05)", border: "2px solid #2563eb", borderRadius: 12, padding: 20, textAlign: "center", position: "relative" }}>
-            <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: C.blue, color: "white", padding: "2px 10px", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>MOST POPULAR</span>
-            <h3 style={{ color: "white", marginBottom: 4, fontSize: 16 }}>Report + Dispute Kit</h3>
-            <div style={{ marginBottom: 12 }}>
-              <span style={{ color: "#2ecc8a", fontSize: 28, fontWeight: 700 }}>$9.99</span>
-              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 13, display: "block" }}>$19.99</span>
-            </div>
-            <ul style={{ color: "#93c5fd", fontSize: 12, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 16 }}>
-              {["Everything in Full Report", "Word-for-word phone scripts", "AI-written formal dispute letter", "Legal citations (NSA, Texas law)"].map(function(t) { return <li key={t} style={{ marginBottom: 4 }}>{"\u2713 " + t}</li>; })}
-            </ul>
-            <button onClick={() => startCheckout("full_report")} style={{ width: "100%", padding: 10, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer", fontSize: 14 }}>Get Dispute Kit</button>
-          </div>
-        </div>
-        {/* $99 We Negotiate */}
-        <div style={{ textAlign: "center", padding: 16, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, background: "rgba(255,255,255,0.05)", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-            <div>
-              <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>We Negotiate For You</span>
-              <span style={{ color: "#2ecc8a", fontWeight: 800, fontSize: 20, marginLeft: 8 }}>$99</span>
-            </div>
-            <button onClick={() => { setShowPaymentModal(false); setActiveTab("negotiate"); }} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid #2563eb", background: "transparent", color: "#2563eb", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-              Learn More
-            </button>
-          </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>We call the hospital for you. Money-back guarantee. Pay only after we accept your case.</div>
-        </div>
-        <button onClick={() => setShowPaymentModal(false)} style={{ display: "block", margin: "0 auto", background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 14 }}>Back to results</button>
-      </div>
-    </div>
-  ) : null;
+    const PaymentModal = null;
 
   // ── CONTACT FORM MODAL ──────────────────────────────────────
   function submitNegotiateRequest() {
@@ -4076,7 +3997,7 @@ function BillXM() {
 
           {/* ── PHONE SCRIPTS ── */}
           {activeTab === "scripts" && (
-            !isPaid ? <PaywallCard title="Word-for-Word Phone Dispute Scripts" tier="report" /> :
+              !hasFull ? <PaywallCard title="Word-for-Word Phone Dispute Scripts" tier="full" /> :
             <div>
               <Card style={{ padding: 20, marginBottom: 16 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.navy, marginBottom: 6 }}>📞 Phone Dispute Guide</div>
