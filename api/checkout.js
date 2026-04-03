@@ -1,4 +1,5 @@
 // api/checkout.js -- BillXM Stripe Checkout
+// Tiers: single_report ($4.99), full_report ($9.99), upgrade ($5.00), monthly
 var Stripe = require('stripe');
 
 module.exports = async function handler(req, res) {
@@ -19,14 +20,14 @@ module.exports = async function handler(req, res) {
     var sessionConfig = null;
 
     if (tier === 'single_report') {
-      // $4.99 (sale) / $9.99 (regular) -- Issues + Line Items only
+      // $4.99 (sale) / $9.99 -- Issues + Line Items
       sessionConfig = {
         mode: 'payment',
         customer_email: email,
         line_items: [{
           price_data: {
             currency: 'usd',
-            product_data: { name: 'BillXM Full Report', description: 'Complete bill analysis with overcharges and line item comparison' },
+            product_data: { name: 'BillXM Full Report', description: 'Complete bill analysis with all overcharges and line item comparison' },
             unit_amount: onSale ? 499 : 999,
           },
           quantity: 1,
@@ -37,7 +38,7 @@ module.exports = async function handler(req, res) {
         allow_promotion_codes: true,
       };
     } else if (tier === 'full_report') {
-      // $9.99 (sale) / $19.99 (regular) -- Everything including dispute letter + phone scripts
+      // $9.99 (sale) / $19.99 -- Everything including dispute letter + phone scripts
       sessionConfig = {
         mode: 'payment',
         customer_email: email,
@@ -49,7 +50,25 @@ module.exports = async function handler(req, res) {
           },
           quantity: 1,
         }],
-        metadata: { email: email, credit_type: 'single_report' },
+        metadata: { email: email, credit_type: 'full_report' },
+        success_url: siteUrl + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: siteUrl + '/#payment-cancelled',
+        allow_promotion_codes: true,
+      };
+    } else if (tier === 'upgrade') {
+      // $5.00 -- Upgrade from $4.99 report to full dispute kit
+      sessionConfig = {
+        mode: 'payment',
+        customer_email: email,
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'BillXM Dispute Kit Upgrade', description: 'Add phone scripts and formal dispute letter to your existing report' },
+            unit_amount: 500,
+          },
+          quantity: 1,
+        }],
+        metadata: { email: email, credit_type: 'upgrade_to_full' },
         success_url: siteUrl + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
         cancel_url: siteUrl + '/#payment-cancelled',
         allow_promotion_codes: true,
@@ -74,7 +93,7 @@ module.exports = async function handler(req, res) {
         allow_promotion_codes: true,
       };
     } else {
-      return res.status(400).json({ error: 'Invalid tier. Use single_report, full_report, or monthly.' });
+      return res.status(400).json({ error: 'Invalid tier' });
     }
 
     var session = await stripe.checkout.sessions.create(sessionConfig);
