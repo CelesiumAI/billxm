@@ -1,87 +1,84 @@
-// api/checkout.js — BillXM Stripe Checkout
-// Creates Stripe Checkout Sessions for single reports and monthly subscriptions
-
+// api/checkout.js -- BillXM Stripe Checkout
 var Stripe = require('stripe');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   var stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
   var body = req.body || {};
-  var tier = body.tier; // 'single_report' or 'monthly'
+  var tier = body.tier;
   var email = body.email || '';
 
-  if (!tier || !email) {
-    return res.status(400).json({ error: 'Missing tier or email' });
-  }
+  if (!tier || !email) return res.status(400).json({ error: 'Missing tier or email' });
 
-  // ── Pricing (launch sale) ──
   var now = new Date();
-  var saleEnd = new Date('2026-06-30');
-  var onSale = now <= saleEnd;
+  var onSale = now <= new Date('2026-06-30');
+  var siteUrl = process.env.SITE_URL || 'https://www.billxm.com';
 
   try {
+    var sessionConfig = null;
+
     if (tier === 'single_report') {
-      // One-time payment for a single report
-      var session = await stripe.checkout.sessions.create({
+      // $4.99 (sale) / $9.99 (regular) -- Issues + Line Items only
+      sessionConfig = {
         mode: 'payment',
         customer_email: email,
         line_items: [{
           price_data: {
             currency: 'usd',
-            product_data: {
-              name: 'BillXM Full Report',
-              description: 'Complete bill analysis with overcharges, dispute letter, and phone scripts',
-            },
-            unit_amount: onSale ? 499 : 999, // $4.99 sale or $9.99 regular
+            product_data: { name: 'BillXM Full Report', description: 'Complete bill analysis with overcharges and line item comparison' },
+            unit_amount: onSale ? 499 : 999,
           },
           quantity: 1,
         }],
-        metadata: {
-          email: email,
-          credit_type: 'single_report',
-        },
-        success_url: (process.env.SITE_URL || 'https://www.billxm.com') + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: (process.env.SITE_URL || 'https://www.billxm.com') + '/#payment-cancelled',
+        metadata: { email: email, credit_type: 'single_report' },
+        success_url: siteUrl + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: siteUrl + '/#payment-cancelled',
         allow_promotion_codes: true,
-      });
-
-      return res.status(200).json({ url: session.url, session_id: session.id });
-
+      };
+    } else if (tier === 'full_report') {
+      // $9.99 (sale) / $19.99 (regular) -- Everything including dispute letter + phone scripts
+      sessionConfig = {
+        mode: 'payment',
+        customer_email: email,
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'BillXM Report + Dispute Kit', description: 'Full analysis plus phone scripts and formal dispute letter' },
+            unit_amount: onSale ? 999 : 1999,
+          },
+          quantity: 1,
+        }],
+        metadata: { email: email, credit_type: 'single_report' },
+        success_url: siteUrl + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: siteUrl + '/#payment-cancelled',
+        allow_promotion_codes: true,
+      };
     } else if (tier === 'monthly') {
-      // Recurring subscription
-      var session = await stripe.checkout.sessions.create({
+      // Monthly subscription -- unlimited everything
+      sessionConfig = {
         mode: 'subscription',
         customer_email: email,
         line_items: [{
           price_data: {
             currency: 'usd',
-            product_data: {
-              name: 'BillXM Unlimited Monthly',
-              description: 'Unlimited bill analyses, reports, dispute letters, and phone scripts',
-            },
-            unit_amount: onSale ? 999 : 1999, // $9.99 sale or $19.99 regular
-            recurring: {
-              interval: 'month',
-            },
+            product_data: { name: 'BillXM Unlimited Monthly', description: 'Unlimited bill analyses, reports, dispute letters, and phone scripts' },
+            unit_amount: onSale ? 999 : 1999,
+            recurring: { interval: 'month' },
           },
           quantity: 1,
         }],
-        metadata: {
-          email: email,
-          credit_type: 'subscription',
-        },
-        success_url: (process.env.SITE_URL || 'https://www.billxm.com') + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: (process.env.SITE_URL || 'https://www.billxm.com') + '/#payment-cancelled',
+        metadata: { email: email, credit_type: 'subscription' },
+        success_url: siteUrl + '/#payment-success?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: siteUrl + '/#payment-cancelled',
         allow_promotion_codes: true,
-      });
-
-      return res.status(200).json({ url: session.url, session_id: session.id });
-
+      };
     } else {
-      return res.status(400).json({ error: 'Invalid tier. Use single_report or monthly.' });
+      return res.status(400).json({ error: 'Invalid tier. Use single_report, full_report, or monthly.' });
     }
+
+    var session = await stripe.checkout.sessions.create(sessionConfig);
+    return res.status(200).json({ url: session.url, session_id: session.id });
 
   } catch (err) {
     console.error('Stripe checkout error:', err.message);

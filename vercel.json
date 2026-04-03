@@ -8,9 +8,11 @@
     }
   ],
   "functions": {
-    "api/analyze.js": { "maxDuration": 300 },
+    "api/analyze.js": { "maxDuration": 120 },
     "api/gate.js": { "maxDuration": 10 },
     "api/checkout.js": { "maxDuration": 10 },
-    "api/webhook.js": { "maxDuration": 10 }
+    "api/webhook.js": { "maxDuration": 10 },
+    "api/counters.js": { "maxDuration": 5 },
+    "api/admin.js": { "maxDuration": 15 }
   }
 }

@@ -453,6 +453,25 @@ window.addEventListener('scroll',function(){
       <a href="#" class="btn btn-mint btn-lg" onclick="launchBillXM();return false;">Check My Bill — Free</a>
       <a href="#how-it-works" class="btn btn-outline btn-lg">See How It Works</a>
     </div>
+
+<!-- Counter Bar -->
+<div id="counterBar" style="background:linear-gradient(135deg, #0a1628, #132040); border-top:1px solid rgba(37,99,235,0.2); border-bottom:1px solid rgba(37,99,235,0.2); padding:28px 0; margin:24px -20px 0;">
+  <div style="max-width:960px; margin:0 auto; display:flex; justify-content:center; gap:48px; flex-wrap:wrap; padding:0 20px;">
+    <div style="text-align:center;">
+      <div id="counterBills" style="font-size:32px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">100+</div>
+      <div style="font-size:13px; color:#8b92a5; margin-top:4px; text-transform:uppercase; letter-spacing:0.05em;">Bills Analyzed</div>
+    </div>
+    <div style="text-align:center;">
+      <div id="counterCharges" style="font-size:32px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$2.0M+</div>
+      <div style="font-size:13px; color:#8b92a5; margin-top:4px; text-transform:uppercase; letter-spacing:0.05em;">Charges Reviewed</div>
+    </div>
+    <div style="text-align:center;">
+      <div id="counterSavings" style="font-size:32px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$500K+</div>
+      <div style="font-size:13px; color:#8b92a5; margin-top:4px; text-transform:uppercase; letter-spacing:0.05em;">Potential Savings Found</div>
+    </div>
+  </div>
+</div>
+    </div>
     <p class="hero-note">Hospital, specialist, lab, urgent care, surgery center — any medical bill &nbsp;·&nbsp; PDF, photo, or paste text &nbsp;·&nbsp; No credit card required</p>
   </div>
   <div class="hero-right">
@@ -1712,13 +1731,72 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
   </div>
 </div></section>
 
-<!-- FOOTER -->
-<footer><div class="container"><div class="footer-grid">
-  <div class="footer-left">&copy; 2026 BillXM LLC. All rights reserved.</div>
-  <div class="footer-links">
-    <a href="#">Privacy</a><a href="#">Terms</a><a href="#">HIPAA Notice</a><a href="mailto:contact.billxm@gmail.com">Contact</a>
+<!-- Team Section -->
+<div style="background:#0d1117; padding:80px 20px; border-top:1px solid #1a2035;">
+  <div style="max-width:960px; margin:0 auto; text-align:center;">
+    <h2 style="font-size:32px; font-weight:800; color:#e8eaf0; margin-bottom:8px;">Our Team</h2>
+    <p style="color:#8b92a5; font-size:16px; margin-bottom:48px;">Healthcare technology meets medical billing expertise</p>
+
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:32px; margin-bottom:48px;">
+      <div style="text-align:center; width:160px;">
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #2563eb, #7c3aed); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">IP</div>
+        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Ian Phan</div>
+        <div style="font-size:13px; color:#2563eb; font-weight:600;">Co-Founder</div>
+      </div>
+      <div style="text-align:center; width:160px;">
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #2563eb, #7c3aed); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">GP</div>
+        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Grayson Phan</div>
+        <div style="font-size:13px; color:#2563eb; font-weight:600;">Co-Founder</div>
+      </div>
+      <div style="text-align:center; width:160px;">
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2563eb); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">PP</div>
+        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Phillip Phan</div>
+        <div style="font-size:13px; color:#8b92a5; font-weight:600;">Managing Director</div>
+      </div>
+      <div style="text-align:center; width:160px;">
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2563eb); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">MH</div>
+        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Marty Hill</div>
+        <div style="font-size:13px; color:#8b92a5; font-weight:600;">Managing Director</div>
+      </div>
+      <div style="text-align:center; width:160px;">
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #065f46, #10b981); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">BS</div>
+        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Blonde Suico</div>
+        <div style="font-size:13px; color:#8b92a5;">FACHE, MBA</div>
+        <div style="font-size:12px; color:#8b92a5;">Consultant</div>
+      </div>
+    </div>
+
+    <h3 style="font-size:18px; font-weight:700; color:#e8eaf0; margin-bottom:24px;">Advisory Board</h3>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:32px;">
+      <div style="text-align:center; width:160px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:#1a2035; border:2px solid #252a35; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:#8b92a5;">AS</div>
+        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">Anshu Shrivastava</div>
+        <div style="font-size:12px; color:#8b92a5;">Rice University / Meta AI</div>
+      </div>
+      <div style="text-align:center; width:160px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:#1a2035; border:2px solid #252a35; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:#8b92a5;">MR</div>
+        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">Mike Rome</div>
+        <div style="font-size:12px; color:#8b92a5;">Dean of Business, HCU</div>
+      </div>
+      <div style="text-align:center; width:160px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:#1a2035; border:2px solid #252a35; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:#8b92a5;">DZ</div>
+        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">David Zhang</div>
+        <div style="font-size:12px; color:#8b92a5;">Biostate AI</div>
+      </div>
+    </div>
   </div>
-</div></div></footer>
+</div>
+
+<!-- Footer -->
+<div style="background:#080b12; padding:32px 20px; border-top:1px solid #1a2035; text-align:center;">
+  <div style="font-size:13px; color:#5a6175;">&copy; 2026 BillXM LLC. All rights reserved.</div>
+  <div style="font-size:12px; color:#3d4455; margin-top:8px;">A Celesium AI venture, backed by Celesium Capital LP</div>
+  <div style="margin-top:12px; display:flex; justify-content:center; gap:16px; font-size:12px;">
+    <a href="#privacy" style="color:#5a6175; text-decoration:none;">Privacy Policy</a>
+    <a href="#terms" style="color:#5a6175; text-decoration:none;">Terms of Service</a>
+    <a href="mailto:contact.billxm@gmail.com" style="color:#5a6175; text-decoration:none;">Contact</a>
+  </div>
+</div>
 
 
 
@@ -1731,6 +1809,18 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Load live counters
+fetch('/api/counters').then(function(r) { return r.json(); }).then(function(data) {
+  if (data.display) {
+    var el1 = document.getElementById('counterBills');
+    var el2 = document.getElementById('counterCharges');
+    var el3 = document.getElementById('counterSavings');
+    if (el1) el1.textContent = data.display.bills;
+    if (el2) el2.textContent = data.display.charges;
+    if (el3) el3.textContent = data.display.savings;
+  }
+}).catch(function() {});
+
 /* Launch app overlay */
 function launchBillXM() {
   // pushState blocked in iframes — wrap so SecurityError never crashes the app
@@ -2129,6 +2219,12 @@ function BillXM() {
   const [gateLoading, setGateLoading] = useState(false);
   const [freeGradesRemaining, setFreeGradesRemaining] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactType, setContactType] = useState("failed_analysis");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactDesc, setContactDesc] = useState("");
+  const [contactSuccess, setContactSuccess] = useState("");
+  const [contactError2, setContactError2] = useState("");
   const fileRef = useRef(null);
 
   // DEMO CODES: "CELESIUM" (internal), "CENTENE2026" (Centene/Superior HealthPlan presentation)
@@ -2222,7 +2318,8 @@ function BillXM() {
 
   // ── Email Gate Functions ──────────────────────────────────
   function submitEmailGate() {
-    if (!gateEmail || gateEmail.indexOf("@") < 1) { setGateError("Please enter a valid email."); return; }
+    var emailRegex = /^[^\s@]+@[^\s@]+\.(com|org|net|edu|gov|io|co|us|info|biz|me|health|med|care|tech|ai|app|dev)$/i;
+    if (!gateEmail || !emailRegex.test(gateEmail)) { setGateError("Please enter a valid email address (e.g. name@gmail.com)"); return; }
     if (!gateConsent) { setGateError("Please agree to the terms."); return; }
     setGateError(""); setGateLoading(true);
     fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "register", email: gateEmail }) })
@@ -2591,6 +2688,7 @@ function BillXM() {
         setAnalysisProgress("");
         setError("Analysis failed: " + (err.message || "Unknown error"));
         setAnalyzeDone(false); setScreen("upload");
+        setContactType("failed_analysis"); setContactEmail(localStorage.getItem("billxm_email") || ""); setShowContactForm(true);
       });
       return;
     }
@@ -2624,6 +2722,7 @@ function BillXM() {
         }
         setAnalyzeDone(false);
         setScreen("upload");
+        setContactType("failed_analysis"); setContactEmail(localStorage.getItem("billxm_email") || ""); setShowContactForm(true);
       });
   }
 
@@ -2941,37 +3040,75 @@ function BillXM() {
   // ── Payment Modal ─────────────────────────────────────────
   const PaymentModal = showPaymentModal ? (
     <div onClick={() => setShowPaymentModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.navy, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, maxWidth: 560, width: "90%", fontFamily: C.font }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.navy, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, maxWidth: 600, width: "90%", fontFamily: C.font }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <span style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", color: "white", padding: "6px 16px", borderRadius: 20, fontSize: 14, fontWeight: 600 }}>LAUNCH SALE — Save 50%!</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 24, textAlign: "center" }}>
-            <h3 style={{ color: "white", marginBottom: 4 }}>Single Report</h3>
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ color: "#4ade80", fontSize: 32, fontWeight: 700 }}>$4.99</span>
-              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 14, display: "block" }}>$9.99</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          {/* $4.99 Full Report */}
+          <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 20, textAlign: "center" }}>
+            <h3 style={{ color: "white", marginBottom: 4, fontSize: 16 }}>Full Report</h3>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: "#2ecc8a", fontSize: 28, fontWeight: 700 }}>$4.99</span>
+              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 13, display: "block" }}>$9.99</span>
             </div>
-            <ul style={{ color: "#93c5fd", fontSize: 13, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 20 }}>
-              {["Full analysis report", "All overcharges identified", "Phone scripts included", "Dispute letter ready"].map(function(t) { return <li key={t} style={{ marginBottom: 6 }}>{"✓ " + t}</li>; })}
+            <ul style={{ color: "#93c5fd", fontSize: 12, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 16 }}>
+              {["All billing issues identified", "Government rate citations", "Line item rate comparison", "30-day report access"].map(function(t) { return <li key={t} style={{ marginBottom: 4 }}>{"\u2713 " + t}</li>; })}
             </ul>
-            <button onClick={() => startCheckout("single_report")} style={{ width: "100%", padding: 12, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer" }}>Buy Report</button>
+            <button onClick={() => startCheckout("single_report")} style={{ width: "100%", padding: 10, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer", fontSize: 14 }}>Get Full Report</button>
           </div>
-          <div style={{ background: "rgba(255,255,255,0.05)", border: "2px solid #2563eb", borderRadius: 12, padding: 24, textAlign: "center", position: "relative" }}>
-            <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: C.blue, color: "white", padding: "2px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600 }}>BEST VALUE</span>
-            <h3 style={{ color: "white", marginBottom: 4 }}>Unlimited Monthly</h3>
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ color: "#4ade80", fontSize: 32, fontWeight: 700 }}>$9.99</span>
-              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>/mo</span>
-              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 14, display: "block" }}>$19.99/mo</span>
+          {/* $9.99 Report + Dispute Kit */}
+          <div style={{ background: "rgba(255,255,255,0.05)", border: "2px solid #2563eb", borderRadius: 12, padding: 20, textAlign: "center", position: "relative" }}>
+            <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: C.blue, color: "white", padding: "2px 10px", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>MOST POPULAR</span>
+            <h3 style={{ color: "white", marginBottom: 4, fontSize: 16 }}>Report + Dispute Kit</h3>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: "#2ecc8a", fontSize: 28, fontWeight: 700 }}>$9.99</span>
+              <span style={{ color: "rgba(255,255,255,0.4)", textDecoration: "line-through", fontSize: 13, display: "block" }}>$19.99</span>
             </div>
-            <ul style={{ color: "#93c5fd", fontSize: 13, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 20 }}>
-              {["Unlimited bill analyses", "Unlimited full reports", "All phone scripts", "Cancel anytime"].map(function(t) { return <li key={t} style={{ marginBottom: 6 }}>{"✓ " + t}</li>; })}
+            <ul style={{ color: "#93c5fd", fontSize: 12, textAlign: "left", listStyle: "none", padding: 0, marginBottom: 16 }}>
+              {["Everything in Full Report", "Phone scripts to call hospital", "Formal dispute letter", "Legal citations ready"].map(function(t) { return <li key={t} style={{ marginBottom: 4 }}>{"\u2713 " + t}</li>; })}
             </ul>
-            <button onClick={() => startCheckout("monthly")} style={{ width: "100%", padding: 12, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer" }}>Subscribe</button>
+            <button onClick={() => startCheckout("full_report")} style={{ width: "100%", padding: 10, borderRadius: 8, background: C.blue, color: "white", fontWeight: 600, border: "none", cursor: "pointer", fontSize: 14 }}>Get Dispute Kit</button>
           </div>
         </div>
-        <button onClick={() => setShowPaymentModal(false)} style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 14 }}>Back to results</button>
+        {/* $99 We Negotiate */}
+        <div style={{ textAlign: "center", padding: 16, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, background: "rgba(255,255,255,0.05)", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+            <div>
+              <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>We Negotiate For You</span>
+              <span style={{ color: "#2ecc8a", fontWeight: 800, fontSize: 20, marginLeft: 8 }}>$99</span>
+            </div>
+            <button onClick={() => { setShowPaymentModal(false); setShowContactForm(true); setContactType("negotiate"); }} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "white", cursor: "pointer", fontSize: 13 }}>
+              Learn More
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>We call the hospital for you. Money-back guarantee. Pay only after we accept your case.</div>
+        </div>
+        <button onClick={() => setShowPaymentModal(false)} style={{ display: "block", margin: "0 auto", background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 14 }}>Back to results</button>
+      </div>
+    </div>
+  ) : null;
+
+  // ── CONTACT FORM MODAL ──────────────────────────────────────
+  function submitContactRequest() {
+    if (!contactEmail || contactEmail.indexOf("@") < 1) { setContactError2("Please enter a valid email."); return; }
+    fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "contact_request", email: contactEmail, request_type: contactType, description: contactDesc }) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { if (data.success) { setContactSuccess(data.message || "Request sent! We'll be in touch within 24 hours."); setContactError2(""); } })
+      .catch(function() { setContactError2("Connection error. Email us at contact.billxm@gmail.com"); });
+  }
+
+  const ContactModal = showContactForm ? (
+    <div onClick={() => setShowContactForm(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 10001, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.navy, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, maxWidth: 440, width: "90%", textAlign: "center", fontFamily: C.font }}>
+        <h2 style={{ color: "white", fontSize: 22, marginBottom: 8 }}>{contactType === "negotiate" ? "We Negotiate For You" : "We Can Still Help"}</h2>
+        <p style={{ color: "#93c5fd", fontSize: 15, marginBottom: 24 }}>{contactType === "negotiate" ? "For $99, our team handles the hospital calls and dispute. You pay ONLY after we accept your case. Money-back guarantee." : "We could not process this bill automatically, but our team can review it manually within 24 hours."}</p>
+        <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="your@email.com" style={{ width: "100%", padding: "14px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: 16, marginBottom: 12, boxSizing: "border-box" }} />
+        <textarea value={contactDesc} onChange={e => setContactDesc(e.target.value)} placeholder="Briefly describe your bill (hospital name, approximate total)" rows={3} style={{ width: "100%", padding: "14px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: 15, marginBottom: 16, boxSizing: "border-box", resize: "vertical" }} />
+        <button onClick={submitContactRequest} style={{ width: "100%", padding: 14, borderRadius: 8, background: C.blue, color: "white", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}>Send Request</button>
+        {contactSuccess && <div style={{ color: "#2ecc8a", fontSize: 14, marginTop: 12 }}>{contactSuccess}</div>}
+        {contactError2 && <div style={{ color: "#ff4e4e", fontSize: 14, marginTop: 12 }}>{contactError2}</div>}
+        <button onClick={() => setShowContactForm(false)} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: "#93c5fd", cursor: "pointer", fontSize: 14 }}>Close</button>
       </div>
     </div>
   ) : null;
@@ -3058,7 +3195,7 @@ function BillXM() {
 
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 60 }}>
-        {SettingsModal}{GateModal}{PaymentModal}
+        {SettingsModal}{GateModal}{PaymentModal}{ContactModal}
         {/* NAV */}
         <div style={{ background: C.navy, padding: "0 24px" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", height: 56 }}>
@@ -3158,7 +3295,7 @@ function BillXM() {
     const info = PORTAL_LABELS[portal] || PORTAL_LABELS["enterprise"];
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        {SettingsModal}{GateModal}{PaymentModal}
+        {SettingsModal}{GateModal}{PaymentModal}{ContactModal}
         <div style={{ background: "white", borderRadius: 20, border: `1px solid ${C.border}`, padding: "44px 36px", maxWidth: 480, width: "100%", textAlign: "center", boxShadow: "0 4px 32px rgba(0,0,0,0.08)" }}>
           <div style={{ fontSize: 44, marginBottom: 16 }}>{info.icon}</div>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 8, letterSpacing: "-0.02em" }}>{info.name} Portal</h2>
@@ -3191,7 +3328,7 @@ function BillXM() {
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 60 }}>
         <NavBar showSettingsBtn={true} />
-        {SettingsModal}{GateModal}{PaymentModal}
+        {SettingsModal}{GateModal}{PaymentModal}{ContactModal}
 
         {/* HERO */}
         <div style={{ background: `linear-gradient(155deg, ${C.navy} 0%, #1e3a5f 100%)`, padding: "64px 24px 80px" }}>
@@ -3262,7 +3399,7 @@ function BillXM() {
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 48 }}>
         <NavBar showSettingsBtn={true} />
-        {SettingsModal}{GateModal}{PaymentModal}
+        {SettingsModal}{GateModal}{PaymentModal}{ContactModal}
         <div style={{ maxWidth: 680, margin: "36px auto 0", padding: "0 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <h1 style={{ fontSize: 30, fontWeight: 800, color: C.navy, letterSpacing: "-0.02em" }}>Analyze Your Medical Bill</h1>
@@ -3431,7 +3568,7 @@ function BillXM() {
 
     return (
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 48 }}>
-        {SettingsModal}{GateModal}{PaymentModal}
+        {SettingsModal}{GateModal}{PaymentModal}{ContactModal}
         {PaywallModal}
         <NavBar right={
           <>
