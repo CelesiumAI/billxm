@@ -1117,6 +1117,21 @@ module.exports = async function handler(req, res) {
     }
 
     var potentialSavings = Math.max(0, Math.round((totalBilled - estimatedFairValue) * 100) / 100);
+
+    // If fair value > billed (facility charged below Medicare APC), use sum of individual overcharges
+    // This catches cases like cruise ship medical centers where facility is cheap but services are overpriced
+    if (potentialSavings === 0 && (highCount + medCount + lowCount) > 0) {
+      var itemSavings = 0;
+      enrichedItems.forEach(function(item) {
+        if (item.savings && item.savings > 0) itemSavings += item.savings;
+      });
+      if (itemSavings > 0) {
+        potentialSavings = Math.round(itemSavings * 100) / 100;
+        estimatedFairValue = Math.round((totalBilled - potentialSavings) * 100) / 100;
+        console.log('Fair value exceeded billed. Using individual item savings: $' + potentialSavings.toFixed(2));
+      }
+    }
+
     var overchargePct = totalBilled > 0 ? Math.round((potentialSavings / totalBilled) * 100) : 0;
     var issueCount = highCount + medCount + lowCount;
 
