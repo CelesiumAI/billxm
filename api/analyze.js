@@ -567,17 +567,34 @@ var GRADE_PROMPT = 'You are BillXM AI. Quickly assess this medical bill data and
 '"issue_count":0,"high_count":0,"medium_count":0,"low_count":0}';
 
 // ── CPT mapping prompt for unknown codes ─────────────────────
-var CPT_MAP_PROMPT = 'You are a medical coding expert. Map each service description to its standard CPT code.\n\n' +
+var CPT_MAP_PROMPT = 'You are a medical coding expert. Map each service description to its standard CPT or HCPCS code.\n\n' +
 'Return ONLY valid JSON, no markdown:\n' +
 '{"mappings": [{"description": "original description", "cpt": "5-digit CPT code", "confidence": "HIGH|MEDIUM|LOW"}]}\n\n' +
 'Rules:\n' +
 '- Only map if you are confident in the CPT code\n' +
 '- If unsure, set cpt to "" and confidence to "LOW"\n' +
-'- Common mappings: EKG 12 LEAD = 93000, CT HEAD W/O CONTRAST = 70450, CBC WITH AUTO DIFF = 85025,\n' +
-'  BASIC METABOLIC PANEL = 80048, COMP METABOLIC PANEL = 80053, ED LEVEL IV = 99284, ED LEVEL V = 99285,\n' +
-'  ED LEVEL III = 99283, CHEST X-RAY = 71046, IV INFUSION HYDRATION = 96360, HCG QUAL = 81025,\n' +
-'  THYROID STIMULATING HORMONE = 84443, URINALYSIS = 81003, LIPID PANEL = 80061\n' +
-'- For drugs (ACETAMINOPHEN, SODIUM CHLORIDE, etc.) set cpt to ""\n';
+'- IGNORE prefixes like "HC " (Hospital Charge) -- focus on the service name\n' +
+'- For room/board, progressive care, observation hours, facility fees: set cpt to "" (these are facility charges)\n' +
+'- For drugs and IV solutions (SODIUM CHLORIDE, MAGNESIUM SULFATE, INSULIN, DEXTROSE, POTASSIUM CHLORIDE, ONDANSETRON, METOCLOPRAMIDE): map to J-codes if known, otherwise set cpt to ""\n' +
+'- Common mappings:\n' +
+'  EKG/ECG = 93005, EKG 12 LEAD = 93000, CT HEAD W/O CONTRAST = 70450,\n' +
+'  CBC/CBS WITH AUTO DIFF = 85025, CBC = 85027,\n' +
+'  BASIC METABOLIC PANEL = 80048, COMP METABOLIC PANEL/COMPREHENSIVE METABOLIC = 80053,\n' +
+'  ED CARE LEVEL 4/ED LEVEL IV = 99284, ED CARE LEVEL 5/ED LEVEL V = 99285,\n' +
+'  ED CARE LEVEL 3/ED LEVEL III = 99283,\n' +
+'  CHEST X-RAY/X-RAY EXAM CHEST 1 VIEW = 71045, CHEST X-RAY 2 VIEW = 71046,\n' +
+'  IV INFUSION HYDRATION/HYDRATION 1ST HR = 96360, HYDRATION ADDL HOUR = 96361,\n' +
+'  IV PUSH/IVP INJECT = 96374, IV PUSH EA ADDL DRUG = 96375,\n' +
+'  BLOOD GAS/ABG = 82803, BLOOD GAS ISTAT = 82803,\n' +
+'  BLOOD CULTURE = 87040, LACTIC ACID = 83605,\n' +
+'  URINALYSIS = 81003, URINALYSIS BIOCHEMICAL = 81003,\n' +
+'  PROFILE LIVER/HEPATIC PANEL = 80076, LIPID PANEL = 80061,\n' +
+'  COVID/FLU/RSV PANEL = 87635, B-HYDROXYBUTYRATE = 82010,\n' +
+'  THYROID STIMULATING HORMONE = 84443, HCG QUAL = 81025,\n' +
+'  MAGNESIUM LEVEL = 83735, AMNIO PH = 83986\n' +
+'- Drug J-code mappings:\n' +
+'  ONDANSETRON = J2405, METOCLOPRAMIDE = J2765, INSULIN GLARGINE = J1815,\n' +
+'  POTASSIUM CHLORIDE = J3480, MAGNESIUM SULFATE = J3475\n';
 
 // ── Cached demo report ───────────────────────────────────────
 var CACHED_DEMO_REPORT = {
@@ -823,7 +840,7 @@ module.exports = async function handler(req, res) {
     // STEP 2b: CPT mapping fallback for unrecognized codes
     // ════════════════════════════════════════════════════════════
     var unmatchedItems = enrichedItems.filter(function(item) {
-      return item.fair_rate === null && item.billed > 0 && item.description.length > 3 && item.code !== '';
+      return item.fair_rate === null && item.billed > 0 && item.description.length > 3;
     });
     var unmatchedValue = 0;
     unmatchedItems.forEach(function(item) { unmatchedValue += item.billed; });
