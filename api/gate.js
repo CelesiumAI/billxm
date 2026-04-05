@@ -33,13 +33,13 @@ async function kvGetInt(key) {
   return parseInt(memoryStore[key] || '0');
 }
 
-// ── Rate limiting (5 per hour per IP) ────────────────────────
+// ── Rate limiting (20 per hour per IP) ────────────────────────
 var ipTracker = {};
 function checkRateLimit(ip) {
   var now = Date.now();
   if (!ipTracker[ip]) ipTracker[ip] = [];
   ipTracker[ip] = ipTracker[ip].filter(function(t) { return now - t < 3600000; });
-  if (ipTracker[ip].length >= 5) return false;
+  if (ipTracker[ip].length >= 20) return false;
   ipTracker[ip].push(now);
   return true;
 }
