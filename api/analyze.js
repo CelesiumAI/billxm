@@ -551,6 +551,7 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '}\n\n' +
 'CRITICAL: Use the total_billed, estimated_fair_value, and potential_savings exactly as provided. Do not recalculate them.\n' +
 'If coverage_note is provided, you MUST include it in your summary. Be transparent: tell the patient which charges were benchmarked and which were not. Never imply the entire bill should cost the estimated_fair_value when facility charges like room/board, progressive care, or observation fees are excluded from the benchmark.\n' +
+'If partial_bill_note is provided, you MUST include it prominently in your summary. The patient needs to know they only uploaded part of their bill.\n' +
 'Write all descriptions in plain English. No unexplained medical jargon.\n' +
 'The phone_script should be conversational and ready to read aloud.\n' +
 'The dispute_letter should be formal, professional, and ready to print and mail.';
@@ -564,7 +565,8 @@ var GRADE_PROMPT = 'You are BillXM AI. Quickly assess this medical bill data and
 '- D = overcharge 50-75%\n' +
 '- F = overcharge >75% or billing violations\n\n' +
 'If potential_savings is $0, grade MUST be A.\n' +
-'If unmapped_charges is high (over 50% of total), note in the summary that the grade only reflects benchmarked services and facility charges like room/board were not included in the comparison.\n\n' +
+'If unmapped_charges is high (over 50% of total), note in the summary that the grade only reflects benchmarked services and facility charges like room/board were not included in the comparison.\n' +
+'If partial_bill_note is provided, include it in the summary so the patient knows they only uploaded part of their bill.\n\n' +
 'Return ONLY valid JSON:\n' +
 '{"grade":"A-F","grade_rationale":"one sentence","summary":"2 sentences for patient",' +
 '"total_billed":0,"estimated_fair_value":0,"potential_savings":0,' +
@@ -776,6 +778,23 @@ module.exports = async function handler(req, res) {
           }
         }
       } catch (retryErr) { console.log('Retry failed, keeping original'); }
+    }
+
+    // ── Check for partial bill (uploaded pages don't cover full bill) ──
+    var partialBillNote = '';
+    var finalLineItemSum = 0;
+    (extracted.line_items || []).forEach(function(item) { finalLineItemSum += (item.billed || 0); });
+    var finalGap = extractedTotal > 0 ? Math.abs(finalLineItemSum - extractedTotal) / extractedTotal : 0;
+    if (finalGap > 0.30 && extractedTotal > finalLineItemSum && finalLineItemSum > 0) {
+      console.log('PARTIAL BILL: Items sum $' + finalLineItemSum.toFixed(2) + ' vs stated total $' + extractedTotal.toFixed(2) + ' (' + Math.round(finalGap * 100) + '% gap). Using line items sum.');
+      var statedTotal = extractedTotal; // save original before overwriting
+      partialBillNote = 'NOTE: This analysis covers $' + finalLineItemSum.toFixed(2) + ' of the $' + statedTotal.toFixed(2) + ' stated total on your bill. ' +
+        'The remaining charges may be on pages that were not uploaded. Upload all pages for a complete analysis.';
+      // Use line items sum as working total -- this is what we actually have data for
+      extractedTotal = finalLineItemSum;
+      extracted.total_billed = finalLineItemSum;
+      extracted.partial_bill = true;
+      extracted.stated_total = statedTotal;
     }
 
     // ════════════════════════════════════════════════════════════
@@ -1115,7 +1134,8 @@ module.exports = async function handler(req, res) {
         hospital: extracted.hospital || '',
         unmapped_charges: (function() { var u = 0; enrichedItems.forEach(function(i) { if (i.fair_rate === null && i.billed > 0) u += i.billed; }); return u; })(),
         top_overcharges: enrichedItems.filter(function(i) { return i.status === 'FLAG'; }).slice(0, 5)
-          .map(function(i) { return i.description + ': billed $' + i.billed + ' vs fair $' + (i.total_fair || 'N/A'); })
+          .map(function(i) { return i.description + ': billed $' + i.billed + ' vs fair $' + (i.total_fair || 'N/A'); }),
+        partial_bill_note: partialBillNote
       };
       var gradeResponse = await client.messages.create({
         model: 'claude-haiku-4-5-20251001', max_tokens: 500, system: GRADE_PROMPT,
@@ -1190,7 +1210,8 @@ module.exports = async function handler(req, res) {
       facility_covered_charges: facilityCoveredCharges,
       benchmarked_charges: benchmarkedCharges,
       unmapped_descriptions: unmappedDescriptions.slice(0, 10),
-      coverage_note: coverageNote
+      coverage_note: coverageNote,
+      partial_bill_note: partialBillNote
     };
 
     var reportResponse = await client.messages.create({
