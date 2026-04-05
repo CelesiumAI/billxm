@@ -7,7 +7,7 @@ var CMS_RVUS = null;
 var CMS_GPCI = null;
 var CMS_DRG = null;
 var CMS_APC = null;
-var CMS_JCODES = null; // ── CHANGE 1: J-code drug pricing database
+var CMS_JCODES = null;
 
 function loadCMSData() {
   if (CMS_RVUS) return;
@@ -21,7 +21,6 @@ function loadCMSData() {
   try {
     CMS_APC = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_apc.json'), 'utf8'));
   } catch (e) { console.log('No APC data, continuing without it'); }
-  // ── CHANGE 1: Load J-code drug pricing ──
   try {
     CMS_JCODES = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_jcodes.json'), 'utf8'));
     console.log('Loaded J-code database: ' + Object.keys(CMS_JCODES.drugs || {}).length + ' drugs');
@@ -70,7 +69,6 @@ function getFairRate(code, state, city) {
     var drug = CMS_RVUS.drugs[code];
     return { rate: drug.r, desc: drug.d, dose: drug.dose, type: 'drug' };
   }
-  // ── CHANGE 2: J-code drug pricing fallback ──
   if (CMS_JCODES && CMS_JCODES.drugs && CMS_JCODES.drugs[code]) {
     var jdrug = CMS_JCODES.drugs[code];
     if (jdrug.r !== null) {
@@ -136,6 +134,14 @@ function estimateDRG(extracted, patientProcedure) {
     if (proc.indexOf('pneumonia') >= 0) candidates.push('194', '193', '192');
     if (proc.indexOf('heart failure') >= 0) candidates.push('293', '292', '291');
     if (proc.indexOf('sepsis') >= 0) candidates.push('872', '871');
+    // CANCER / CHEMO procedures
+    if (proc.indexOf('chemotherapy') >= 0 || proc.indexOf('chemo') >= 0) candidates.push('693', '694', '695');
+    if (proc.indexOf('lymphoma') >= 0) candidates.push('820', '821', '822');
+    if (proc.indexOf('leukemia') >= 0) candidates.push('834', '835', '836');
+    if (proc.indexOf('mastectomy') >= 0 || proc.indexOf('breast cancer') >= 0) candidates.push('584', '585');
+    if (proc.indexOf('lung cancer') >= 0 || proc.indexOf('lobectomy') >= 0) candidates.push('163', '164', '165');
+    if (proc.indexOf('colon cancer') >= 0 || proc.indexOf('colorectal') >= 0) candidates.push('329', '330', '331');
+    if (proc.indexOf('radiation') >= 0 || proc.indexOf('radiotherapy') >= 0) candidates.push('693', '694');
   }
 
   // SECOND: Diagnosis keywords from bill text
@@ -155,6 +161,13 @@ function estimateDRG(extracted, patientProcedure) {
     if (text.indexOf('kidney') >= 0 && text.indexOf('failure') >= 0) candidates.push('684', '683', '682');
     if (text.indexOf('diabetes') >= 0) candidates.push('640', '639', '638');
     if (text.indexOf('urinary tract infection') >= 0 || text.indexOf('uti') >= 0) candidates.push('690', '689');
+    // CANCER / CHEMO from bill text
+    if (text.indexOf('chemo') >= 0 || text.indexOf('chemotherapy') >= 0) candidates.push('693', '694', '695');
+    if (text.indexOf('lymphoma') >= 0) candidates.push('820', '821', '822');
+    if (text.indexOf('leukemia') >= 0) candidates.push('834', '835', '836');
+    if (text.indexOf('cancer') >= 0 || text.indexOf('oncology') >= 0 || text.indexOf('neoplasm') >= 0 || text.indexOf('tumor') >= 0 || text.indexOf('malignant') >= 0) candidates.push('693', '694', '695');
+    if (text.indexOf('radiation') >= 0 || text.indexOf('radiotherapy') >= 0) candidates.push('693', '694');
+    if (text.indexOf('seizure') >= 0 || text.indexOf('epilep') >= 0) candidates.push('101', '100');
   }
 
   // THIRD: Hospital name + bill pattern clues
@@ -165,6 +178,20 @@ function estimateDRG(extracted, patientProcedure) {
     var hasImplant = text.indexOf('implant') >= 0 || text.indexOf('device') >= 0 || text.indexOf('prosthe') >= 0;
     var isOrtho = hospitalName.indexOf('ortho') >= 0 || hospitalName.indexOf('joint') >= 0 || hospitalName.indexOf('bone') >= 0;
     var isCardiac = hospitalName.indexOf('heart') >= 0 || hospitalName.indexOf('cardiac') >= 0 || hospitalName.indexOf('cardio') >= 0;
+    var isCancer = hospitalName.indexOf('cancer') >= 0 || hospitalName.indexOf('oncol') >= 0 || hospitalName.indexOf('tumor') >= 0;
+
+    // Cancer center
+    if (isCancer || text.indexOf('chemo drugs') >= 0 || text.indexOf('infusion') >= 0) {
+      return {
+        code: 'RANGE',
+        desc: 'Cancer treatment / chemotherapy admission. Tell us your diagnosis for a precise benchmark.',
+        payment: 0,
+        los: 0,
+        admission_type: 'MEDICAL',
+        drg_range: { low: 8000, high: 35000, typical_drg: '693', typical_desc: 'Chemotherapy with Major Complication' },
+        prompt_procedure: true
+      };
+    }
 
     // Orthopedic hospital + implant + surgery = likely joint replacement
     if (isOrtho && hasImplant && hasSurgical) {
@@ -230,49 +257,35 @@ function estimateDRG(extracted, patientProcedure) {
   return null;
 }
 
-// ── CHANGE 4a: Detect summary bill (no CPT codes) ───────────
+// ── Detect summary bill (no CPT codes) ──────────────────────
 function detectSummaryBill(extracted, enrichedItems) {
   if (!extracted.line_items || extracted.line_items.length === 0) return false;
   var totalBilled = extracted.total_billed || 0;
   if (totalBilled < 500) return false;
 
-  // Count items that have a valid CPT/HCPCS code matched to a CMS rate
   var matchedCount = 0;
   var totalItems = enrichedItems.length;
   enrichedItems.forEach(function(item) {
     if (item.fair_rate !== null && item.code) matchedCount++;
   });
 
-  // Summary bill = zero or near-zero code matches on a substantial bill
-  // Also check if descriptions look like department categories
   var deptKeywords = [
-    // Room & board
     'room and', 'room &', 'bed semi', 'bed priv', 'room-priv', 'room-semi',
     'medical-sur', 'med-sur', 'room and care', 'room and board',
-    // Pharmacy & drugs
     'pharmacy', 'drugs req', 'drug charge', 'single source drug',
-    // Supplies
     'supplies', 'sterile supply', 'med-sur supplies',
-    // Lab departments
     'laboratory', 'chemistry', 'hematology', 'bacteriology', 'microbiology',
     'urology', 'pathology', 'pathology lab', 'lab-',
-    // Imaging
     'radiology', 'ct scan', 'mri', 'ultrasound', 'diagnostic-general',
-    // Cardio/Pulmonary
     'cardiology', 'pulmonary', 'respiratory', 'ekg', 'ecg', 'eeg',
     'pulmonary function',
-    // Surgical
     'or services', 'operating room', 'surgery services', 'recovery room',
     'anesthesia',
-    // Emergency
     'emergency room', 'emergency care', 'emerg room',
-    // ICU
     'intensive care', 'intermediate care', 'icu',
-    // Therapy
     'therapy services', 'physical therapy', 'occupational therapy',
     'respiratory therapy', 'behavioral health', 'rehabilitation',
     'other therapeutic',
-    // Other common departments
     'blood', 'blood adm', 'special services', 'audiology', 'iv therapy', 'miscellaneous',
     'medical/surgical', 'professional or physician', 'professional fee',
     'extension of', 'room and bed', 'central supply', 'chemo drugs', 'chemo',
@@ -286,12 +299,9 @@ function detectSummaryBill(extracted, enrichedItems) {
     }
   });
 
-  // It's a summary bill if: very few CPT matches AND most items look like departments
   var matchRate = totalItems > 0 ? matchedCount / totalItems : 0;
   var deptRate = totalItems > 0 ? deptMatchCount / totalItems : 0;
 
-  // Also check fair value coverage: if matched fair values cover less than 5% of total billed,
-  // it's effectively a summary bill even if CPT mapping matched a couple of therapy codes
   var totalFairValue = 0;
   enrichedItems.forEach(function(item) {
     if (item.total_fair) totalFairValue += item.total_fair;
@@ -303,19 +313,17 @@ function detectSummaryBill(extracted, enrichedItems) {
   return false;
 }
 
-// ── CHANGE 4b: Build summary bill response ──────────────────
+// ── Build summary bill response ─────────────────────────────
 function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBilled, drgEstimate) {
   var hospital = (extracted.hospital || 'the hospital').trim();
   var state = (extracted.state || '').trim();
   var dos = (extracted.date_of_service || '').trim();
 
-  // Identify department breakdown
   var departments = enrichedItems.map(function(item) {
     return { description: item.description, billed: item.billed };
   }).filter(function(d) { return d.billed > 0; })
   .sort(function(a, b) { return b.billed - a.billed; });
 
-  // Estimate stay length from Room and Care charges
   var roomCharge = 0;
   departments.forEach(function(d) {
     var desc = d.description.toLowerCase();
@@ -325,13 +333,15 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
   });
   var estimatedDays = roomCharge > 0 ? Math.round(roomCharge / 3500) : null;
 
-  // Flag disproportionate departments
   var flags = [];
   departments.forEach(function(d) {
     var pct = totalBilled > 0 ? Math.round(d.billed / totalBilled * 100) : 0;
     var desc = d.description.toLowerCase();
     if (desc.indexOf('pharmacy') >= 0 && pct > 20) {
       flags.push({ department: d.description, amount: d.billed, pct: pct, note: 'Pharmacy charges represent ' + pct + '% of total bill -- unusually high. May include markup on individual drugs.' });
+    }
+    if ((desc.indexOf('chemo') >= 0 || desc.indexOf('infusion') >= 0) && d.billed > 5000) {
+      flags.push({ department: d.description, amount: d.billed, pct: pct, note: 'Chemotherapy/infusion charges of $' + d.billed.toLocaleString() + ' -- request itemized bill to verify individual drug pricing against Medicare ASP+6% rates.' });
     }
     if (desc.indexOf('respiratory') >= 0 && pct > 15) {
       flags.push({ department: d.description, amount: d.billed, pct: pct, note: 'Respiratory therapy charges represent ' + pct + '% of total bill -- warrants line-item review.' });
@@ -341,10 +351,9 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     }
   });
 
-  // DRG context for inpatient
   var drgContext = '';
   if (billType === 'INPATIENT' && drgEstimate) {
-    if (drgEstimate.code !== 'UNKNOWN' && drgEstimate.payment > 0) {
+    if (drgEstimate.code !== 'UNKNOWN' && drgEstimate.code !== 'RANGE' && drgEstimate.payment > 0) {
       var multiplier = totalBilled > 0 ? (totalBilled / drgEstimate.payment).toFixed(1) : 'N/A';
       drgContext = 'Based on available information, the estimated Medicare DRG payment for this type of admission would be approximately $' +
         drgEstimate.payment.toLocaleString() + ' (DRG ' + drgEstimate.code + '). Your bill of $' +
@@ -364,14 +373,12 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     }
   }
 
-  // Build summary text
   var summaryParts = ['This is a summary bill showing $' + totalBilled.toLocaleString() + ' in total charges across ' + departments.length + ' service departments.'];
   if (estimatedDays) summaryParts.push('The room charges suggest an estimated ' + estimatedDays + '-day hospital stay.');
   summaryParts.push('This bill does not contain the individual procedure codes (CPT/HCPCS codes) needed for a full line-by-line analysis.');
   if (drgContext) summaryParts.push(drgContext);
   summaryParts.push('To unlock your complete BillXM overcharge analysis, request an itemized bill from ' + hospital + ' using the phone script and letter below.');
 
-  // Phone script
   var phoneScript = 'Hello, I am calling about my account' +
     (dos ? ' for services received on ' + dos : '') +
     ' at ' + hospital + '. ' +
@@ -381,7 +388,6 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     'Can you confirm this will be mailed to my address on file? ' +
     'If I do not receive it within 30 days, I will follow up in writing and may file a complaint with my state attorney general and the Centers for Medicare & Medicaid Services.';
 
-  // Request letter
   var requestLetter = 'Dear Billing Department,\n\n' +
     'Re: Request for Itemized Bill\n' +
     (dos ? 'Date of Service: ' + dos + '\n' : '') +
@@ -400,14 +406,12 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     'Thank you for your prompt attention to this matter.\n\n' +
     'Sincerely,\n[Patient Name]\n[Address]\n[Phone Number]\n[Account Number]';
 
-  // Calculate fair value and savings if DRG was matched
   var estimatedFairValue = null;
   var potentialSavings = null;
   if (drgEstimate && drgEstimate.code !== 'UNKNOWN' && drgEstimate.code !== 'RANGE' && drgEstimate.payment > 0) {
     estimatedFairValue = drgEstimate.payment;
     potentialSavings = Math.max(0, Math.round((totalBilled - drgEstimate.payment) * 100) / 100);
   } else if (drgEstimate && drgEstimate.code === 'RANGE' && drgEstimate.drg_range) {
-    // Use high end as conservative fair value estimate
     var rangeHigh = drgEstimate.drg_range.high || 0;
     if (rangeHigh > 0 && totalBilled > rangeHigh) {
       estimatedFairValue = rangeHigh;
@@ -464,49 +468,33 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
 // ── Record anonymized analytics ──────────────────────────────
 async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade, issueCount, drgEstimate) {
   try {
-    // Build anonymized record (NO patient data)
     var hospital = (extracted.hospital || '').trim();
     var state = (extracted.state || '').trim();
     var city = (extracted.city || '').trim();
     if (!hospital) return;
 
     var record = {
-      hospital: hospital,
-      state: state,
-      city: city,
-      bill_type: billType,
+      hospital: hospital, state: state, city: city, bill_type: billType,
       drg: drgEstimate ? drgEstimate.code : null,
-      total_billed: totalBilled,
-      fair_value: estimatedFairValue,
-      savings: potentialSavings,
-      grade: grade || 'N/A',
+      total_billed: totalBilled, fair_value: estimatedFairValue,
+      savings: potentialSavings, grade: grade || 'N/A',
       issue_count: issueCount || 0,
-      month: new Date().toISOString().slice(0, 7), // 2026-04 (no exact date)
+      month: new Date().toISOString().slice(0, 7),
       codes: enrichedItems
         .filter(function(i) { return i.code && i.billed > 0; })
-        .map(function(i) {
-          return { code: i.code, billed: i.billed, fair: i.total_fair, type: i.type };
-        })
+        .map(function(i) { return { code: i.code, billed: i.billed, fair: i.total_fair, type: i.type }; })
     };
 
-    // Store via Upstash KV if available
     if (process.env.KV_REST_API_URL) {
       var Redis = require('@upstash/redis').Redis;
       var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
-
-      // 1. Store individual analysis record
       var analysisKey = 'analysis:' + Date.now();
-      await redis.set(analysisKey, JSON.stringify(record), { ex: 365 * 24 * 60 * 60 }); // 1 year
-
-      // 2. Increment global counters
+      await redis.set(analysisKey, JSON.stringify(record), { ex: 365 * 24 * 60 * 60 });
       await redis.incrby('counter:bills_analyzed', 1);
       await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
-      // ── CHANGE 4c: Only increment savings if we actually found savings ──
       if (potentialSavings && potentialSavings > 0) {
         await redis.incrby('counter:savings_found', Math.round(potentialSavings));
       }
-
-      // 3. Store per-hospital, per-code pricing data
       for (var j = 0; j < record.codes.length; j++) {
         var c = record.codes[j];
         if (!c.code || !c.billed) continue;
@@ -523,22 +511,14 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
           if (c.fair) pricing.medicare_rate = c.fair;
         } else {
           pricing = {
-            hospital: hospital,
-            state: state,
-            city: city,
-            code: c.code,
-            count: 1,
-            total_billed: c.billed,
-            avg_billed: c.billed,
-            min_billed: c.billed,
-            max_billed: c.billed,
-            medicare_rate: c.fair || null,
-            type: c.type
+            hospital: hospital, state: state, city: city, code: c.code,
+            count: 1, total_billed: c.billed, avg_billed: c.billed,
+            min_billed: c.billed, max_billed: c.billed,
+            medicare_rate: c.fair || null, type: c.type
           };
         }
         await redis.set(hKey, JSON.stringify(pricing), { ex: 365 * 24 * 60 * 60 });
       }
-
       console.log('Analytics recorded: ' + hospital + ', $' + totalBilled.toFixed(2));
     }
   } catch (err) {
@@ -546,8 +526,17 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
   }
 }
 
+// ── Timeout wrapper for API calls ────────────────────────────
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error('TIMEOUT: ' + label + ' did not respond within ' + Math.round(ms/1000) + 's')); }, ms);
+    })
+  ]);
+}
+
 // ── Haiku extraction prompt ──────────────────────────────────
-// ── CHANGE 3: Fixed to prefer Total Charges over Amount Due ──
 var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charge from this bill into structured JSON.\n\n' +
 'Rules:\n' +
 '- Include EVERY line item on the bill, even $0.00 items\n' +
@@ -588,7 +577,7 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '- Other/Convenience items (rev code 0999)\n' +
 'You MUST scan every page and capture items from every category.';
 
-// ── Sonnet report prompt (no rate tables) ────────────────────
+// ── Sonnet report prompt ─────────────────────────────────────
 var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 'You will receive pre-analyzed medical bill data. Each line item already has its government fair rate looked up. ' +
 'The bill type (INPATIENT or OUTPATIENT) is already determined. If inpatient, a DRG benchmark is provided.\n\n' +
@@ -607,9 +596,9 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '- EXCESSIVE_MARKUP: billed > 2x fair rate. Severity: HIGH if >300%, MEDIUM if 150-300%, LOW if 100-150%\n' +
 '- DUPLICATE: same code on same date without justification\n' +
 '- DRUG_OVERCHARGE: for J-code drugs, flag when billed > 3x the Medicare ASP+6% payment limit\n' +
-'- FACILITY_OVERCHARGE: when total facility charges (room, board, observation, progressive care) exceed the APC or DRG benchmark. This is a HIGH severity issue. Include all facility line items and the total APC/DRG benchmark in the description.\n' +
-'- PACKAGED_CHARGE: when a charge that should be packaged into APC/DRG appears as a separate line item. These should not be billed separately under Medicare rules.\n' +
-'- Do NOT flag items without fair rates unless they are packaged charges that should not appear\n\n' +
+'- FACILITY_OVERCHARGE: when total facility charges exceed the APC or DRG benchmark. HIGH severity.\n' +
+'- PACKAGED_CHARGE: when a charge that should be packaged into APC/DRG appears as a separate line item.\n' +
+'- Do NOT flag items without fair rates unless they are packaged charges\n\n' +
 'Return ONLY valid JSON. No markdown, no backticks:\n' +
 '{\n' +
 '  "grade": "A-F",\n' +
@@ -629,8 +618,8 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '      "dispute_basis": "grounds for dispute"\n' +
 '    }\n' +
 '  ],\n' +
-'  "phone_script": "A word-for-word phone script the patient can read when calling the hospital billing department. Include: who to ask for, what to reference, specific dollar amounts to dispute, and how to escalate if they refuse.",\n' +
-'  "dispute_letter": "A formal dispute letter the patient can send to the hospital. Include: date, hospital name, account reference, specific overcharges with CMS citations, request for adjustment, deadline for response, and mention of regulatory rights.",\n' +
+'  "phone_script": "word-for-word phone script",\n' +
+'  "dispute_letter": "formal dispute letter",\n' +
 '  "next_steps": ["actionable step"],\n' +
 '  "nsa_eligible": false,\n' +
 '  "financial_assistance_note": "guidance if applicable",\n' +
@@ -638,13 +627,11 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '  "appeal_recommended": false\n' +
 '}\n\n' +
 'CRITICAL: Use the total_billed, estimated_fair_value, and potential_savings exactly as provided. Do not recalculate them.\n' +
-'If coverage_note is provided, you MUST include it in your summary. Be transparent: tell the patient which charges were benchmarked and which were not. Never imply the entire bill should cost the estimated_fair_value when facility charges like room/board, progressive care, or observation fees are excluded from the benchmark.\n' +
-'If partial_bill_note is provided, you MUST include it prominently in your summary. The patient needs to know they only uploaded part of their bill.\n' +
-'Write all descriptions in plain English. No unexplained medical jargon.\n' +
-'The phone_script should be conversational and ready to read aloud.\n' +
-'The dispute_letter should be formal, professional, and ready to print and mail.';
+'If coverage_note is provided, include it in your summary.\n' +
+'If partial_bill_note is provided, include it prominently.\n' +
+'Write all descriptions in plain English.';
 
-// ── Grade-only prompt for free tier ──────────────────────────
+// ── Grade-only prompt ────────────────────────────────────────
 var GRADE_PROMPT = 'You are BillXM AI. Quickly assess this medical bill data and return a grade.\n\n' +
 'Grade based on the overcharge percentage provided:\n' +
 '- A = overcharge < 10%\n' +
@@ -653,63 +640,43 @@ var GRADE_PROMPT = 'You are BillXM AI. Quickly assess this medical bill data and
 '- D = overcharge 50-75%\n' +
 '- F = overcharge >75% or billing violations\n\n' +
 'If potential_savings is $0, grade MUST be A.\n' +
-'If unmapped_charges is high (over 50% of total), note in the summary that the grade only reflects benchmarked services and facility charges like room/board were not included in the comparison.\n' +
-'If partial_bill_note is provided, include it in the summary so the patient knows they only uploaded part of their bill.\n\n' +
+'If unmapped_charges is high (over 50% of total), note in the summary that the grade only reflects benchmarked services.\n' +
+'If partial_bill_note is provided, include it in the summary.\n\n' +
 'Return ONLY valid JSON:\n' +
 '{"grade":"A-F","grade_rationale":"one sentence","summary":"2 sentences for patient",' +
 '"total_billed":0,"estimated_fair_value":0,"potential_savings":0,' +
 '"issue_count":0,"high_count":0,"medium_count":0,"low_count":0}';
 
-// ── CPT mapping prompt for unknown codes ─────────────────────
+// ── CPT mapping prompt ───────────────────────────────────────
 var CPT_MAP_PROMPT = 'You are a medical coding expert. Map each service description to its standard CPT or HCPCS code.\n\n' +
 'Return ONLY valid JSON, no markdown:\n' +
 '{"mappings": [{"description": "original description", "cpt": "5-digit CPT code", "confidence": "HIGH|MEDIUM|LOW"}]}\n\n' +
 'Rules:\n' +
 '- Only map if you are confident in the CPT code\n' +
 '- If unsure, set cpt to "" and confidence to "LOW"\n' +
-'- IGNORE prefixes like "HC " (Hospital Charge) -- focus on the service name\n' +
-'- ONLY these are facility charges (set cpt to ""): ROOM AND BOARD, PROGRESSIVE CARE UNIT, OBSERVATION HOUR, NURSING CARE. Everything else is a medical service or drug that MUST be mapped.\n' +
-'- NEVER set cpt to "" for: EKG, ECG, CBC, labs, x-rays, CT scans, infusions, blood tests, panels, cultures, therapy services, injections, or any diagnostic test. These are all medical services with CPT codes.\n' +
-'- For drugs and IV solutions (SODIUM CHLORIDE, MAGNESIUM SULFATE, INSULIN, DEXTROSE, POTASSIUM CHLORIDE, ONDANSETRON, METOCLOPRAMIDE): map to J-codes if known, otherwise set cpt to ""\n' +
+'- IGNORE prefixes like "HC " (Hospital Charge)\n' +
+'- ONLY these are facility charges (set cpt to ""): ROOM AND BOARD, PROGRESSIVE CARE UNIT, OBSERVATION HOUR, NURSING CARE\n' +
+'- NEVER set cpt to "" for: EKG, ECG, CBC, labs, x-rays, CT scans, infusions, blood tests, panels, cultures, therapy services, injections, or any diagnostic test\n' +
 '- Common mappings:\n' +
 '  EKG/ECG = 93005, EKG 12 LEAD = 93000, CT HEAD W/O CONTRAST = 70450,\n' +
 '  CBC/CBS WITH AUTO DIFF = 85025, CBC = 85027,\n' +
-'  BASIC METABOLIC PANEL = 80048, COMP METABOLIC PANEL/COMPREHENSIVE METABOLIC = 80053,\n' +
-'  ED CARE LEVEL 4/ED LEVEL IV = 99284, ED CARE LEVEL 5/ED LEVEL V = 99285,\n' +
-'  ED CARE LEVEL 3/ED LEVEL III = 99283,\n' +
-'  CHEST X-RAY/X-RAY EXAM CHEST 1 VIEW = 71045, CHEST X-RAY 2 VIEW = 71046,\n' +
-'  IV INFUSION HYDRATION/HYDRATION 1ST HR = 96360, HYDRATION ADDL HOUR = 96361,\n' +
-'  IV PUSH/IVP INJECT = 96374, IV PUSH EA ADDL DRUG = 96375,\n' +
-'  BLOOD GAS/ABG = 82803, BLOOD GAS ISTAT = 82803,\n' +
-'  BLOOD CULTURE = 87040, LACTIC ACID = 83605,\n' +
-'  URINALYSIS = 81003, URINALYSIS BIOCHEMICAL = 81003,\n' +
-'  PROFILE LIVER/HEPATIC PANEL = 80076, LIPID PANEL = 80061,\n' +
-'  COVID/FLU/RSV PANEL = 87635, B-HYDROXYBUTYRATE = 82010,\n' +
-'  THYROID STIMULATING HORMONE = 84443, HCG QUAL = 81025,\n' +
-'  MAGNESIUM LEVEL = 83735, AMNIO PH = 83986\n' +
+'  BASIC METABOLIC PANEL = 80048, COMP METABOLIC PANEL = 80053,\n' +
+'  ED CARE LEVEL 4 = 99284, ED CARE LEVEL 5 = 99285, ED CARE LEVEL 3 = 99283,\n' +
+'  CHEST X-RAY 1 VIEW = 71045, CHEST X-RAY 2 VIEW = 71046,\n' +
+'  IV INFUSION HYDRATION 1ST HR = 96360, HYDRATION ADDL HOUR = 96361,\n' +
+'  IV PUSH = 96374, IV PUSH EA ADDL = 96375,\n' +
+'  BLOOD GAS/ABG = 82803, BLOOD CULTURE = 87040, LACTIC ACID = 83605,\n' +
+'  URINALYSIS = 81003, HEPATIC PANEL = 80076, LIPID PANEL = 80061,\n' +
+'  THYROID STIMULATING HORMONE = 84443, MAGNESIUM LEVEL = 83735\n' +
 '- Drug J-code mappings:\n' +
-'  ONDANSETRON/ZOFRAN = J2405, METOCLOPRAMIDE/REGLAN = J2765, INSULIN GLARGINE = J1815,\n' +
-'  POTASSIUM CHLORIDE = J3480, MAGNESIUM SULFATE = J3475,\n' +
-'  KETOROLAC/TORADOL = J1885, MORPHINE = J2270, HYDROMORPHONE/DILAUDID = J1170,\n' +
-'  FENTANYL = J3010, LORAZEPAM/ATIVAN = J2060, MIDAZOLAM/VERSED = J2250,\n' +
-'  DIPHENHYDRAMINE/BENADRYL = J1200, PROMETHAZINE/PHENERGAN = J2550,\n' +
-'  FUROSEMIDE/LASIX = J1940, HEPARIN = J1644, ENOXAPARIN/LOVENOX = J1650,\n' +
-'  DEXAMETHASONE/DECADRON = J1100, METHYLPREDNISOLONE/SOLUMEDROL = J2920,\n' +
-'  HYDROCORTISONE = J1720, PROPOFOL/DIPRIVAN = J2704, EPINEPHRINE = J0171,\n' +
-'  NALOXONE/NARCAN = J2310, ACETAMINOPHEN IV/OFIRMEV = J0131,\n' +
-'  VANCOMYCIN = J3370, CEFTRIAXONE/ROCEPHIN = J0696, AZITHROMYCIN/ZITHROMAX = J0456,\n' +
-'  PIPERACILLIN-TAZOBACTAM/ZOSYN = J2543, CEFAZOLIN/ANCEF = J0690,\n' +
-'  PANTOPRAZOLE/PROTONIX IV = J3480, FAMOTIDINE/PEPCID IV = J3490,\n' +
-'  ALTEPLASE/TPA = J2997, AMIODARONE = J0282, DOPAMINE = J1265, DOBUTAMINE = J1250\n' +
-'- IV FLUID/SOLUTION J-code mappings (CRITICAL -- these are commonly overcharged 50-100x):\n' +
-'  SODIUM CHLORIDE 0.9%/NORMAL SALINE/NS 1000 = J7030,\n' +
-'  SODIUM CHLORIDE 0.9%/NS PER 500 ML = J7040,\n' +
-'  SODIUM CHLORIDE 0.9%/NS 250 = J7050,\n' +
-'  SODIUM CHLORIDE 0.45%/HALF NORMAL SALINE/1/2 NS = J7042,\n' +
-'  DEXTROSE 5%/D5W 500 ML = J7060, DEXTROSE 5%/D5W 1000 = J7070,\n' +
-'  DEXTROSE-NACL/D5NS/D5 NORMAL SALINE = J7042,\n' +
-'  LACTATED RINGERS/LR/RINGERS LACTATE = J7120,\n' +
-'  Any IV bag/solution described as SOLN/SOLUTION with NaCl or saline = J7030/J7040/J7050 based on volume\n';
+'  ONDANSETRON/ZOFRAN = J2405, KETOROLAC/TORADOL = J1885, MORPHINE = J2270,\n' +
+'  HEPARIN = J1644, ENOXAPARIN/LOVENOX = J1650, DEXAMETHASONE = J1100,\n' +
+'  VANCOMYCIN = J3370, CEFTRIAXONE = J0696, AZITHROMYCIN = J0456,\n' +
+'  ACETAMINOPHEN IV = J0131, PANTOPRAZOLE IV = J3480, FAMOTIDINE IV = J3490\n' +
+'- IV FLUID J-codes:\n' +
+'  SODIUM CHLORIDE 0.9%/NORMAL SALINE 1000 = J7030,\n' +
+'  SODIUM CHLORIDE 0.9% 500 ML = J7040, SODIUM CHLORIDE 0.9% 250 = J7050,\n' +
+'  LACTATED RINGERS/LR = J7120, DEXTROSE 5% 500 ML = J7060\n';
 
 // ── Cached demo report ───────────────────────────────────────
 var CACHED_DEMO_REPORT = {
@@ -775,10 +742,24 @@ module.exports = async function handler(req, res) {
   var body = req.body || {};
   var messages = body.messages;
   var tier = body.tier;
-  var patientProcedure = body.procedure || ''; // Optional: patient-provided procedure name
+  var patientProcedure = body.procedure || '';
+
+  // ── FIX 1: Detect if this is an image upload ──
+  var isImageUpload = false;
+  try {
+    if (Array.isArray(messages)) {
+      messages.forEach(function(msg) {
+        if (Array.isArray(msg.content)) {
+          msg.content.forEach(function(block) {
+            if (block.type === 'image') isImageUpload = true;
+          });
+        }
+      });
+    }
+  } catch (e) { /* ignore */ }
 
   console.log('=== ANALYZE REQUEST ===');
-  console.log('Tier:', tier, 'Demo:', !!body.demo, 'Procedure:', patientProcedure || 'not provided');
+  console.log('Tier:', tier, 'Demo:', !!body.demo, 'Procedure:', patientProcedure || 'not provided', 'Image:', isImageUpload);
 
   if (!messages || !tier) return res.status(400).json({ error: 'Missing messages or tier' });
 
@@ -792,7 +773,9 @@ module.exports = async function handler(req, res) {
   });
 
   try {
+    console.log('Loading CMS data...');
     loadCMSData();
+    console.log('CMS data loaded.');
 
     // ── DEMO: Return cached result with artificial delay ──
     if (body.demo === true) {
@@ -802,7 +785,9 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(CACHED_DEMO_REPORT) }] });
     }
 
+    console.log('Creating Anthropic client...');
     var client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    console.log('Anthropic client ready.');
 
     // ════════════════════════════════════════════════════════════
     // STEP 1: Extract structured data with Haiku
@@ -810,14 +795,57 @@ module.exports = async function handler(req, res) {
     console.log('Step 1: Extracting bill data with Haiku...');
     var extractResponse;
     try {
-      extractResponse = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 8000,
-        system: EXTRACT_PROMPT,
-        messages: messages,
-      });
+      // ── FIX 2: Timeout wrapper -- 90 seconds max for Haiku ──
+      extractResponse = await withTimeout(
+        client.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 8000,
+          system: EXTRACT_PROMPT,
+          messages: messages,
+        }),
+        90000,
+        'Haiku extraction'
+      );
+      console.log('Haiku responded successfully.');
     } catch (apiErr) {
-      console.error('Haiku API error:', apiErr.status, apiErr.message);
+      console.error('Haiku API error:', apiErr.message);
+
+      // ── FIX 3: Graceful fallback for image failures ──
+      if (isImageUpload) {
+        console.log('Image extraction failed -- returning IMAGE_UNREADABLE response');
+        var fallbackResult = {
+          bill_type: 'UNKNOWN',
+          report_type: 'IMAGE_UNREADABLE',
+          grade: 'PENDING',
+          grade_rationale: 'We could not read this bill image clearly enough to extract charges. Upload a PDF for best results.',
+          summary: 'BillXM was unable to extract the charges from this bill image. This can happen with photos of paper bills, low-resolution images, or bills with unusual formatting. For the most accurate analysis, request a PDF copy of your bill from the hospital (most hospitals can email you one) and upload that instead. If you only have a paper bill, try taking a clearer photo with good lighting, or scan it as a PDF.',
+          hospital: '',
+          state: '',
+          date_of_service: '',
+          total_billed: 0,
+          estimated_fair_value: null,
+          potential_savings: null,
+          drg_estimate: null,
+          departments: [],
+          department_flags: [],
+          phone_script: 'Hello, I am calling to request a PDF or electronic copy of my hospital bill. I need a detailed statement showing all charges, procedure codes, and dates of service. Can you email that to me? If not, can you mail me an itemized statement with CPT codes?',
+          request_letter: '',
+          next_steps: [
+            'Request a PDF copy of your bill from the hospital -- most hospitals can email this to you',
+            'If you only have a paper bill, try scanning it as a PDF using your phone (most phone cameras have a scan mode)',
+            'Upload the PDF to BillXM for a complete analysis',
+            'If you need immediate help, use the contact form below to send your bill to our team for manual review'
+          ],
+          issues: [],
+          line_items: [],
+          nsa_eligible: false,
+          financial_assistance_note: '',
+          insurance_notes: '',
+          appeal_recommended: false
+        };
+        return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(fallbackResult) }] });
+      }
+
       throw new Error('Bill extraction failed: ' + (apiErr.message || 'API error'));
     }
 
@@ -827,9 +855,36 @@ module.exports = async function handler(req, res) {
       raw = raw.replace(/```json|```/g, '').trim();
       var s = raw.indexOf('{');
       var e = raw.lastIndexOf('}');
-      if (s === -1 || e === -1) throw new Error('No JSON found');
+      if (s === -1 || e === -1) throw new Error('No JSON found in Haiku response');
       extracted = JSON.parse(raw.slice(s, e + 1));
     } catch (err) {
+      console.error('JSON parse failed. Raw response:', raw ? raw.substring(0, 200) : 'empty');
+
+      // ── FIX 3b: If parse fails on image, return IMAGE_UNREADABLE ──
+      if (isImageUpload) {
+        console.log('Image JSON parse failed -- returning IMAGE_UNREADABLE response');
+        var parseFailResult = {
+          bill_type: 'UNKNOWN',
+          report_type: 'IMAGE_UNREADABLE',
+          grade: 'PENDING',
+          grade_rationale: 'We could not extract structured data from this bill image. Upload a PDF for best results.',
+          summary: 'BillXM could not clearly read the charges on this bill image. The image may be blurry, too small, or have formatting that makes it difficult to extract individual line items. For the best results, upload a PDF copy of your bill. You can request one from your hospital by calling their billing department.',
+          hospital: '', state: '', date_of_service: '',
+          total_billed: 0, estimated_fair_value: null, potential_savings: null,
+          drg_estimate: null, departments: [], department_flags: [],
+          phone_script: 'Hello, I am calling to request a PDF or electronic copy of my hospital bill. I need a detailed statement showing all charges, procedure codes, and dates of service. Can you email that to me?',
+          request_letter: '',
+          next_steps: [
+            'Request a PDF copy of your bill from the hospital',
+            'Try scanning your paper bill as a PDF using your phone camera',
+            'Upload the PDF to BillXM for a complete analysis'
+          ],
+          issues: [], line_items: [],
+          nsa_eligible: false, financial_assistance_note: '', insurance_notes: '', appeal_recommended: false
+        };
+        return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(parseFailResult) }] });
+      }
+
       throw new Error('Failed to parse bill extraction: ' + err.message);
     }
 
@@ -846,12 +901,16 @@ module.exports = async function handler(req, res) {
     if (totalPct > 0.15 && extractedTotal > 0) {
       console.log('WARNING: Items sum $' + lineItemSum.toFixed(2) + ' vs total $' + extractedTotal.toFixed(2) + ' (' + Math.round(totalPct * 100) + '% gap). Retrying...');
       try {
-        var retryResponse = await client.messages.create({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 8000,
-          system: EXTRACT_PROMPT + '\n\nPREVIOUS ATTEMPT MISSED LINE ITEMS. Bill total is $' + extractedTotal.toFixed(2) + ' but only $' + lineItemSum.toFixed(2) + ' captured. Include ALL items from ALL pages.',
-          messages: messages,
-        });
+        var retryResponse = await withTimeout(
+          client.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 8000,
+            system: EXTRACT_PROMPT + '\n\nPREVIOUS ATTEMPT MISSED LINE ITEMS. Bill total is $' + extractedTotal.toFixed(2) + ' but only $' + lineItemSum.toFixed(2) + ' captured. Include ALL items from ALL pages.',
+            messages: messages,
+          }),
+          90000,
+          'Haiku retry extraction'
+        );
         var retryRaw = retryResponse.content.map(function(b) { return b.text || ''; }).join('');
         retryRaw = retryRaw.replace(/```json|```/g, '').trim();
         var rs = retryRaw.indexOf('{');
@@ -866,14 +925,13 @@ module.exports = async function handler(req, res) {
             extractedTotal = extracted.total_billed || extractedTotal;
           }
         }
-      } catch (retryErr) { console.log('Retry failed, keeping original'); }
+      } catch (retryErr) { console.log('Retry failed, keeping original:', retryErr.message); }
     }
 
     // ════════════════════════════════════════════════════════════
     // STEP 1b: Separate charges from discounts/credits/payments
     // ════════════════════════════════════════════════════════════
     if (extracted.line_items && extracted.line_items.length > 0) {
-      // First: remove discount, credit, payment, and adjustment lines from charges
       var discountKeywords = ['discount', 'adjustment', 'write-off', 'write off', 'charity',
         'financial assistance', 'courtesy', 'contractual', 'allowance', 'account balance',
         'balance due', 'amount due', 'patient responsibility', 'insurance payment',
@@ -886,11 +944,9 @@ module.exports = async function handler(req, res) {
         for (var dk = 0; dk < discountKeywords.length; dk++) {
           if (desc.indexOf(discountKeywords[dk]) >= 0) { isDiscount = true; break; }
         }
-        // Negative amounts are always credits/adjustments, not charges
         if ((item.billed || 0) < 0) {
           adjustmentsTotal += (item.billed || 0);
         } else if (isDiscount) {
-          // Positive discount lines (like "Uninsured Discount: 35,673") are adjustments too
           adjustmentsTotal -= (item.billed || 0);
         } else {
           charges.push(item);
@@ -902,7 +958,7 @@ module.exports = async function handler(req, res) {
         extracted.adjustments = adjustmentsTotal;
       }
 
-      // Second: net TRUE charge/reversal pairs (same service, same date, similar amounts)
+      // Net charge/reversal pairs
       var grouped = {};
       extracted.line_items.forEach(function(item) {
         var key = (item.description || '').trim().toUpperCase() + '|' + (item.date || '');
@@ -917,16 +973,12 @@ module.exports = async function handler(req, res) {
           var hasPos = g.items.some(function(i) { return (i.billed || 0) > 0; });
           var hasNeg = g.items.some(function(i) { return (i.billed || 0) < 0; });
           if (hasPos && hasNeg) {
-            // Only net if amounts are proportional (reversal should be close to the charge amount)
             var maxPos = 0, maxNeg = 0;
             g.items.forEach(function(i) {
               if ((i.billed || 0) > maxPos) maxPos = i.billed;
               if ((i.billed || 0) < maxNeg) maxNeg = i.billed;
             });
-            // Only net if the negative is within 3x of the positive (true reversal, not bulk credit)
-            if (Math.abs(maxNeg) <= maxPos * 3) {
-              hasReversals = true;
-            }
+            if (Math.abs(maxNeg) <= maxPos * 3) hasReversals = true;
           }
         }
       });
@@ -944,7 +996,6 @@ module.exports = async function handler(req, res) {
               if ((i.billed || 0) < maxNeg) maxNeg = i.billed;
             });
             if (Math.abs(maxNeg) <= maxPos * 3) {
-              // True reversal -- net it
               var netAmount = Math.round(g.netAmount * 100) / 100;
               if (Math.abs(netAmount) > 0.01) {
                 var rep = JSON.parse(JSON.stringify(g.items[0]));
@@ -953,7 +1004,6 @@ module.exports = async function handler(req, res) {
                 netted.push(rep);
               }
             } else {
-              // Not a true reversal -- keep all items separately
               g.items.forEach(function(i) { if ((i.billed || 0) > 0) netted.push(i); });
             }
           } else {
@@ -964,7 +1014,6 @@ module.exports = async function handler(req, res) {
         extracted.line_items = netted;
       }
 
-      // Recalculate total from remaining charges
       var chargeSum = 0;
       extracted.line_items.forEach(function(item) { chargeSum += (item.billed || 0); });
       if (chargeSum > 0 && Math.abs(chargeSum - extractedTotal) > extractedTotal * 0.1) {
@@ -974,16 +1023,15 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // ── Check for partial bill (uploaded pages don't cover full bill) ──
+    // ── Check for partial bill ──
     var partialBillNote = '';
     var finalLineItemSum = 0;
     (extracted.line_items || []).forEach(function(item) { finalLineItemSum += (item.billed || 0); });
     var finalGap = extractedTotal > 0 ? Math.abs(finalLineItemSum - extractedTotal) / extractedTotal : 0;
     if (finalGap > 0.30 && extractedTotal > finalLineItemSum && finalLineItemSum > 0) {
-      console.log('PARTIAL BILL: Items sum $' + finalLineItemSum.toFixed(2) + ' vs stated total $' + extractedTotal.toFixed(2) + ' (' + Math.round(finalGap * 100) + '% gap). Using line items sum.');
+      console.log('PARTIAL BILL: Items sum $' + finalLineItemSum.toFixed(2) + ' vs stated total $' + extractedTotal.toFixed(2));
       var statedTotal = extractedTotal;
-      partialBillNote = 'NOTE: This analysis covers $' + finalLineItemSum.toFixed(2) + ' of the $' + statedTotal.toFixed(2) + ' stated total on your bill. ' +
-        'The remaining charges may be on pages that were not uploaded. Upload all pages for a complete analysis.';
+      partialBillNote = 'NOTE: This analysis covers $' + finalLineItemSum.toFixed(2) + ' of the $' + statedTotal.toFixed(2) + ' stated total on your bill. The remaining charges may be on pages that were not uploaded. Upload all pages for a complete analysis.';
       extractedTotal = finalLineItemSum;
       extracted.total_billed = finalLineItemSum;
       extracted.partial_bill = true;
@@ -1042,12 +1090,16 @@ module.exports = async function handler(req, res) {
       console.log('Step 2b: ' + unmatchedItems.length + ' items unmatched. Mapping descriptions to CPT...');
       try {
         var descriptionsToMap = unmatchedItems.map(function(item) { return item.description; });
-        var mapResponse = await client.messages.create({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 2000,
-          system: CPT_MAP_PROMPT,
-          messages: [{ role: 'user', content: 'Map these: ' + JSON.stringify(descriptionsToMap) }],
-        });
+        var mapResponse = await withTimeout(
+          client.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 2000,
+            system: CPT_MAP_PROMPT,
+            messages: [{ role: 'user', content: 'Map these: ' + JSON.stringify(descriptionsToMap) }],
+          }),
+          60000,
+          'Haiku CPT mapping'
+        );
         var mapRaw = mapResponse.content.map(function(b) { return b.text || ''; }).join('');
         mapRaw = mapRaw.replace(/```json|```/g, '').trim();
         var ms = mapRaw.indexOf('{');
@@ -1090,14 +1142,13 @@ module.exports = async function handler(req, res) {
     }
 
     // ════════════════════════════════════════════════════════════
-    // STEP 2c: Summary bill detection (CHANGE 4)
+    // STEP 2c: Summary bill detection
     // ════════════════════════════════════════════════════════════
     if (detectSummaryBill(extracted, enrichedItems)) {
       console.log('SUMMARY BILL DETECTED -- routing to summary response');
       var summaryDRG = billType === 'INPATIENT' ? estimateDRG(extracted, patientProcedure) : null;
       var summaryResult = buildSummaryBillResponse(extracted, enrichedItems, billType, totalBilled, summaryDRG);
 
-      // Record analytics based on whether we found a DRG benchmark
       var hasDRGMatch = summaryDRG && summaryDRG.code !== 'UNKNOWN' && summaryDRG.payment > 0;
       var hasRange = summaryDRG && summaryDRG.code === 'RANGE' && summaryDRG.drg_range && summaryDRG.drg_range.high > 0;
       var analyticsCharges = (hasDRGMatch || hasRange) ? totalBilled : 0;
@@ -1108,7 +1159,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
 
-    // ── Re-detect bill type after CPT mapping (mapped ER codes now available) ──
+    // ── Re-detect bill type after CPT mapping ──
     var hasERCode = enrichedItems.some(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
     var hasObservation = enrichedItems.some(function(item) { return (item.description || '').toLowerCase().indexOf('observation') >= 0; });
     if (hasERCode && billType === 'INPATIENT') {
@@ -1128,7 +1179,6 @@ module.exports = async function handler(req, res) {
         var drgMarkup = totalBilled > 0 && drg.payment > 0 ? (totalBilled / drg.payment).toFixed(1) : '0';
         drgEstimate = { drg_code: drg.code, drg_description: drg.desc, drg_payment: drg.payment, markup_multiplier: drgMarkup + 'x' };
         console.log('DRG ' + drg.code + ': $' + drg.payment.toFixed(2) + ' (' + drgMarkup + 'x)');
-        // Mark room/board/facility items as covered by DRG and assign fair rates
         var drgFacilityItems = [];
         enrichedItems.forEach(function(item) {
           if (item.fair_rate === null && item.billed > 0) {
@@ -1151,7 +1201,7 @@ module.exports = async function handler(req, res) {
             drgFacilityItems[di].fair_rate = 0;
             drgFacilityItems[di].total_fair = 0;
             drgFacilityItems[di].markup_pct = 'NOT ALLOWED';
-            drgFacilityItems[di].note = 'NOT SEPARATELY PAYABLE -- this charge is packaged into the DRG payment under Medicare rules and should not appear as a separate line item. Dispute this charge.';
+            drgFacilityItems[di].note = 'NOT SEPARATELY PAYABLE -- packaged into DRG payment. Dispute this charge.';
             drgFacilityItems[di].status = 'FLAG';
           }
         }
@@ -1160,8 +1210,6 @@ module.exports = async function handler(req, res) {
       }
     } else {
       estimatedFairValue = totalFairCPT;
-
-      // ER facility fee APC
       var erFeeAdded = false;
       if (CMS_APC && CMS_APC.apcs) {
         var erLevel = enrichedItems.find(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
@@ -1177,8 +1225,6 @@ module.exports = async function handler(req, res) {
             console.log('APC ' + apcCode + ' (ER facility): $' + apcPayment.toFixed(2));
           }
         }
-
-        // Observation APC (8011 = comprehensive observation)
         if (hasObservation && CMS_APC.apcs['8011']) {
           var obsApc = CMS_APC.apcs['8011'];
           var obsPayment = obsApc.payment || obsApc.r || 0;
@@ -1193,10 +1239,7 @@ module.exports = async function handler(req, res) {
           console.log('APC 8011 (observation): $' + obsPayment.toFixed(2));
         }
       }
-
-      // Even without CMS_APC data, provide hardcoded APC estimates for common ER levels
       if (!erFeeAdded && hasERCode) {
-        // CMS 2026 national APC payment rates (approximate)
         var erCode = enrichedItems.find(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
         if (erCode) {
           var hardcodedAPC = { '99285': 814, '99284': 531, '99283': 330, '99282': 188, '99281': 79 };
@@ -1204,13 +1247,10 @@ module.exports = async function handler(req, res) {
           estimatedFairValue += hcApcPayment;
           apcEstimate = { apc_description: 'ER facility fee estimate (ED Level ' + erCode.code.slice(-1) + ')', apc_payment: hcApcPayment };
           erFeeAdded = true;
-          console.log('Hardcoded APC (ER facility): $' + hcApcPayment);
         }
       }
-
-      // Hardcoded observation APC if CMS_APC not loaded
       if (hasObservation && !(apcEstimate && apcEstimate.observation_payment)) {
-        var hcObsPayment = 2846; // CMS 2026 APC 8011 approximate
+        var hcObsPayment = 2846;
         estimatedFairValue += hcObsPayment;
         if (apcEstimate) {
           apcEstimate.observation_apc = 'Comprehensive Observation Services (estimated)';
@@ -1219,10 +1259,7 @@ module.exports = async function handler(req, res) {
         } else {
           apcEstimate = { apc_description: 'Comprehensive Observation Services (estimated)', apc_payment: hcObsPayment, observation_payment: hcObsPayment };
         }
-        console.log('Hardcoded APC (observation): $' + hcObsPayment);
       }
-
-      // Mark facility charges as covered by APC and assign fair rates
       if (erFeeAdded || hasObservation) {
         var facilityItems = [];
         enrichedItems.forEach(function(item) {
@@ -1236,7 +1273,6 @@ module.exports = async function handler(req, res) {
             }
           }
         });
-        // Assign APC payment to facility items: largest gets the full APC rate, others are packaged
         if (facilityItems.length > 0 && apcEstimate) {
           var totalApcRate = apcEstimate.apc_payment || 0;
           facilityItems.sort(function(a, b) { return b.billed - a.billed; });
@@ -1248,18 +1284,15 @@ module.exports = async function handler(req, res) {
             facilityItems[fi].fair_rate = 0;
             facilityItems[fi].total_fair = 0;
             facilityItems[fi].markup_pct = 'NOT ALLOWED';
-            facilityItems[fi].note = 'NOT SEPARATELY PAYABLE -- this charge is packaged into the APC facility fee under Medicare rules and should not appear as a separate line item. Dispute this charge.';
+            facilityItems[fi].note = 'NOT SEPARATELY PAYABLE -- packaged into APC facility fee. Dispute this charge.';
             facilityItems[fi].status = 'FLAG';
           }
-          // Calculate and flag facility overcharge
           var totalFacilityBilled = 0;
           facilityItems.forEach(function(fi) { totalFacilityBilled += fi.billed; });
-          var facilityOvercharge = Math.max(0, Math.round((totalFacilityBilled - totalApcRate) * 100) / 100);
           if (totalFacilityBilled > totalApcRate) {
             highCount++;
-            // Store for report
             apcEstimate.facility_total_billed = totalFacilityBilled;
-            apcEstimate.facility_overcharge = facilityOvercharge;
+            apcEstimate.facility_overcharge = Math.max(0, Math.round((totalFacilityBilled - totalApcRate) * 100) / 100);
             apcEstimate.facility_items = facilityItems.map(function(fi) { return fi.description + ': $' + fi.billed.toFixed(2); });
           }
         }
@@ -1267,9 +1300,6 @@ module.exports = async function handler(req, res) {
     }
 
     var potentialSavings = Math.max(0, Math.round((totalBilled - estimatedFairValue) * 100) / 100);
-
-    // If fair value > billed (facility charged below Medicare APC), use sum of individual overcharges
-    // This catches cases like cruise ship medical centers where facility is cheap but services are overpriced
     if (potentialSavings === 0 && (highCount + medCount + lowCount) > 0) {
       var itemSavings = 0;
       enrichedItems.forEach(function(item) {
@@ -1284,7 +1314,6 @@ module.exports = async function handler(req, res) {
 
     var overchargePct = totalBilled > 0 ? Math.round((potentialSavings / totalBilled) * 100) : 0;
     var issueCount = highCount + medCount + lowCount;
-
     console.log('Summary: Billed $' + totalBilled.toFixed(2) + ', Fair $' + estimatedFairValue.toFixed(2) + ', Savings $' + potentialSavings.toFixed(2) + ' (' + overchargePct + '%)');
 
     // ════════════════════════════════════════════════════════════
@@ -1302,10 +1331,14 @@ module.exports = async function handler(req, res) {
           .map(function(i) { return i.description + ': billed $' + i.billed + ' vs fair $' + (i.total_fair || 'N/A'); }),
         partial_bill_note: partialBillNote
       };
-      var gradeResponse = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001', max_tokens: 500, system: GRADE_PROMPT,
-        messages: [{ role: 'user', content: 'Grade this bill:\n' + JSON.stringify(gradeInput) }],
-      });
+      var gradeResponse = await withTimeout(
+        client.messages.create({
+          model: 'claude-haiku-4-5-20251001', max_tokens: 500, system: GRADE_PROMPT,
+          messages: [{ role: 'user', content: 'Grade this bill:\n' + JSON.stringify(gradeInput) }],
+        }),
+        60000,
+        'Haiku grading'
+      );
       var gradeRaw = gradeResponse.content.map(function(b) { return b.text || ''; }).join('');
       gradeRaw = gradeRaw.replace(/```json|```/g, '').trim();
       var gs = gradeRaw.indexOf('{');
@@ -1314,10 +1347,7 @@ module.exports = async function handler(req, res) {
       grade.total_billed = totalBilled;
       grade.estimated_fair_value = estimatedFairValue;
       grade.potential_savings = potentialSavings;
-
-      // Record analytics even for grade-only
       recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade.grade, issueCount, drgEstimate);
-
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(grade) }] });
     }
 
@@ -1325,8 +1355,6 @@ module.exports = async function handler(req, res) {
     // STEP 3b: Full report (Sonnet)
     // ════════════════════════════════════════════════════════════
     console.log('Step 3b: Generating report with Sonnet...');
-
-    // Calculate unmapped charges (items with no fair rate AND not covered by APC/DRG)
     var unmappedCharges = 0;
     var unmappedDescriptions = [];
     var facilityCoveredCharges = 0;
@@ -1334,7 +1362,6 @@ module.exports = async function handler(req, res) {
     enrichedItems.forEach(function(item) {
       if (item.fair_rate === null && item.billed > 0) {
         if (item.type === 'facility_apc' || item.type === 'facility_drg') {
-          // These are covered by APC/DRG -- NOT unmapped
           facilityCoveredCharges += item.billed;
           facilityCoveredDescriptions.push(item.description + ': $' + item.billed.toFixed(2));
         } else {
@@ -1345,23 +1372,20 @@ module.exports = async function handler(req, res) {
     });
     var benchmarkedCharges = totalBilled - unmappedCharges;
 
-    // Build coverage note
     var coverageNote = '';
     if (facilityCoveredCharges > 0 && apcEstimate) {
       coverageNote += 'FACILITY CHARGES: The hospital billed $' + facilityCoveredCharges.toFixed(2) + ' for facility services (' +
-        facilityCoveredDescriptions.join(', ') + '). Under Medicare APC rules, these are all packaged into the facility fee. ' +
-        'Medicare would pay approximately $' + apcEstimate.apc_payment.toFixed(2) + ' total for all facility services. ' +
-        'The hospital is charging ' + (facilityCoveredCharges / apcEstimate.apc_payment).toFixed(1) + 'x the Medicare facility benchmark. ';
+        facilityCoveredDescriptions.join(', ') + '). Under Medicare APC rules, these are packaged into the facility fee. ' +
+        'Medicare would pay approximately $' + apcEstimate.apc_payment.toFixed(2) + ' total. ';
     }
     if (facilityCoveredCharges > 0 && drgEstimate && drgEstimate.drg_code !== 'UNKNOWN') {
       coverageNote += 'FACILITY CHARGES: The hospital billed $' + facilityCoveredCharges.toFixed(2) + ' for facility services. ' +
-        'Under Medicare DRG rules, ALL facility services for this admission are covered by the DRG payment of $' +
-        drgEstimate.drg_payment.toFixed(2) + '. ';
+        'Under Medicare DRG rules, ALL facility services are covered by the DRG payment of $' + drgEstimate.drg_payment.toFixed(2) + '. ';
     }
     if (unmappedCharges > 0) {
       coverageNote += 'NOTE: $' + unmappedCharges.toFixed(2) + ' in charges (' + Math.round(unmappedCharges / totalBilled * 100) +
         '% of total) could not be benchmarked (' + unmappedDescriptions.slice(0, 5).join(', ') + '). ' +
-        'Request an itemized bill with CPT codes for a complete analysis of these charges.';
+        'Request an itemized bill with CPT codes for a complete analysis.';
     }
 
     var reportInput = {
@@ -1379,10 +1403,14 @@ module.exports = async function handler(req, res) {
       partial_bill_note: partialBillNote
     };
 
-    var reportResponse = await client.messages.create({
-      model: 'claude-sonnet-4-20250514', max_tokens: 8000, system: REPORT_PROMPT,
-      messages: [{ role: 'user', content: 'Write the analysis report:\n\n' + JSON.stringify(reportInput, null, 2) }],
-    });
+    var reportResponse = await withTimeout(
+      client.messages.create({
+        model: 'claude-sonnet-4-20250514', max_tokens: 8000, system: REPORT_PROMPT,
+        messages: [{ role: 'user', content: 'Write the analysis report:\n\n' + JSON.stringify(reportInput, null, 2) }],
+      }),
+      90000,
+      'Sonnet report'
+    );
 
     var reportRaw = reportResponse.content.map(function(b) { return b.text || ''; }).join('');
     reportRaw = reportRaw.replace(/```json|```/g, '').trim();
@@ -1404,26 +1432,17 @@ module.exports = async function handler(req, res) {
     if (apcEstimate) report.apc_estimate = apcEstimate;
 
     report.line_items = enrichedItems.map(function(item) {
-      // Use custom note if set by facility marking, otherwise determine appropriate note
       var defaultNote;
-      if (item.type === 'facility_drg') {
-        defaultNote = 'Facility charge -- covered by DRG benchmark';
-      } else if (item.type === 'facility_apc') {
-        defaultNote = 'Facility charge -- covered by APC benchmark';
-      } else if (item.type === 'drug') {
-        defaultNote = 'Drug/solution charge -- Medicare ASP+6% benchmark';
-      } else if (item.status === 'FLAG' && item.fair_rate !== null) {
+      if (item.type === 'facility_drg') { defaultNote = 'Facility charge -- covered by DRG benchmark'; }
+      else if (item.type === 'facility_apc') { defaultNote = 'Facility charge -- covered by APC benchmark'; }
+      else if (item.type === 'drug') { defaultNote = 'Drug/solution charge -- Medicare ASP+6% benchmark'; }
+      else if (item.status === 'FLAG' && item.fair_rate !== null) {
         var mPct = item.total_fair > 0 ? Math.round((item.billed / item.total_fair - 1) * 100) : 0;
         defaultNote = 'Overcharged ' + mPct + '% above Medicare rate -- DISPUTE';
-      } else if (item.fair_rate !== null && item.status === 'OK') {
-        defaultNote = 'Within expected range of Medicare rate';
-      } else if (item.billed > 0 && !item.code) {
-        defaultNote = 'No CPT code provided -- request itemized bill with procedure codes to verify this charge';
-      } else if (item.billed > 0 && item.type === 'unknown') {
-        defaultNote = 'Code not in CMS database -- request clarification from billing department';
-      } else {
-        defaultNote = 'Unable to benchmark -- request itemized bill with CPT codes';
-      }
+      } else if (item.fair_rate !== null && item.status === 'OK') { defaultNote = 'Within expected range of Medicare rate'; }
+      else if (item.billed > 0 && !item.code) { defaultNote = 'No CPT code provided -- request itemized bill with procedure codes'; }
+      else if (item.billed > 0 && item.type === 'unknown') { defaultNote = 'Code not in CMS database -- request clarification from billing department'; }
+      else { defaultNote = 'Unable to benchmark -- request itemized bill with CPT codes'; }
       return {
         code: item.code, description: item.description, billed: item.billed,
         quantity: item.quantity, fair_rate: item.fair_rate, total_fair: item.total_fair,
@@ -1432,9 +1451,7 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    // Record analytics
     recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
-
     return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(report) }] });
 
   } catch (err) {
