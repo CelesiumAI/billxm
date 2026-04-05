@@ -569,7 +569,9 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n' +
 '- For drugs with code 00000, set code to "" and include the drug name in description\n' +
 '- Include adjustments/discounts as a total in the adjustments field, but do NOT include them as line_items. Lines labeled "discount", "uninsured discount", "financial assistance", "write-off", "charity care", "adjustment", "insurance payment", "account balance", or "balance due" are NOT charges.\n' +
-'- Negative amounts (in parentheses or with minus sign) are credits/payments, NOT charges. Do not include them in line_items.\n\n' +
+'- Negative amounts (in parentheses or with minus sign) are credits/payments, NOT charges. Do not include them in line_items.\n' +
+'- CRITICAL: ACCOUNT BALANCE, BALANCE DUE, TOTAL DUE, and PAY NOW lines are NOT service charges. They are the final amount owed after discounts and payments. NEVER include them as line_items. NEVER use them as total_billed.\n' +
+'- CRITICAL: UNINSURED DISCOUNT, PROMPT PAY DISCOUNT, CHARITY CARE, and similar discount lines are adjustments, not charges. Record them in the adjustments field as a negative number. Do NOT include them as line_items.\n\n' +
 'Return ONLY valid JSON, no markdown, no explanation:\n' +
 '{\n' +
 '  "hospital": "FULL hospital name exactly as printed -- include specialty designations like Orthopedic, Cardiac, Cancer Center, Childrens, etc.",\n' +
@@ -952,10 +954,12 @@ module.exports = async function handler(req, res) {
     // STEP 1b: Separate charges from discounts/credits/payments
     // ════════════════════════════════════════════════════════════
     if (extracted.line_items && extracted.line_items.length > 0) {
-      var discountKeywords = ['discount', 'adjustment', 'write-off', 'write off', 'charity',
-        'financial assistance', 'courtesy', 'contractual', 'allowance', 'account balance',
-        'balance due', 'amount due', 'patient responsibility', 'insurance payment',
-        'payment', 'paid', 'credit'];
+      var discountKeywords = ['discount', 'uninsured discount', 'prompt pay', 'adjustment',
+        'write-off', 'write off', 'charity', 'financial assistance', 'courtesy',
+        'contractual', 'allowance', 'account balance', 'account bal',
+        'balance due', 'amount due', 'total due', 'pay now', 'please pay',
+        'patient responsibility', 'insurance payment',
+        'payment', 'paid', 'credit', 'refund'];
       var charges = [];
       var adjustmentsTotal = 0;
       extracted.line_items.forEach(function(item) {
@@ -976,6 +980,30 @@ module.exports = async function handler(req, res) {
         console.log('Separated: ' + charges.length + ' charges from ' + (extracted.line_items.length - charges.length) + ' discounts/credits (adjustments: $' + adjustmentsTotal.toFixed(2) + ')');
         extracted.line_items = charges;
         extracted.adjustments = adjustmentsTotal;
+      }
+
+      // ── FIX: Sanity check -- catch account balance / total due lines Haiku mislabeled as charges ──
+      // If any single charge equals the sum of all OTHER charges (within 5%), it's an account balance, not a charge
+      if (extracted.line_items.length > 2) {
+        var totalAllItems = 0;
+        extracted.line_items.forEach(function(item) { totalAllItems += (item.billed || 0); });
+        var suspiciousRemoved = false;
+        extracted.line_items = extracted.line_items.filter(function(item) {
+          var otherSum = totalAllItems - (item.billed || 0);
+          var diff = Math.abs((item.billed || 0) - otherSum);
+          // If this item's amount ≈ sum of all other items, it's a running total, not a charge
+          if (otherSum > 0 && diff / otherSum < 0.05 && (item.billed || 0) > 0) {
+            console.log('SANITY CHECK: Removed suspected account balance line: "' + item.description + '" $' + (item.billed || 0).toFixed(2) + ' (≈ sum of other charges $' + otherSum.toFixed(2) + ')');
+            suspiciousRemoved = true;
+            return false;
+          }
+          return true;
+        });
+        if (suspiciousRemoved) {
+          var newSum = 0;
+          extracted.line_items.forEach(function(item) { newSum += (item.billed || 0); });
+          console.log('After sanity check: ' + extracted.line_items.length + ' items, $' + newSum.toFixed(2));
+        }
       }
 
       // Net charge/reversal pairs
