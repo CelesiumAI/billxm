@@ -956,7 +956,8 @@ module.exports = async function handler(req, res) {
         var drgMarkup = totalBilled > 0 && drg.payment > 0 ? (totalBilled / drg.payment).toFixed(1) : '0';
         drgEstimate = { drg_code: drg.code, drg_description: drg.desc, drg_payment: drg.payment, markup_multiplier: drgMarkup + 'x' };
         console.log('DRG ' + drg.code + ': $' + drg.payment.toFixed(2) + ' (' + drgMarkup + 'x)');
-        // Mark room/board/facility items as covered by DRG
+        // Mark room/board/facility items as covered by DRG and assign fair rates
+        var drgFacilityItems = [];
         enrichedItems.forEach(function(item) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
@@ -964,9 +965,24 @@ module.exports = async function handler(req, res) {
                 desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
+              drgFacilityItems.push(item);
             }
           }
         });
+        if (drgFacilityItems.length > 0) {
+          drgFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          drgFacilityItems[0].fair_rate = drg.payment;
+          drgFacilityItems[0].total_fair = drg.payment;
+          drgFacilityItems[0].markup_pct = drg.payment > 0 ? Math.round((drgFacilityItems[0].billed / drg.payment - 1) * 100) + '%' : 'N/A';
+          drgFacilityItems[0].note = 'Medicare DRG benchmark covers ALL facility services for this admission';
+          for (var di = 1; di < drgFacilityItems.length; di++) {
+            drgFacilityItems[di].fair_rate = 0;
+            drgFacilityItems[di].total_fair = 0;
+            drgFacilityItems[di].markup_pct = 'N/A';
+            drgFacilityItems[di].note = 'Packaged in DRG -- not separately payable under Medicare';
+            drgFacilityItems[di].status = 'FLAG';
+          }
+        }
       } else {
         estimatedFairValue = totalFairCPT;
       }
@@ -1034,8 +1050,9 @@ module.exports = async function handler(req, res) {
         console.log('Hardcoded APC (observation): $' + hcObsPayment);
       }
 
-      // Mark facility charges as covered by APC (room/board during ER+observation are packaged)
+      // Mark facility charges as covered by APC and assign fair rates
       if (erFeeAdded || hasObservation) {
+        var facilityItems = [];
         enrichedItems.forEach(function(item) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
@@ -1043,9 +1060,32 @@ module.exports = async function handler(req, res) {
                 desc.indexOf('progressive') >= 0 || desc.indexOf('observation') >= 0 || desc.indexOf('nursing') >= 0) {
               item.status = 'APC_COVERED';
               item.type = 'facility_apc';
+              facilityItems.push(item);
             }
           }
         });
+        // Assign APC payment to facility items: largest gets the full APC rate, others are packaged
+        if (facilityItems.length > 0 && apcEstimate) {
+          var totalApcRate = apcEstimate.apc_payment || 0;
+          facilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          facilityItems[0].fair_rate = totalApcRate;
+          facilityItems[0].total_fair = totalApcRate;
+          facilityItems[0].markup_pct = totalApcRate > 0 ? Math.round((facilityItems[0].billed / totalApcRate - 1) * 100) + '%' : 'N/A';
+          facilityItems[0].note = 'Medicare APC benchmark for all facility services combined';
+          for (var fi = 1; fi < facilityItems.length; fi++) {
+            facilityItems[fi].fair_rate = 0;
+            facilityItems[fi].total_fair = 0;
+            facilityItems[fi].markup_pct = 'N/A';
+            facilityItems[fi].note = 'Packaged in APC -- not separately payable under Medicare';
+            facilityItems[fi].status = 'FLAG';
+          }
+          // Add facility overcharge as an issue
+          var totalFacilityBilled = 0;
+          facilityItems.forEach(function(fi) { totalFacilityBilled += fi.billed; });
+          if (totalFacilityBilled > totalApcRate * 2) {
+            highCount++;
+          }
+        }
       }
     }
 
@@ -1170,16 +1210,18 @@ module.exports = async function handler(req, res) {
     if (apcEstimate) report.apc_estimate = apcEstimate;
 
     report.line_items = enrichedItems.map(function(item) {
+      // Use custom note if set by facility marking, otherwise use default
+      var defaultNote = item.type === 'facility_drg' ? 'Facility charge -- covered by DRG benchmark' :
+            item.type === 'facility_apc' ? 'Facility charge -- covered by APC benchmark' :
+            item.type === 'no_code' ? 'Facility charge, no CPT code' :
+            item.type === 'drug' ? 'Drug charge -- Medicare ASP+6% benchmark' :
+            item.type === 'unknown' ? 'Code not found in CMS database' :
+            item.status === 'FLAG' ? 'Exceeds Medicare rate' : 'Within expected range';
       return {
         code: item.code, description: item.description, billed: item.billed,
         quantity: item.quantity, fair_rate: item.fair_rate, total_fair: item.total_fair,
         markup_pct: item.markup_pct, status: item.status,
-        note: item.type === 'facility_drg' ? 'Facility charge -- covered by DRG benchmark' :
-              item.type === 'facility_apc' ? 'Facility charge -- covered by APC benchmark' :
-              item.type === 'no_code' ? 'Facility charge, no CPT code' :
-              item.type === 'drug' ? 'Drug charge -- Medicare ASP+6% benchmark' :
-              item.type === 'unknown' ? 'Code not found in CMS database' :
-              item.status === 'FLAG' ? 'Exceeds Medicare rate' : 'Within expected range'
+        note: item.note || defaultNote
       };
     });
 
