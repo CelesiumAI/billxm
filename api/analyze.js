@@ -548,6 +548,7 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '  "appeal_recommended": false\n' +
 '}\n\n' +
 'CRITICAL: Use the total_billed, estimated_fair_value, and potential_savings exactly as provided. Do not recalculate them.\n' +
+'If coverage_note is provided, you MUST include it in your summary. Be transparent: tell the patient which charges were benchmarked and which were not. Never imply the entire bill should cost the estimated_fair_value when facility charges like room/board, progressive care, or observation fees are excluded from the benchmark.\n' +
 'Write all descriptions in plain English. No unexplained medical jargon.\n' +
 'The phone_script should be conversational and ready to read aloud.\n' +
 'The dispute_letter should be formal, professional, and ready to print and mail.';
@@ -560,7 +561,8 @@ var GRADE_PROMPT = 'You are BillXM AI. Quickly assess this medical bill data and
 '- C = overcharge 25-50%\n' +
 '- D = overcharge 50-75%\n' +
 '- F = overcharge >75% or billing violations\n\n' +
-'If potential_savings is $0, grade MUST be A.\n\n' +
+'If potential_savings is $0, grade MUST be A.\n' +
+'If unmapped_charges is high (over 50% of total), note in the summary that the grade only reflects benchmarked services and facility charges like room/board were not included in the comparison.\n\n' +
 'Return ONLY valid JSON:\n' +
 '{"grade":"A-F","grade_rationale":"one sentence","summary":"2 sentences for patient",' +
 '"total_billed":0,"estimated_fair_value":0,"potential_savings":0,' +
@@ -914,6 +916,14 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
 
+    // ── Re-detect bill type after CPT mapping (mapped ER codes now available) ──
+    var hasERCode = enrichedItems.some(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
+    var hasObservation = enrichedItems.some(function(item) { return (item.description || '').toLowerCase().indexOf('observation') >= 0; });
+    if (hasERCode && billType === 'INPATIENT') {
+      billType = 'OUTPATIENT';
+      console.log('Bill type corrected to OUTPATIENT (ER code found after CPT mapping)');
+    }
+
     // ── Determine fair value based on bill type ──
     var estimatedFairValue = 0;
     var drgEstimate = null;
@@ -926,11 +936,25 @@ module.exports = async function handler(req, res) {
         var drgMarkup = totalBilled > 0 && drg.payment > 0 ? (totalBilled / drg.payment).toFixed(1) : '0';
         drgEstimate = { drg_code: drg.code, drg_description: drg.desc, drg_payment: drg.payment, markup_multiplier: drgMarkup + 'x' };
         console.log('DRG ' + drg.code + ': $' + drg.payment.toFixed(2) + ' (' + drgMarkup + 'x)');
+        // Mark room/board/facility items as covered by DRG
+        enrichedItems.forEach(function(item) {
+          if (item.fair_rate === null && item.billed > 0) {
+            var desc = (item.description || '').toLowerCase();
+            if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care unit') >= 0 ||
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
+              item.status = 'DRG_COVERED';
+              item.type = 'facility_drg';
+            }
+          }
+        });
       } else {
         estimatedFairValue = totalFairCPT;
       }
     } else {
       estimatedFairValue = totalFairCPT;
+
+      // ER facility fee APC
+      var erFeeAdded = false;
       if (CMS_APC && CMS_APC.apcs) {
         var erLevel = enrichedItems.find(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
         if (erLevel) {
@@ -941,8 +965,67 @@ module.exports = async function handler(req, res) {
             var apcPayment = apc.payment || apc.r || 0;
             estimatedFairValue += apcPayment;
             apcEstimate = { apc_description: (apc.desc || apc.d || 'ER facility fee') + ' (APC ' + apcCode + ')', apc_payment: apcPayment };
+            erFeeAdded = true;
+            console.log('APC ' + apcCode + ' (ER facility): $' + apcPayment.toFixed(2));
           }
         }
+
+        // Observation APC (8011 = comprehensive observation)
+        if (hasObservation && CMS_APC.apcs['8011']) {
+          var obsApc = CMS_APC.apcs['8011'];
+          var obsPayment = obsApc.payment || obsApc.r || 0;
+          estimatedFairValue += obsPayment;
+          if (apcEstimate) {
+            apcEstimate.observation_apc = 'Comprehensive Observation Services (APC 8011)';
+            apcEstimate.observation_payment = obsPayment;
+            apcEstimate.apc_payment += obsPayment;
+          } else {
+            apcEstimate = { apc_description: 'Comprehensive Observation Services (APC 8011)', apc_payment: obsPayment, observation_payment: obsPayment };
+          }
+          console.log('APC 8011 (observation): $' + obsPayment.toFixed(2));
+        }
+      }
+
+      // Even without CMS_APC data, provide hardcoded APC estimates for common ER levels
+      if (!erFeeAdded && hasERCode) {
+        // CMS 2026 national APC payment rates (approximate)
+        var erCode = enrichedItems.find(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
+        if (erCode) {
+          var hardcodedAPC = { '99285': 814, '99284': 531, '99283': 330, '99282': 188, '99281': 79 };
+          var hcApcPayment = hardcodedAPC[erCode.code] || 531;
+          estimatedFairValue += hcApcPayment;
+          apcEstimate = { apc_description: 'ER facility fee estimate (ED Level ' + erCode.code.slice(-1) + ')', apc_payment: hcApcPayment };
+          erFeeAdded = true;
+          console.log('Hardcoded APC (ER facility): $' + hcApcPayment);
+        }
+      }
+
+      // Hardcoded observation APC if CMS_APC not loaded
+      if (hasObservation && !(apcEstimate && apcEstimate.observation_payment)) {
+        var hcObsPayment = 2846; // CMS 2026 APC 8011 approximate
+        estimatedFairValue += hcObsPayment;
+        if (apcEstimate) {
+          apcEstimate.observation_apc = 'Comprehensive Observation Services (estimated)';
+          apcEstimate.observation_payment = hcObsPayment;
+          apcEstimate.apc_payment += hcObsPayment;
+        } else {
+          apcEstimate = { apc_description: 'Comprehensive Observation Services (estimated)', apc_payment: hcObsPayment, observation_payment: hcObsPayment };
+        }
+        console.log('Hardcoded APC (observation): $' + hcObsPayment);
+      }
+
+      // Mark facility charges as covered by APC (room/board during ER+observation are packaged)
+      if (erFeeAdded || hasObservation) {
+        enrichedItems.forEach(function(item) {
+          if (item.fair_rate === null && item.billed > 0) {
+            var desc = (item.description || '').toLowerCase();
+            if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care unit') >= 0 ||
+                desc.indexOf('progressive') >= 0 || desc.indexOf('observation') >= 0 || desc.indexOf('nursing') >= 0) {
+              item.status = 'APC_COVERED';
+              item.type = 'facility_apc';
+            }
+          }
+        });
       }
     }
 
@@ -962,6 +1045,7 @@ module.exports = async function handler(req, res) {
         potential_savings: potentialSavings, overcharge_pct: overchargePct,
         issue_count: issueCount, high_count: highCount, medium_count: medCount, low_count: lowCount,
         hospital: extracted.hospital || '',
+        unmapped_charges: (function() { var u = 0; enrichedItems.forEach(function(i) { if (i.fair_rate === null && i.billed > 0) u += i.billed; }); return u; })(),
         top_overcharges: enrichedItems.filter(function(i) { return i.status === 'FLAG'; }).slice(0, 5)
           .map(function(i) { return i.description + ': billed $' + i.billed + ' vs fair $' + (i.total_fair || 'N/A'); })
       };
@@ -988,6 +1072,18 @@ module.exports = async function handler(req, res) {
     // STEP 3b: Full report (Sonnet)
     // ════════════════════════════════════════════════════════════
     console.log('Step 3b: Generating report with Sonnet...');
+
+    // Calculate unmapped charges (items with no fair rate benchmark)
+    var unmappedCharges = 0;
+    var unmappedDescriptions = [];
+    enrichedItems.forEach(function(item) {
+      if (item.fair_rate === null && item.billed > 0) {
+        unmappedCharges += item.billed;
+        unmappedDescriptions.push(item.description + ': $' + item.billed.toFixed(2));
+      }
+    });
+    var benchmarkedCharges = totalBilled - unmappedCharges;
+
     var reportInput = {
       bill_type: billType, hospital: extracted.hospital || '', state: state, city: city,
       date_of_service: extracted.date_of_service || '', total_billed: totalBilled,
@@ -995,6 +1091,10 @@ module.exports = async function handler(req, res) {
       overcharge_pct: overchargePct, drg_estimate: drgEstimate, apc_estimate: apcEstimate,
       line_items: enrichedItems,
       issue_counts: { high: highCount, medium: medCount, low: lowCount, total: issueCount },
+      unmapped_charges: unmappedCharges,
+      benchmarked_charges: benchmarkedCharges,
+      unmapped_descriptions: unmappedDescriptions.slice(0, 10),
+      coverage_note: unmappedCharges > 0 ? 'IMPORTANT: $' + unmappedCharges.toFixed(2) + ' in charges (' + Math.round(unmappedCharges / totalBilled * 100) + '% of total) could not be benchmarked because they lack CPT codes. These include facility fees like room and board, progressive care, and observation charges. The fair value of $' + estimatedFairValue.toFixed(2) + ' only covers the $' + benchmarkedCharges.toFixed(2) + ' in services that could be benchmarked against CMS rates. The actual total overcharge may be different.' : ''
     };
 
     var reportResponse = await client.messages.create({
@@ -1026,7 +1126,9 @@ module.exports = async function handler(req, res) {
         code: item.code, description: item.description, billed: item.billed,
         quantity: item.quantity, fair_rate: item.fair_rate, total_fair: item.total_fair,
         markup_pct: item.markup_pct, status: item.status,
-        note: item.type === 'no_code' ? 'Facility charge, no CPT code' :
+        note: item.type === 'facility_drg' ? 'Facility charge -- covered by DRG benchmark' :
+              item.type === 'facility_apc' ? 'Facility charge -- covered by APC benchmark' :
+              item.type === 'no_code' ? 'Facility charge, no CPT code' :
               item.type === 'drug' ? 'Drug charge -- Medicare ASP+6% benchmark' :
               item.type === 'unknown' ? 'Code not found in CMS database' :
               item.status === 'FLAG' ? 'Exceeds Medicare rate' : 'Within expected range'
