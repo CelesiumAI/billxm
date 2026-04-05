@@ -595,8 +595,28 @@ var CPT_MAP_PROMPT = 'You are a medical coding expert. Map each service descript
 '  THYROID STIMULATING HORMONE = 84443, HCG QUAL = 81025,\n' +
 '  MAGNESIUM LEVEL = 83735, AMNIO PH = 83986\n' +
 '- Drug J-code mappings:\n' +
-'  ONDANSETRON = J2405, METOCLOPRAMIDE = J2765, INSULIN GLARGINE = J1815,\n' +
-'  POTASSIUM CHLORIDE = J3480, MAGNESIUM SULFATE = J3475\n';
+'  ONDANSETRON/ZOFRAN = J2405, METOCLOPRAMIDE/REGLAN = J2765, INSULIN GLARGINE = J1815,\n' +
+'  POTASSIUM CHLORIDE = J3480, MAGNESIUM SULFATE = J3475,\n' +
+'  KETOROLAC/TORADOL = J1885, MORPHINE = J2270, HYDROMORPHONE/DILAUDID = J1170,\n' +
+'  FENTANYL = J3010, LORAZEPAM/ATIVAN = J2060, MIDAZOLAM/VERSED = J2250,\n' +
+'  DIPHENHYDRAMINE/BENADRYL = J1200, PROMETHAZINE/PHENERGAN = J2550,\n' +
+'  FUROSEMIDE/LASIX = J1940, HEPARIN = J1644, ENOXAPARIN/LOVENOX = J1650,\n' +
+'  DEXAMETHASONE/DECADRON = J1100, METHYLPREDNISOLONE/SOLUMEDROL = J2920,\n' +
+'  HYDROCORTISONE = J1720, PROPOFOL/DIPRIVAN = J2704, EPINEPHRINE = J0171,\n' +
+'  NALOXONE/NARCAN = J2310, ACETAMINOPHEN IV/OFIRMEV = J0131,\n' +
+'  VANCOMYCIN = J3370, CEFTRIAXONE/ROCEPHIN = J0696, AZITHROMYCIN/ZITHROMAX = J0456,\n' +
+'  PIPERACILLIN-TAZOBACTAM/ZOSYN = J2543, CEFAZOLIN/ANCEF = J0690,\n' +
+'  PANTOPRAZOLE/PROTONIX IV = J3480, FAMOTIDINE/PEPCID IV = J3490,\n' +
+'  ALTEPLASE/TPA = J2997, AMIODARONE = J0282, DOPAMINE = J1265, DOBUTAMINE = J1250\n' +
+'- IV FLUID/SOLUTION J-code mappings (CRITICAL -- these are commonly overcharged 50-100x):\n' +
+'  SODIUM CHLORIDE 0.9%/NORMAL SALINE/NS 1000 = J7030,\n' +
+'  SODIUM CHLORIDE 0.9%/NS PER 500 ML = J7040,\n' +
+'  SODIUM CHLORIDE 0.9%/NS 250 = J7050,\n' +
+'  SODIUM CHLORIDE 0.45%/HALF NORMAL SALINE/1/2 NS = J7042,\n' +
+'  DEXTROSE 5%/D5W 500 ML = J7060, DEXTROSE 5%/D5W 1000 = J7070,\n' +
+'  DEXTROSE-NACL/D5NS/D5 NORMAL SALINE = J7042,\n' +
+'  LACTATED RINGERS/LR/RINGERS LACTATE = J7120,\n' +
+'  Any IV bag/solution described as SOLN/SOLUTION with NaCl or saline = J7030/J7040/J7050 based on volume\n';
 
 // ── Cached demo report ───────────────────────────────────────
 var CACHED_DEMO_REPORT = {
@@ -1073,16 +1093,43 @@ module.exports = async function handler(req, res) {
     // ════════════════════════════════════════════════════════════
     console.log('Step 3b: Generating report with Sonnet...');
 
-    // Calculate unmapped charges (items with no fair rate benchmark)
+    // Calculate unmapped charges (items with no fair rate AND not covered by APC/DRG)
     var unmappedCharges = 0;
     var unmappedDescriptions = [];
+    var facilityCoveredCharges = 0;
+    var facilityCoveredDescriptions = [];
     enrichedItems.forEach(function(item) {
       if (item.fair_rate === null && item.billed > 0) {
-        unmappedCharges += item.billed;
-        unmappedDescriptions.push(item.description + ': $' + item.billed.toFixed(2));
+        if (item.type === 'facility_apc' || item.type === 'facility_drg') {
+          // These are covered by APC/DRG -- NOT unmapped
+          facilityCoveredCharges += item.billed;
+          facilityCoveredDescriptions.push(item.description + ': $' + item.billed.toFixed(2));
+        } else {
+          unmappedCharges += item.billed;
+          unmappedDescriptions.push(item.description + ': $' + item.billed.toFixed(2));
+        }
       }
     });
     var benchmarkedCharges = totalBilled - unmappedCharges;
+
+    // Build coverage note
+    var coverageNote = '';
+    if (facilityCoveredCharges > 0 && apcEstimate) {
+      coverageNote += 'FACILITY CHARGES: The hospital billed $' + facilityCoveredCharges.toFixed(2) + ' for facility services (' +
+        facilityCoveredDescriptions.join(', ') + '). Under Medicare APC rules, these are all packaged into the facility fee. ' +
+        'Medicare would pay approximately $' + apcEstimate.apc_payment.toFixed(2) + ' total for all facility services. ' +
+        'The hospital is charging ' + (facilityCoveredCharges / apcEstimate.apc_payment).toFixed(1) + 'x the Medicare facility benchmark. ';
+    }
+    if (facilityCoveredCharges > 0 && drgEstimate && drgEstimate.drg_code !== 'UNKNOWN') {
+      coverageNote += 'FACILITY CHARGES: The hospital billed $' + facilityCoveredCharges.toFixed(2) + ' for facility services. ' +
+        'Under Medicare DRG rules, ALL facility services for this admission are covered by the DRG payment of $' +
+        drgEstimate.drg_payment.toFixed(2) + '. ';
+    }
+    if (unmappedCharges > 0) {
+      coverageNote += 'NOTE: $' + unmappedCharges.toFixed(2) + ' in charges (' + Math.round(unmappedCharges / totalBilled * 100) +
+        '% of total) could not be benchmarked (' + unmappedDescriptions.slice(0, 5).join(', ') + '). ' +
+        'Request an itemized bill with CPT codes for a complete analysis of these charges.';
+    }
 
     var reportInput = {
       bill_type: billType, hospital: extracted.hospital || '', state: state, city: city,
@@ -1092,9 +1139,10 @@ module.exports = async function handler(req, res) {
       line_items: enrichedItems,
       issue_counts: { high: highCount, medium: medCount, low: lowCount, total: issueCount },
       unmapped_charges: unmappedCharges,
+      facility_covered_charges: facilityCoveredCharges,
       benchmarked_charges: benchmarkedCharges,
       unmapped_descriptions: unmappedDescriptions.slice(0, 10),
-      coverage_note: unmappedCharges > 0 ? 'IMPORTANT: $' + unmappedCharges.toFixed(2) + ' in charges (' + Math.round(unmappedCharges / totalBilled * 100) + '% of total) could not be benchmarked because they lack CPT codes. These include facility fees like room and board, progressive care, and observation charges. The fair value of $' + estimatedFairValue.toFixed(2) + ' only covers the $' + benchmarkedCharges.toFixed(2) + ' in services that could be benchmarked against CMS rates. The actual total overcharge may be different.' : ''
+      coverage_note: coverageNote
     };
 
     var reportResponse = await client.messages.create({
