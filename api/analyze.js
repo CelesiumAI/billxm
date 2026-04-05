@@ -114,13 +114,38 @@ function estimateDRG(extracted) {
     text += ' ' + (item.category || '').toLowerCase();
   });
   var candidates = [];
-  if (text.indexOf('pneumonia') >= 0 || (text.indexOf('respiratory') >= 0 && text.indexOf('inhalation') >= 0)) candidates.push('194', '193', '192');
-  if (text.indexOf('heart failure') >= 0 || text.indexOf('cardiac') >= 0) candidates.push('293', '292', '291');
+  // Medical DRGs -- only match on actual diagnosis keywords
+  if (text.indexOf('pneumonia') >= 0) candidates.push('194', '193', '192');
+  if (text.indexOf('heart failure') >= 0) candidates.push('293', '292', '291');
   if (text.indexOf('sepsis') >= 0 || text.indexOf('septicemia') >= 0) candidates.push('872', '871');
   if (text.indexOf('chest pain') >= 0) candidates.push('313');
-  if (text.indexOf('copd') >= 0 || text.indexOf('obstructive pulmonary') >= 0 || text.indexOf('bronchitis') >= 0 || text.indexOf('asthma') >= 0) candidates.push('192', '193', '194', '203', '202');
-  if (candidates.length === 0 && (text.indexOf('inhalation') >= 0 || text.indexOf('nebuliz') >= 0 || text.indexOf('chest physio') >= 0)) candidates.push('194', '193', '192');
-  if (candidates.length === 0) candidates.push('194');
+  if (text.indexOf('copd') >= 0 || text.indexOf('obstructive pulmonary') >= 0 || text.indexOf('bronchitis') >= 0 || text.indexOf('asthma') >= 0) candidates.push('203', '202');
+  if (text.indexOf('stroke') >= 0 || text.indexOf('cerebrovascular') >= 0) candidates.push('065', '064');
+  if (text.indexOf('hip replacement') >= 0 || text.indexOf('hip arthroplasty') >= 0) candidates.push('470');
+  if (text.indexOf('knee replacement') >= 0 || text.indexOf('knee arthroplasty') >= 0) candidates.push('470');
+  if (text.indexOf('appendectomy') >= 0 || text.indexOf('appendicitis') >= 0) candidates.push('343', '342');
+  if (text.indexOf('cholecystectomy') >= 0 || text.indexOf('gallbladder') >= 0) candidates.push('418', '419');
+  if (text.indexOf('cesarean') >= 0 || text.indexOf('c-section') >= 0) candidates.push('788', '787', '786');
+  if (text.indexOf('vaginal delivery') >= 0 || text.indexOf('childbirth') >= 0) candidates.push('775', '774');
+  if (text.indexOf('kidney') >= 0 && text.indexOf('failure') >= 0) candidates.push('684', '683', '682');
+  if (text.indexOf('diabetes') >= 0) candidates.push('640', '639', '638');
+  if (text.indexOf('urinary tract infection') >= 0 || text.indexOf('uti') >= 0) candidates.push('690', '689');
+
+  // If no diagnosis match found, do NOT default to pneumonia.
+  // Instead, detect if it's a surgical or medical admission from department clues.
+  if (candidates.length === 0) {
+    var hasSurgical = text.indexOf('or services') >= 0 || text.indexOf('operating room') >= 0 ||
+      text.indexOf('surgery') >= 0 || text.indexOf('anesthesia') >= 0 || text.indexOf('recovery room') >= 0;
+    // Return null with context about admission type -- no guessing diagnosis
+    return {
+      code: 'UNKNOWN',
+      desc: hasSurgical ? 'Surgical admission (specific procedure unknown -- request itemized bill)' : 'Medical admission (specific diagnosis unknown -- request itemized bill)',
+      payment: 0,
+      los: 0,
+      admission_type: hasSurgical ? 'SURGICAL' : 'MEDICAL'
+    };
+  }
+
   for (var i = 0; i < candidates.length; i++) {
     var drg = CMS_DRG.drgs[candidates[i]];
     if (drg) {
@@ -150,12 +175,38 @@ function detectSummaryBill(extracted, enrichedItems) {
 
   // Summary bill = zero or near-zero code matches on a substantial bill
   // Also check if descriptions look like department categories
-  var deptKeywords = ['room and', 'pharmacy', 'laboratory', 'radiology', 'respiratory',
-    'cardiology', 'pulmonary', 'therapy services', 'emergency room', 'emergency care',
-    'intensive care', 'intermediate care', 'operating room', 'surgery services',
-    'anesthesia', 'blood', 'special services', 'audiology', 'ct scan', 'mri',
-    'medical/surgical', 'iv therapy', 'physical therapy', 'occupational therapy',
-    'other therapeutic', 'professional or physician'];
+  var deptKeywords = [
+    // Room & board
+    'room and', 'room &', 'bed semi', 'bed priv', 'room-priv', 'room-semi',
+    'medical-sur', 'med-sur', 'room and care', 'room and board',
+    // Pharmacy & drugs
+    'pharmacy', 'drugs req', 'drug charge', 'single source drug',
+    // Supplies
+    'supplies', 'sterile supply', 'med-sur supplies',
+    // Lab departments
+    'laboratory', 'chemistry', 'hematology', 'bacteriology', 'microbiology',
+    'urology', 'pathology', 'pathology lab', 'lab-',
+    // Imaging
+    'radiology', 'ct scan', 'mri', 'ultrasound', 'diagnostic-general',
+    // Cardio/Pulmonary
+    'cardiology', 'pulmonary', 'respiratory', 'ekg', 'ecg', 'eeg',
+    'pulmonary function',
+    // Surgical
+    'or services', 'operating room', 'surgery services', 'recovery room',
+    'anesthesia',
+    // Emergency
+    'emergency room', 'emergency care', 'emerg room',
+    // ICU
+    'intensive care', 'intermediate care', 'icu',
+    // Therapy
+    'therapy services', 'physical therapy', 'occupational therapy',
+    'respiratory therapy', 'behavioral health', 'rehabilitation',
+    'other therapeutic',
+    // Other common departments
+    'blood', 'special services', 'audiology', 'iv therapy',
+    'medical/surgical', 'professional or physician', 'professional fee',
+    'extension of'
+  ];
   var deptMatchCount = 0;
   (extracted.line_items || []).forEach(function(item) {
     var desc = (item.description || '').toLowerCase();
@@ -211,10 +262,16 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
   // DRG context for inpatient
   var drgContext = '';
   if (billType === 'INPATIENT' && drgEstimate) {
-    var multiplier = totalBilled > 0 && drgEstimate.payment > 0 ? (totalBilled / drgEstimate.payment).toFixed(1) : 'N/A';
-    drgContext = 'Based on available information, the estimated Medicare DRG payment for this type of admission would be approximately $' +
-      drgEstimate.payment.toLocaleString() + ' (DRG ' + drgEstimate.code + '). Your bill of $' +
-      totalBilled.toLocaleString() + ' is approximately ' + multiplier + 'x the Medicare benchmark.';
+    if (drgEstimate.code !== 'UNKNOWN' && drgEstimate.payment > 0) {
+      var multiplier = totalBilled > 0 ? (totalBilled / drgEstimate.payment).toFixed(1) : 'N/A';
+      drgContext = 'Based on available information, the estimated Medicare DRG payment for this type of admission would be approximately $' +
+        drgEstimate.payment.toLocaleString() + ' (DRG ' + drgEstimate.code + '). Your bill of $' +
+        totalBilled.toLocaleString() + ' is approximately ' + multiplier + 'x the Medicare benchmark.';
+    } else {
+      drgContext = 'This appears to be a ' + (drgEstimate.desc || 'hospital admission') +
+        '. Without an itemized bill, we cannot determine the exact DRG classification or Medicare benchmark. ' +
+        'The itemized bill with procedure codes will allow us to identify the correct DRG and calculate your fair value.';
+    }
   }
 
   // Build summary text
@@ -824,7 +881,7 @@ module.exports = async function handler(req, res) {
 
     if (billType === 'INPATIENT') {
       var drg = estimateDRG(extracted);
-      if (drg) {
+      if (drg && drg.code !== 'UNKNOWN' && drg.payment > 0) {
         estimatedFairValue = drg.payment;
         var drgMarkup = totalBilled > 0 && drg.payment > 0 ? (totalBilled / drg.payment).toFixed(1) : '0';
         drgEstimate = { drg_code: drg.code, drg_description: drg.desc, drg_payment: drg.payment, markup_multiplier: drgMarkup + 'x' };
