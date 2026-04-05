@@ -954,9 +954,10 @@ module.exports = async function handler(req, res) {
     // STEP 1b: Separate charges from discounts/credits/payments
     // ════════════════════════════════════════════════════════════
     if (extracted.line_items && extracted.line_items.length > 0) {
-      var discountKeywords = ['discount', 'uninsured discount', 'prompt pay', 'adjustment',
-        'write-off', 'write off', 'charity', 'financial assistance', 'courtesy',
-        'contractual', 'allowance', 'account balance', 'account bal',
+      var discountKeywords = ['discount', 'disc ', 'disc.', 'uninsured', 'prompt pay',
+        'adjustment', 'write-off', 'write off', 'charity',
+        'financial assistance', 'courtesy', 'contractual', 'allowance',
+        'account balance', 'account bal', 'acct bal', 'acct balance',
         'balance due', 'amount due', 'total due', 'pay now', 'please pay',
         'patient responsibility', 'insurance payment',
         'payment', 'paid', 'credit', 'refund'];
@@ -971,6 +972,7 @@ module.exports = async function handler(req, res) {
         if ((item.billed || 0) < 0) {
           adjustmentsTotal += (item.billed || 0);
         } else if (isDiscount) {
+          console.log('Discount keyword matched: "' + item.description + '" $' + (item.billed || 0).toFixed(2));
           adjustmentsTotal -= (item.billed || 0);
         } else {
           charges.push(item);
@@ -980,6 +982,34 @@ module.exports = async function handler(req, res) {
         console.log('Separated: ' + charges.length + ' charges from ' + (extracted.line_items.length - charges.length) + ' discounts/credits (adjustments: $' + adjustmentsTotal.toFixed(2) + ')');
         extracted.line_items = charges;
         extracted.adjustments = adjustmentsTotal;
+      }
+
+      // ── Numerical discount detection: if extraction reported adjustments but keyword filter missed them ──
+      // Check if charges sum exceeds what it should be by roughly the adjustment amount
+      if (extracted.adjustments && Math.abs(extracted.adjustments) > 0) {
+        var chargesSum = 0;
+        charges.forEach(function(item) { chargesSum += (item.billed || 0); });
+        var expectedTotal = chargesSum + (extracted.adjustments || 0); // adjustments are negative
+        // If Haiku reported adjustments but the discount is still in the charges, find and remove it
+        // Look for a charge whose amount ≈ the absolute adjustment value
+        var absAdj = Math.abs(extracted.adjustments);
+        if (absAdj > 100) {
+          var bestMatch = null;
+          var bestDiff = Infinity;
+          charges.forEach(function(item, idx) {
+            var diff = Math.abs((item.billed || 0) - absAdj);
+            if (diff < absAdj * 0.05 && diff < bestDiff) { // within 5% of adjustment
+              bestMatch = idx;
+              bestDiff = diff;
+            }
+          });
+          if (bestMatch !== null) {
+            var removed = charges[bestMatch];
+            console.log('NUMERICAL MATCH: Removed suspected discount line: "' + removed.description + '" $' + (removed.billed || 0).toFixed(2) + ' (≈ adjustment amount $' + absAdj.toFixed(2) + ')');
+            charges.splice(bestMatch, 1);
+            extracted.line_items = charges;
+          }
+        }
       }
 
       // ── FIX: Sanity check -- catch account balance / total due lines Haiku mislabeled as charges ──
