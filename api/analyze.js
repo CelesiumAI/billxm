@@ -106,43 +106,113 @@ function detectBillType(extracted) {
 }
 
 // ── Estimate DRG from services on the bill ───────────────────
-function estimateDRG(extracted) {
+function estimateDRG(extracted, patientProcedure) {
   if (!CMS_DRG || !CMS_DRG.drgs) return null;
   var text = '';
   (extracted.line_items || []).forEach(function(item) {
     text += ' ' + (item.description || '').toLowerCase();
     text += ' ' + (item.category || '').toLowerCase();
   });
+  var hospitalName = (extracted.hospital || '').toLowerCase();
   var candidates = [];
-  // Medical DRGs -- only match on actual diagnosis keywords
-  if (text.indexOf('pneumonia') >= 0) candidates.push('194', '193', '192');
-  if (text.indexOf('heart failure') >= 0) candidates.push('293', '292', '291');
-  if (text.indexOf('sepsis') >= 0 || text.indexOf('septicemia') >= 0) candidates.push('872', '871');
-  if (text.indexOf('chest pain') >= 0) candidates.push('313');
-  if (text.indexOf('copd') >= 0 || text.indexOf('obstructive pulmonary') >= 0 || text.indexOf('bronchitis') >= 0 || text.indexOf('asthma') >= 0) candidates.push('203', '202');
-  if (text.indexOf('stroke') >= 0 || text.indexOf('cerebrovascular') >= 0) candidates.push('065', '064');
-  if (text.indexOf('hip replacement') >= 0 || text.indexOf('hip arthroplasty') >= 0) candidates.push('470');
-  if (text.indexOf('knee replacement') >= 0 || text.indexOf('knee arthroplasty') >= 0) candidates.push('470');
-  if (text.indexOf('appendectomy') >= 0 || text.indexOf('appendicitis') >= 0) candidates.push('343', '342');
-  if (text.indexOf('cholecystectomy') >= 0 || text.indexOf('gallbladder') >= 0) candidates.push('418', '419');
-  if (text.indexOf('cesarean') >= 0 || text.indexOf('c-section') >= 0) candidates.push('788', '787', '786');
-  if (text.indexOf('vaginal delivery') >= 0 || text.indexOf('childbirth') >= 0) candidates.push('775', '774');
-  if (text.indexOf('kidney') >= 0 && text.indexOf('failure') >= 0) candidates.push('684', '683', '682');
-  if (text.indexOf('diabetes') >= 0) candidates.push('640', '639', '638');
-  if (text.indexOf('urinary tract infection') >= 0 || text.indexOf('uti') >= 0) candidates.push('690', '689');
 
-  // If no diagnosis match found, do NOT default to pneumonia.
-  // Instead, detect if it's a surgical or medical admission from department clues.
+  // HIGHEST PRIORITY: Patient-provided procedure name
+  if (patientProcedure) {
+    var proc = patientProcedure.toLowerCase();
+    if (proc.indexOf('knee replacement') >= 0 || proc.indexOf('knee arthroplasty') >= 0 || proc.indexOf('total knee') >= 0) candidates.push('470');
+    if (proc.indexOf('hip replacement') >= 0 || proc.indexOf('hip arthroplasty') >= 0 || proc.indexOf('total hip') >= 0) candidates.push('470');
+    if (proc.indexOf('shoulder replacement') >= 0) candidates.push('470');
+    if (proc.indexOf('spinal fusion') >= 0 || proc.indexOf('spine surgery') >= 0 || proc.indexOf('back surgery') >= 0) candidates.push('460', '459');
+    if (proc.indexOf('appendectomy') >= 0 || proc.indexOf('appendix') >= 0) candidates.push('343', '342');
+    if (proc.indexOf('gallbladder') >= 0 || proc.indexOf('cholecystectomy') >= 0) candidates.push('418', '419');
+    if (proc.indexOf('cesarean') >= 0 || proc.indexOf('c-section') >= 0 || proc.indexOf('c section') >= 0) candidates.push('788', '787', '786');
+    if (proc.indexOf('vaginal delivery') >= 0 || proc.indexOf('childbirth') >= 0 || proc.indexOf('labor and delivery') >= 0) candidates.push('775', '774');
+    if (proc.indexOf('pacemaker') >= 0 || proc.indexOf('defibrillator') >= 0) candidates.push('245', '246');
+    if (proc.indexOf('cardiac stent') >= 0 || proc.indexOf('angioplasty') >= 0 || proc.indexOf('heart stent') >= 0) candidates.push('247', '248', '249');
+    if (proc.indexOf('coronary bypass') >= 0 || proc.indexOf('cabg') >= 0 || proc.indexOf('heart bypass') >= 0) candidates.push('236', '235', '234');
+    if (proc.indexOf('hernia') >= 0) candidates.push('353', '352');
+    if (proc.indexOf('hysterectomy') >= 0) candidates.push('743', '742');
+    if (proc.indexOf('colectomy') >= 0 || proc.indexOf('colon') >= 0) candidates.push('331', '330', '329');
+    if (proc.indexOf('pneumonia') >= 0) candidates.push('194', '193', '192');
+    if (proc.indexOf('heart failure') >= 0) candidates.push('293', '292', '291');
+    if (proc.indexOf('sepsis') >= 0) candidates.push('872', '871');
+  }
+
+  // SECOND: Diagnosis keywords from bill text
+  if (candidates.length === 0) {
+    if (text.indexOf('pneumonia') >= 0) candidates.push('194', '193', '192');
+    if (text.indexOf('heart failure') >= 0) candidates.push('293', '292', '291');
+    if (text.indexOf('sepsis') >= 0 || text.indexOf('septicemia') >= 0) candidates.push('872', '871');
+    if (text.indexOf('chest pain') >= 0) candidates.push('313');
+    if (text.indexOf('copd') >= 0 || text.indexOf('obstructive pulmonary') >= 0 || text.indexOf('bronchitis') >= 0 || text.indexOf('asthma') >= 0) candidates.push('203', '202');
+    if (text.indexOf('stroke') >= 0 || text.indexOf('cerebrovascular') >= 0) candidates.push('065', '064');
+    if (text.indexOf('hip replacement') >= 0 || text.indexOf('hip arthroplasty') >= 0) candidates.push('470');
+    if (text.indexOf('knee replacement') >= 0 || text.indexOf('knee arthroplasty') >= 0) candidates.push('470');
+    if (text.indexOf('appendectomy') >= 0 || text.indexOf('appendicitis') >= 0) candidates.push('343', '342');
+    if (text.indexOf('cholecystectomy') >= 0 || text.indexOf('gallbladder') >= 0) candidates.push('418', '419');
+    if (text.indexOf('cesarean') >= 0 || text.indexOf('c-section') >= 0) candidates.push('788', '787', '786');
+    if (text.indexOf('vaginal delivery') >= 0 || text.indexOf('childbirth') >= 0) candidates.push('775', '774');
+    if (text.indexOf('kidney') >= 0 && text.indexOf('failure') >= 0) candidates.push('684', '683', '682');
+    if (text.indexOf('diabetes') >= 0) candidates.push('640', '639', '638');
+    if (text.indexOf('urinary tract infection') >= 0 || text.indexOf('uti') >= 0) candidates.push('690', '689');
+  }
+
+  // THIRD: Hospital name + bill pattern clues
   if (candidates.length === 0) {
     var hasSurgical = text.indexOf('or services') >= 0 || text.indexOf('operating room') >= 0 ||
-      text.indexOf('surgery') >= 0 || text.indexOf('anesthesia') >= 0 || text.indexOf('recovery room') >= 0;
-    // Return null with context about admission type -- no guessing diagnosis
+      text.indexOf('oper rm') >= 0 || text.indexOf('surgery') >= 0 ||
+      text.indexOf('anesthesia') >= 0 || text.indexOf('recovery room') >= 0;
+    var hasImplant = text.indexOf('implant') >= 0 || text.indexOf('device') >= 0 || text.indexOf('prosthe') >= 0;
+    var isOrtho = hospitalName.indexOf('ortho') >= 0 || hospitalName.indexOf('joint') >= 0 || hospitalName.indexOf('bone') >= 0;
+    var isCardiac = hospitalName.indexOf('heart') >= 0 || hospitalName.indexOf('cardiac') >= 0 || hospitalName.indexOf('cardio') >= 0;
+
+    // Orthopedic hospital + implant + surgery = likely joint replacement
+    if (isOrtho && hasImplant && hasSurgical) {
+      return {
+        code: 'RANGE',
+        desc: 'Orthopedic surgical procedure with implant (likely joint replacement). Tell us your procedure for a precise benchmark.',
+        payment: 0,
+        los: 0,
+        admission_type: 'SURGICAL',
+        drg_range: { low: 12000, high: 25000, typical_drg: '470', typical_desc: 'Major Joint Replacement' },
+        prompt_procedure: true
+      };
+    }
+
+    // Cardiac hospital + implant + surgery
+    if (isCardiac && hasImplant && hasSurgical) {
+      return {
+        code: 'RANGE',
+        desc: 'Cardiac surgical procedure with implant. Tell us your procedure for a precise benchmark.',
+        payment: 0,
+        los: 0,
+        admission_type: 'SURGICAL',
+        drg_range: { low: 15000, high: 45000, typical_drg: '245', typical_desc: 'Cardiac Device Implant' },
+        prompt_procedure: true
+      };
+    }
+
+    // Generic surgical with implant
+    if (hasImplant && hasSurgical) {
+      return {
+        code: 'RANGE',
+        desc: 'Surgical admission with implant (specific procedure unknown). Tell us your procedure for a precise benchmark.',
+        payment: 0,
+        los: 0,
+        admission_type: 'SURGICAL',
+        drg_range: { low: 10000, high: 30000 },
+        prompt_procedure: true
+      };
+    }
+
+    // Generic surgical or medical
     return {
       code: 'UNKNOWN',
-      desc: hasSurgical ? 'Surgical admission (specific procedure unknown -- request itemized bill)' : 'Medical admission (specific diagnosis unknown -- request itemized bill)',
+      desc: hasSurgical ? 'Surgical admission (specific procedure unknown). Tell us your procedure for a precise benchmark.' : 'Medical admission (specific diagnosis unknown). Tell us your diagnosis for a precise benchmark.',
       payment: 0,
       los: 0,
-      admission_type: hasSurgical ? 'SURGICAL' : 'MEDICAL'
+      admission_type: hasSurgical ? 'SURGICAL' : 'MEDICAL',
+      prompt_procedure: true
     };
   }
 
@@ -278,10 +348,18 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
       drgContext = 'Based on available information, the estimated Medicare DRG payment for this type of admission would be approximately $' +
         drgEstimate.payment.toLocaleString() + ' (DRG ' + drgEstimate.code + '). Your bill of $' +
         totalBilled.toLocaleString() + ' is approximately ' + multiplier + 'x the Medicare benchmark.';
+    } else if (drgEstimate.code === 'RANGE' && drgEstimate.drg_range) {
+      var range = drgEstimate.drg_range;
+      drgContext = 'This appears to be a ' + (drgEstimate.desc || 'surgical admission') +
+        ' Medicare typically pays between $' + range.low.toLocaleString() + ' and $' + range.high.toLocaleString() +
+        ' for similar procedures' + (range.typical_desc ? ' (e.g., ' + range.typical_desc + ')' : '') +
+        '. Your bill of $' + totalBilled.toLocaleString() + ' is ' +
+        (range.high > 0 ? (totalBilled / range.high).toFixed(1) + 'x to ' + (totalBilled / range.low).toFixed(1) + 'x' : 'significantly above') +
+        ' the Medicare benchmark. To get a precise comparison, tell us what procedure you had.';
     } else {
       drgContext = 'This appears to be a ' + (drgEstimate.desc || 'hospital admission') +
-        '. Without an itemized bill, we cannot determine the exact DRG classification or Medicare benchmark. ' +
-        'The itemized bill with procedure codes will allow us to identify the correct DRG and calculate your fair value.';
+        '. Without an itemized bill or procedure details, we cannot determine the exact DRG classification or Medicare benchmark. ' +
+        'Tell us what procedure you had, or request an itemized bill with procedure codes for a precise analysis.';
     }
   }
 
@@ -324,9 +402,16 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
   // Calculate fair value and savings if DRG was matched
   var estimatedFairValue = null;
   var potentialSavings = null;
-  if (drgEstimate && drgEstimate.code !== 'UNKNOWN' && drgEstimate.payment > 0) {
+  if (drgEstimate && drgEstimate.code !== 'UNKNOWN' && drgEstimate.code !== 'RANGE' && drgEstimate.payment > 0) {
     estimatedFairValue = drgEstimate.payment;
     potentialSavings = Math.max(0, Math.round((totalBilled - drgEstimate.payment) * 100) / 100);
+  } else if (drgEstimate && drgEstimate.code === 'RANGE' && drgEstimate.drg_range) {
+    // Use high end as conservative fair value estimate
+    var rangeHigh = drgEstimate.drg_range.high || 0;
+    if (rangeHigh > 0 && totalBilled > rangeHigh) {
+      estimatedFairValue = rangeHigh;
+      potentialSavings = Math.max(0, Math.round((totalBilled - rangeHigh) * 100) / 100);
+    }
   }
 
   return {
@@ -468,6 +553,7 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '- Preserve the exact code shown on the bill (including leading zeros like 036600)\n' +
 '- Use the exact dollar amounts shown on the bill\n' +
 '- CRITICAL: total_billed MUST be the TOTAL CHARGES, Total Patient Services, or Total Amount for Hospital Services. This is the FULL undiscounted amount BEFORE any payments, adjustments, insurance, or discounts. Do NOT use "Amount Due", "Balance Due", "Patient Balance", "Please Pay Now", or any post-payment amount. These are completely different numbers.\n' +
+'- CRITICAL: Numbers in PARENTHESES like (40,528.18) or numbers followed by a minus sign like 1,839.41- are PAYMENTS, CREDITS, or ADJUSTMENTS. They are NEGATIVE amounts. Do NOT add them to the total. Do NOT include insurance payments, Blue Cross payments, Medicaid payments, or any line labeled "Payments" or "Adjustments" as charges. The total_billed should be ONLY the sum of positive service charges.\n' +
 '- If the bill shows subtotals by category, make sure all items from every category are included\n' +
 '- Count line items carefully. If a service appears multiple times on different dates, each is a separate line item\n' +
 '- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n' +
@@ -687,9 +773,10 @@ module.exports = async function handler(req, res) {
   var body = req.body || {};
   var messages = body.messages;
   var tier = body.tier;
+  var patientProcedure = body.procedure || ''; // Optional: patient-provided procedure name
 
   console.log('=== ANALYZE REQUEST ===');
-  console.log('Tier:', tier, 'Demo:', !!body.demo);
+  console.log('Tier:', tier, 'Demo:', !!body.demo, 'Procedure:', patientProcedure || 'not provided');
 
   if (!messages || !tier) return res.status(400).json({ error: 'Missing messages or tier' });
 
@@ -945,14 +1032,15 @@ module.exports = async function handler(req, res) {
     // ════════════════════════════════════════════════════════════
     if (detectSummaryBill(extracted, enrichedItems)) {
       console.log('SUMMARY BILL DETECTED -- routing to summary response');
-      var summaryDRG = billType === 'INPATIENT' ? estimateDRG(extracted) : null;
+      var summaryDRG = billType === 'INPATIENT' ? estimateDRG(extracted, patientProcedure) : null;
       var summaryResult = buildSummaryBillResponse(extracted, enrichedItems, billType, totalBilled, summaryDRG);
 
       // Record analytics based on whether we found a DRG benchmark
       var hasDRGMatch = summaryDRG && summaryDRG.code !== 'UNKNOWN' && summaryDRG.payment > 0;
-      var analyticsCharges = hasDRGMatch ? totalBilled : 0;
-      var analyticsFairValue = hasDRGMatch ? summaryDRG.payment : 0;
-      var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : 0;
+      var hasRange = summaryDRG && summaryDRG.code === 'RANGE' && summaryDRG.drg_range && summaryDRG.drg_range.high > 0;
+      var analyticsCharges = (hasDRGMatch || hasRange) ? totalBilled : 0;
+      var analyticsFairValue = hasDRGMatch ? summaryDRG.payment : (hasRange ? summaryDRG.drg_range.high : 0);
+      var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : (hasRange ? Math.max(0, totalBilled - summaryDRG.drg_range.high) : 0);
       recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG);
 
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
@@ -972,7 +1060,7 @@ module.exports = async function handler(req, res) {
     var apcEstimate = null;
 
     if (billType === 'INPATIENT') {
-      var drg = estimateDRG(extracted);
+      var drg = estimateDRG(extracted, patientProcedure);
       if (drg && drg.code !== 'UNKNOWN' && drg.payment > 0) {
         estimatedFairValue = drg.payment;
         var drgMarkup = totalBilled > 0 && drg.payment > 0 ? (totalBilled / drg.payment).toFixed(1) : '0';
