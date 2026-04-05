@@ -519,7 +519,9 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '- EXCESSIVE_MARKUP: billed > 2x fair rate. Severity: HIGH if >300%, MEDIUM if 150-300%, LOW if 100-150%\n' +
 '- DUPLICATE: same code on same date without justification\n' +
 '- DRUG_OVERCHARGE: for J-code drugs, flag when billed > 3x the Medicare ASP+6% payment limit\n' +
-'- Do NOT flag NO_CPT items or items without fair rates\n\n' +
+'- FACILITY_OVERCHARGE: when total facility charges (room, board, observation, progressive care) exceed the APC or DRG benchmark. This is a HIGH severity issue. Include all facility line items and the total APC/DRG benchmark in the description.\n' +
+'- PACKAGED_CHARGE: when a charge that should be packaged into APC/DRG appears as a separate line item. These should not be billed separately under Medicare rules.\n' +
+'- Do NOT flag items without fair rates unless they are packaged charges that should not appear\n\n' +
 'Return ONLY valid JSON. No markdown, no backticks:\n' +
 '{\n' +
 '  "grade": "A-F",\n' +
@@ -576,7 +578,8 @@ var CPT_MAP_PROMPT = 'You are a medical coding expert. Map each service descript
 '- Only map if you are confident in the CPT code\n' +
 '- If unsure, set cpt to "" and confidence to "LOW"\n' +
 '- IGNORE prefixes like "HC " (Hospital Charge) -- focus on the service name\n' +
-'- For room/board, progressive care, observation hours, facility fees: set cpt to "" (these are facility charges)\n' +
+'- ONLY these are facility charges (set cpt to ""): ROOM AND BOARD, PROGRESSIVE CARE UNIT, OBSERVATION HOUR, NURSING CARE. Everything else is a medical service or drug that MUST be mapped.\n' +
+'- NEVER set cpt to "" for: EKG, ECG, CBC, labs, x-rays, CT scans, infusions, blood tests, panels, cultures, therapy services, injections, or any diagnostic test. These are all medical services with CPT codes.\n' +
 '- For drugs and IV solutions (SODIUM CHLORIDE, MAGNESIUM SULFATE, INSULIN, DEXTROSE, POTASSIUM CHLORIDE, ONDANSETRON, METOCLOPRAMIDE): map to J-codes if known, otherwise set cpt to ""\n' +
 '- Common mappings:\n' +
 '  EKG/ECG = 93005, EKG 12 LEAD = 93000, CT HEAD W/O CONTRAST = 70450,\n' +
@@ -978,8 +981,8 @@ module.exports = async function handler(req, res) {
           for (var di = 1; di < drgFacilityItems.length; di++) {
             drgFacilityItems[di].fair_rate = 0;
             drgFacilityItems[di].total_fair = 0;
-            drgFacilityItems[di].markup_pct = 'N/A';
-            drgFacilityItems[di].note = 'Packaged in DRG -- not separately payable under Medicare';
+            drgFacilityItems[di].markup_pct = 'NOT ALLOWED';
+            drgFacilityItems[di].note = 'NOT SEPARATELY PAYABLE -- this charge is packaged into the DRG payment under Medicare rules and should not appear as a separate line item. Dispute this charge.';
             drgFacilityItems[di].status = 'FLAG';
           }
         }
@@ -1075,15 +1078,20 @@ module.exports = async function handler(req, res) {
           for (var fi = 1; fi < facilityItems.length; fi++) {
             facilityItems[fi].fair_rate = 0;
             facilityItems[fi].total_fair = 0;
-            facilityItems[fi].markup_pct = 'N/A';
-            facilityItems[fi].note = 'Packaged in APC -- not separately payable under Medicare';
+            facilityItems[fi].markup_pct = 'NOT ALLOWED';
+            facilityItems[fi].note = 'NOT SEPARATELY PAYABLE -- this charge is packaged into the APC facility fee under Medicare rules and should not appear as a separate line item. Dispute this charge.';
             facilityItems[fi].status = 'FLAG';
           }
-          // Add facility overcharge as an issue
+          // Calculate and flag facility overcharge
           var totalFacilityBilled = 0;
           facilityItems.forEach(function(fi) { totalFacilityBilled += fi.billed; });
-          if (totalFacilityBilled > totalApcRate * 2) {
+          var facilityOvercharge = Math.max(0, Math.round((totalFacilityBilled - totalApcRate) * 100) / 100);
+          if (totalFacilityBilled > totalApcRate) {
             highCount++;
+            // Store for report
+            apcEstimate.facility_total_billed = totalFacilityBilled;
+            apcEstimate.facility_overcharge = facilityOvercharge;
+            apcEstimate.facility_items = facilityItems.map(function(fi) { return fi.description + ': $' + fi.billed.toFixed(2); });
           }
         }
       }
@@ -1210,13 +1218,26 @@ module.exports = async function handler(req, res) {
     if (apcEstimate) report.apc_estimate = apcEstimate;
 
     report.line_items = enrichedItems.map(function(item) {
-      // Use custom note if set by facility marking, otherwise use default
-      var defaultNote = item.type === 'facility_drg' ? 'Facility charge -- covered by DRG benchmark' :
-            item.type === 'facility_apc' ? 'Facility charge -- covered by APC benchmark' :
-            item.type === 'no_code' ? 'Facility charge, no CPT code' :
-            item.type === 'drug' ? 'Drug charge -- Medicare ASP+6% benchmark' :
-            item.type === 'unknown' ? 'Code not found in CMS database' :
-            item.status === 'FLAG' ? 'Exceeds Medicare rate' : 'Within expected range';
+      // Use custom note if set by facility marking, otherwise determine appropriate note
+      var defaultNote;
+      if (item.type === 'facility_drg') {
+        defaultNote = 'Facility charge -- covered by DRG benchmark';
+      } else if (item.type === 'facility_apc') {
+        defaultNote = 'Facility charge -- covered by APC benchmark';
+      } else if (item.type === 'drug') {
+        defaultNote = 'Drug/solution charge -- Medicare ASP+6% benchmark';
+      } else if (item.status === 'FLAG' && item.fair_rate !== null) {
+        var mPct = item.total_fair > 0 ? Math.round((item.billed / item.total_fair - 1) * 100) : 0;
+        defaultNote = 'Overcharged ' + mPct + '% above Medicare rate -- DISPUTE';
+      } else if (item.fair_rate !== null && item.status === 'OK') {
+        defaultNote = 'Within expected range of Medicare rate';
+      } else if (item.billed > 0 && !item.code) {
+        defaultNote = 'No CPT code provided -- request itemized bill with procedure codes to verify this charge';
+      } else if (item.billed > 0 && item.type === 'unknown') {
+        defaultNote = 'Code not in CMS database -- request clarification from billing department';
+      } else {
+        defaultNote = 'Unable to benchmark -- request itemized bill with CPT codes';
+      }
       return {
         code: item.code, description: item.description, billed: item.billed,
         quantity: item.quantity, fair_rate: item.fair_rate, total_fair: item.total_fair,
