@@ -39,8 +39,8 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
 /* HERO */
 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;padding-top:68px;}
 .hero-left{display:flex;flex-direction:column;justify-content:center;padding:72px 56px 72px 72px;background:var(--white);}
-.hero-right{position:relative;overflow:visible;background:linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);display:flex;align-items:center;justify-content:center;}
-.hero-right-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 35% 65%,rgba(37,99,235,0.06) 0%,transparent 55%),radial-gradient(ellipse at 75% 25%,rgba(37,99,235,0.04) 0%,transparent 45%);}
+.hero-right{position:relative;overflow:visible;background:linear-gradient(160deg, #1e293b 0%, #0f172a 100%);display:flex;align-items:center;justify-content:center;}
+.hero-right-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 35% 65%,rgba(37,99,235,0.13) 0%,transparent 55%),radial-gradient(ellipse at 75% 25%,rgba(37,99,235,0.07) 0%,transparent 45%);}
 .hero-right-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(255,255,255,.018) 47px,rgba(255,255,255,.018) 48px),repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.012) 47px,rgba(255,255,255,.012) 48px);}
 .hero-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:32px 32px 200px;}
 .hero-stat-cards{position:absolute;bottom:32px;left:24px;right:24px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -185,15 +185,15 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
 .price-card .btn{width:100%;margin-top:2px;}
 
 /* CTA */
-.cta-section{padding:112px 0;position:relative;overflow:hidden;background:var(--ink);}
-.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(37,99,235,.12) 0%,transparent 55%),radial-gradient(ellipse at 20% 0%,rgba(37,99,235,.06) 0%,transparent 45%);}
+.cta-section{padding:112px 0;position:relative;overflow:hidden;background:linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(37,99,235,0.06) 0%,transparent 55%),radial-gradient(ellipse at 20% 0%,rgba(37,99,235,0.04) 0%,transparent 45%);}
 .cta-inner{position:relative;z-index:1;text-align:center;max-width:620px;margin:0 auto;}
 .cta-label{font-size:11px;color:var(--mint);font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;}
-.cta-inner h2{font-family:'Instrument Serif',serif;font-size:clamp(34px,4vw,52px);color:white;margin-bottom:18px;line-height:1.13;letter-spacing:-.02em;}
-.cta-inner p{font-size:17px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:38px;}
-.cta-note{font-size:12px;color:rgba(255,255,255,.33);margin-top:16px;}
+.cta-inner h2{font-family:'Instrument Serif',serif;font-size:clamp(34px,4vw,52px);color:var(--ink);margin-bottom:18px;line-height:1.13;letter-spacing:-.02em;}
+.cta-inner p{font-size:17px;color:var(--storm);line-height:1.7;margin-bottom:38px;}
+.cta-note{font-size:12px;color:var(--mist);margin-top:16px;}
 .cta-avatars{display:flex;justify-content:center;margin-bottom:26px;}
-.cta-av{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.14);margin-left:-9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:white;box-shadow:0 2px 12px rgba(0,0,0,.3);}
+.cta-av{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.8);margin-left:-9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:white;box-shadow:0 2px 12px rgba(0,0,0,.15);}
 .cta-av:first-child{margin-left:0;}
 
 /* SAMPLE REPORT SECTION */
@@ -460,44 +460,47 @@ window.addEventListener('scroll',function(){
 
     <p class="hero-note">Hospital, specialist, lab, urgent care, surgery center — any medical bill &nbsp;·&nbsp; PDF, photo, or paste text &nbsp;·&nbsp; No credit card required</p>
   </div>
-  <div class="hero-right" style="background:linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);">
-    <div style="position:absolute; width:300px; height:300px; background:radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%);"></div>
-    <div style="position:relative; z-index:1; padding:48px 40px; text-align:center;">
-      <div style="font-size:13px; color:#475569; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:6px;">Live Platform Stats</div>
-      <div style="width:40px; height:2px; background:#2563eb; margin:0 auto 32px;"></div>
-      <div style="display:flex; flex-direction:column; gap:28px;">
-        <div>
-          <div id="counterBills" style="font-size:42px; font-weight:800; color:#1e293b; letter-spacing:-0.02em;">100+</div>
-          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Bills Analyzed</div>
-        </div>
-        <div>
-          <div id="counterCharges" style="font-size:42px; font-weight:800; color:#1e293b; letter-spacing:-0.02em;">$2.0M+</div>
-          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Charges Reviewed</div>
-        </div>
-        <div>
-          <div id="counterSavings" style="font-size:42px; font-weight:800; color:#059669; letter-spacing:-0.02em;">$500K+</div>
-          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Potential Savings Found</div>
+  <div class="hero-right" style="background:linear-gradient(160deg, #1e293b 0%, #0f172a 100%);">
+    <div style="position:absolute; width:300px; height:300px; background:radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%);"></div>
+    <div style="position:relative; z-index:1; padding:36px 32px;">
+      <!-- Counter card -->
+      <div style="background:white; border-radius:16px; padding:32px 28px; box-shadow:0 8px 40px rgba(0,0,0,0.2); margin-bottom:20px;">
+        <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:4px; text-align:center;">Live Platform Stats</div>
+        <div style="width:32px; height:2px; background:#2563eb; margin:0 auto 24px;"></div>
+        <div style="display:flex; flex-direction:column; gap:20px; text-align:center;">
+          <div>
+            <div id="counterBills" style="font-size:38px; font-weight:800; color:#1e293b; letter-spacing:-0.02em;">100+</div>
+            <div style="font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Bills Analyzed</div>
+          </div>
+          <div style="height:1px; background:#e2e8f0;"></div>
+          <div>
+            <div id="counterCharges" style="font-size:38px; font-weight:800; color:#1e293b; letter-spacing:-0.02em;">$2.0M+</div>
+            <div style="font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Charges Reviewed</div>
+          </div>
+          <div style="height:1px; background:#e2e8f0;"></div>
+          <div>
+            <div id="counterSavings" style="font-size:38px; font-weight:800; color:#059669; letter-spacing:-0.02em;">$500K+</div>
+            <div style="font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Potential Savings Found</div>
+          </div>
         </div>
       </div>
-      <!-- Trust badges integrated under counter -->
-      <div style="margin-top:40px; padding-top:28px; border-top:1px solid rgba(0,0,0,0.08);">
-        <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
-            <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
-            Compares every charge to official U.S. government rates
-          </div>
-          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
-            <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
-            Detects duplicates, upcoding &amp; bundling violations
-          </div>
-          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
-            <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
-            Works on any medical bill -- hospital, specialist, lab, or urgent care
-          </div>
-          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
-            <span style="width:8px; height:8px; border-radius:50%; background:#059669; flex-shrink:0;"></span>
-            HIPAA compliant · No data stored
-          </div>
+      <!-- Trust badges -->
+      <div style="display:flex; flex-direction:column; gap:10px; padding:0 4px;">
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:rgba(255,255,255,0.85); font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb"/><polyline points="4.5,8 7,10.5 11.5,5.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          Compares every charge to official U.S. government rates
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:rgba(255,255,255,0.85); font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb"/><polyline points="4.5,8 7,10.5 11.5,5.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          Detects duplicates, upcoding &amp; bundling violations
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:rgba(255,255,255,0.85); font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#2563eb"/><polyline points="4.5,8 7,10.5 11.5,5.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          Works on any medical bill -- hospital, specialist, lab, or urgent care
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:rgba(255,255,255,0.85); font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#059669"/><polyline points="4.5,8 7,10.5 11.5,5.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          HIPAA compliant · No data stored
         </div>
       </div>
     </div>
@@ -1703,27 +1706,27 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
 </div></section>
 
 <!-- Expert Billing Section -->
-<div style="background:linear-gradient(135deg, #0a1628, #132040); padding:80px 20px; border-top:1px solid rgba(37,99,235,0.2);">
+<div style="background:#f8fafc; padding:80px 20px; border-top:1px solid rgba(0,0,0,0.06);">
   <div style="max-width:960px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;">
     <div>
-      <div style="display:inline-block; background:rgba(37,99,235,0.15); color:#3b82f6; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600; margin-bottom:20px;">AI + EXPERT TEAM</div>
-      <h2 style="font-size:36px; font-weight:800; color:#e8eaf0; margin-bottom:16px; line-height:1.2;">AI Analysis.<br>Expert Negotiation.</h2>
-      <p style="color:#8b92a5; font-size:16px; line-height:1.8; margin-bottom:24px;">
+      <div style="display:inline-block; background:rgba(37,99,235,0.08); color:#2563eb; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600; margin-bottom:20px;">AI + EXPERT TEAM</div>
+      <h2 style="font-size:36px; font-weight:800; color:#1e293b; margin-bottom:16px; line-height:1.2;">AI Analysis.<br>Expert Negotiation.</h2>
+      <p style="color:#475569; font-size:16px; line-height:1.8; margin-bottom:24px;">
         BillXM combines artificial intelligence trained on 175,000+ government medical codes with experienced healthcare billing professionals. Our team includes experts with 15+ years in hospital revenue cycle operations, medical coding, and billing compliance at major health systems.
       </p>
-      <p style="color:#8b92a5; font-size:16px; line-height:1.8;">
+      <p style="color:#475569; font-size:16px; line-height:1.8;">
         When you choose "We Negotiate," you are backed by certified billing professionals who know exactly how hospitals bill, how they negotiate, and where the overcharges hide.
       </p>
     </div>
     <div style="text-align:center;">
-      <div style="background:#12151a; border:1px solid #252a35; border-radius:16px; padding:32px;">
+      <div style="background:white; border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:32px; box-shadow:0 4px 24px rgba(0,0,0,0.06);">
         <div style="font-size:48px; margin-bottom:16px;">&#127973;</div>
-        <div style="font-size:14px; color:#8b92a5; line-height:1.7;">
-          <div style="margin-bottom:12px;"><strong style="color:#e8eaf0;">175,000+</strong> CMS medical codes</div>
-          <div style="margin-bottom:12px;"><strong style="color:#e8eaf0;">15+ years</strong> hospital billing experience</div>
-          <div style="margin-bottom:12px;"><strong style="color:#e8eaf0;">Certified</strong> revenue cycle professionals</div>
-          <div style="margin-bottom:12px;"><strong style="color:#e8eaf0;">Major health systems</strong> Memorial Hermann, CHI, HCA</div>
-          <div><strong style="color:#2ecc8a;">Money-back guarantee</strong> on We Negotiate service</div>
+        <div style="font-size:14px; color:#475569; line-height:1.7;">
+          <div style="margin-bottom:12px;"><strong style="color:#1e293b;">175,000+</strong> CMS medical codes</div>
+          <div style="margin-bottom:12px;"><strong style="color:#1e293b;">15+ years</strong> hospital billing experience</div>
+          <div style="margin-bottom:12px;"><strong style="color:#1e293b;">Certified</strong> revenue cycle professionals</div>
+          <div style="margin-bottom:12px;"><strong style="color:#1e293b;">Major health systems</strong> Memorial Hermann, CHI, HCA</div>
+          <div><strong style="color:#059669;">Money-back guarantee</strong> on We Negotiate service</div>
         </div>
       </div>
     </div>
@@ -1731,118 +1734,118 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
 </div>
 
 <!-- Team Section -->
-<div id="team" style="background:#0d1117; padding:80px 20px; border-top:1px solid #1a2035;">
+<div id="team" style="background:white; padding:80px 20px; border-top:1px solid rgba(0,0,0,0.06);">
   <div style="max-width:960px; margin:0 auto; text-align:center;">
-    <h2 style="font-size:32px; font-weight:800; color:#e8eaf0; margin-bottom:8px;">Our Team</h2>
-    <p style="color:#8b92a5; font-size:16px; margin-bottom:48px;">Healthcare technology meets medical billing expertise</p>
+    <h2 style="font-size:32px; font-weight:800; color:#1e293b; margin-bottom:8px;">Our Team</h2>
+    <p style="color:#64748b; font-size:16px; margin-bottom:48px;">Healthcare technology meets medical billing expertise</p>
 
     <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:32px; margin-bottom:48px;">
       <div style="text-align:center; width:160px;">
         <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #2563eb, #7c3aed); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">IP</div>
-        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Ian Phan</div>
+        <div style="font-size:15px; font-weight:700; color:#1e293b;">Ian Phan</div>
         <div style="font-size:13px; color:#2563eb; font-weight:600;">Co-Founder</div>
-        <div style="font-size:11px; color:#8b92a5; margin-top:4px;">Product strategy and technical development</div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">Product strategy and technical development</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #2563eb, #7c3aed); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">GP</div>
-        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Grayson Phan</div>
+        <div style="font-size:15px; font-weight:700; color:#1e293b;">Grayson Phan</div>
         <div style="font-size:13px; color:#2563eb; font-weight:600;">Co-Founder</div>
-        <div style="font-size:11px; color:#8b92a5; margin-top:4px;">Operations and growth</div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">Operations and growth</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #065f46, #10b981); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">BS</div>
-        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Blonde Suico</div>
+        <div style="font-size:15px; font-weight:700; color:#1e293b;">Blonde Suico</div>
         <div style="font-size:13px; color:#10b981; font-weight:600;">Healthcare Strategy Lead</div>
-        <div style="font-size:11px; color:#8b92a5; margin-top:2px;">FACHE, MBA</div>
-        <div style="font-size:11px; color:#8b92a5;">Health plan partnerships and enterprise growth</div>
+        <div style="font-size:11px; color:#64748b; margin-top:2px;">FACHE, MBA</div>
+        <div style="font-size:11px; color:#64748b;">Health plan partnerships and enterprise growth</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2563eb); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">RN</div>
-        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Rupesh Nigam, MD</div>
-        <div style="font-size:13px; color:#8b92a5; font-weight:600;">Physician Consultant</div>
-        <div style="font-size:11px; color:#8b92a5; margin-top:4px;">Clinical oversight and billing guidance</div>
+        <div style="font-size:15px; font-weight:700; color:#1e293b;">Rupesh Nigam, MD</div>
+        <div style="font-size:13px; color:#64748b; font-weight:600;">Physician Consultant</div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">Clinical oversight and billing guidance</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2563eb); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">MH</div>
-        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Marty Hill</div>
-        <div style="font-size:13px; color:#8b92a5; font-weight:600;">Managing Director</div>
-        <div style="font-size:11px; color:#8b92a5; margin-top:4px;">Corporate strategy and investment oversight</div>
+        <div style="font-size:15px; font-weight:700; color:#1e293b;">Marty Hill</div>
+        <div style="font-size:13px; color:#64748b; font-weight:600;">Managing Director</div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">Corporate strategy and investment oversight</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #2563eb); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px; font-weight:700; color:white;">JR</div>
-        <div style="font-size:15px; font-weight:700; color:#e8eaf0;">Jonathan Ramirez</div>
-        <div style="font-size:13px; color:#8b92a5; font-weight:600;">Associate Director</div>
-        <div style="font-size:11px; color:#8b92a5; margin-top:4px;">Investment operations, Celesium Capital</div>
+        <div style="font-size:15px; font-weight:700; color:#1e293b;">Jonathan Ramirez</div>
+        <div style="font-size:13px; color:#64748b; font-weight:600;">Associate Director</div>
+        <div style="font-size:11px; color:#64748b; margin-top:4px;">Investment operations, Celesium Capital</div>
       </div>
     </div>
 
-    <h3 style="font-size:18px; font-weight:700; color:#e8eaf0; margin-bottom:24px;">Advisory Board</h3>
+    <h3 style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:24px;">Advisory Board</h3>
     <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:32px;">
       <div style="text-align:center; width:160px;">
         <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #1e3a5f, #3b82f6); border:2px solid #3b82f6; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:white;">DZ</div>
-        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">David Zhang</div>
+        <div style="font-size:14px; font-weight:600; color:#1e293b;">David Zhang</div>
         <div style="font-size:12px; color:#3b82f6;">Technical Advisor</div>
-        <div style="font-size:11px; color:#8b92a5;">AI and software, Biostate AI</div>
+        <div style="font-size:11px; color:#64748b;">AI and software, Biostate AI</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #4c1d95, #8b5cf6); border:2px solid #8b5cf6; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:white;">AS</div>
-        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">Anshu Shrivastava</div>
+        <div style="font-size:14px; font-weight:600; color:#1e293b;">Anshu Shrivastava</div>
         <div style="font-size:12px; color:#8b5cf6;">AI Advisor</div>
-        <div style="font-size:11px; color:#8b92a5;">Rice University / Meta AI</div>
+        <div style="font-size:11px; color:#64748b;">Rice University / Meta AI</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #92400e, #f59e0b); border:2px solid #f59e0b; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:white;">MR</div>
-        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">Mike Rome</div>
+        <div style="font-size:14px; font-weight:600; color:#1e293b;">Mike Rome</div>
         <div style="font-size:12px; color:#f59e0b;">Business Advisor</div>
-        <div style="font-size:11px; color:#8b92a5;">Dean of Business, HCU</div>
+        <div style="font-size:11px; color:#64748b;">Dean of Business, HCU</div>
       </div>
       <div style="text-align:center; width:160px;">
         <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #065f46, #10b981); border:2px solid #10b981; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:18px; font-weight:700; color:white;">MP</div>
-        <div style="font-size:14px; font-weight:600; color:#e8eaf0;">Marcus Phillips</div>
+        <div style="font-size:14px; font-weight:600; color:#1e293b;">Marcus Phillips</div>
         <div style="font-size:12px; color:#10b981;">Cybersecurity Advisor</div>
-        <div style="font-size:11px; color:#8b92a5;">Research security, Rice University</div>
+        <div style="font-size:11px; color:#64748b;">Research security, Rice University</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Contact Section -->
-<div id="contact" style="background:#0d1117; padding:80px 20px; border-top:1px solid #1a2035;">
+<div id="contact" style="background:#f8fafc; padding:80px 20px; border-top:1px solid rgba(0,0,0,0.06);">
   <div style="max-width:960px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:start;">
     <div>
-      <h2 style="font-size:36px; font-weight:800; color:#e8eaf0; margin-bottom:16px; line-height:1.2;">Speak with our team</h2>
-      <p style="color:#8b92a5; font-size:16px; line-height:1.7; margin-bottom:40px;">
+      <h2 style="font-size:36px; font-weight:800; color:#1e293b; margin-bottom:16px; line-height:1.2;">Speak with our team</h2>
+      <p style="color:#475569; font-size:16px; line-height:1.7; margin-bottom:40px;">
         Have questions about your bill analysis? Need help with a payment? Want to learn about our enterprise solutions for health plans? Send us a message and we will respond within 24 hours.
       </p>
       <div style="margin-bottom:24px;">
-        <div style="font-size:11px; color:#5a6175; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">RESPONSE TIME</div>
-        <div style="color:#e8eaf0; font-size:16px;">Within 24 hours, typically same day</div>
+        <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">RESPONSE TIME</div>
+        <div style="color:#1e293b; font-size:16px;">Within 24 hours, typically same day</div>
       </div>
       <div>
-        <div style="font-size:11px; color:#5a6175; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">LOCATION</div>
-        <div style="color:#e8eaf0; font-size:16px;">Houston, Texas</div>
+        <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">LOCATION</div>
+        <div style="color:#1e293b; font-size:16px;">Houston, Texas</div>
       </div>
     </div>
-    <div style="background:#12151a; border:1px solid #252a35; border-radius:16px; padding:32px;">
-      <h3 style="color:#e8eaf0; font-size:20px; font-weight:700; margin-bottom:8px;">Contact Us</h3>
-      <p style="color:#8b92a5; font-size:14px; margin-bottom:24px;">Send us a message and we will respond as soon as possible.</p>
+    <div style="background:white; border:1px solid rgba(0,0,0,0.08); border-radius:16px; padding:32px; box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+      <h3 style="color:#1e293b; font-size:20px; font-weight:700; margin-bottom:8px;">Contact Us</h3>
+      <p style="color:#64748b; font-size:14px; margin-bottom:24px;">Send us a message and we will respond as soon as possible.</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
         <div>
-          <label style="display:block; color:#8b92a5; font-size:13px; margin-bottom:4px;">First name</label>
-          <input type="text" id="ctFirstName" placeholder="First name" style="width:100%; padding:12px; border-radius:8px; border:1px solid #252a35; background:#1a1e26; color:#e8eaf0; font-size:15px; box-sizing:border-box;" />
+          <label style="display:block; color:#64748b; font-size:13px; margin-bottom:4px;">First name</label>
+          <input type="text" id="ctFirstName" placeholder="First name" style="width:100%; padding:12px; border-radius:8px; border:1px solid #e2e8f0; background:white; color:#1e293b; font-size:15px; box-sizing:border-box;" />
         </div>
         <div>
-          <label style="display:block; color:#8b92a5; font-size:13px; margin-bottom:4px;">Last name</label>
-          <input type="text" id="ctLastName" placeholder="Last name" style="width:100%; padding:12px; border-radius:8px; border:1px solid #252a35; background:#1a1e26; color:#e8eaf0; font-size:15px; box-sizing:border-box;" />
+          <label style="display:block; color:#64748b; font-size:13px; margin-bottom:4px;">Last name</label>
+          <input type="text" id="ctLastName" placeholder="Last name" style="width:100%; padding:12px; border-radius:8px; border:1px solid #e2e8f0; background:white; color:#1e293b; font-size:15px; box-sizing:border-box;" />
         </div>
       </div>
       <div style="margin-bottom:12px;">
-        <label style="display:block; color:#8b92a5; font-size:13px; margin-bottom:4px;">Email *</label>
-        <input type="email" id="ctEmail" placeholder="your@email.com" style="width:100%; padding:12px; border-radius:8px; border:1px solid #252a35; background:#1a1e26; color:#e8eaf0; font-size:15px; box-sizing:border-box;" />
+        <label style="display:block; color:#64748b; font-size:13px; margin-bottom:4px;">Email *</label>
+        <input type="email" id="ctEmail" placeholder="your@email.com" style="width:100%; padding:12px; border-radius:8px; border:1px solid #e2e8f0; background:white; color:#1e293b; font-size:15px; box-sizing:border-box;" />
       </div>
       <div style="margin-bottom:12px;">
-        <label style="display:block; color:#8b92a5; font-size:13px; margin-bottom:4px;">How can we help? *</label>
-        <select id="ctTopic" style="width:100%; padding:12px; border-radius:8px; border:1px solid #252a35; background:#1a1e26; color:#e8eaf0; font-size:15px; box-sizing:border-box;">
+        <label style="display:block; color:#64748b; font-size:13px; margin-bottom:4px;">How can we help? *</label>
+        <select id="ctTopic" style="width:100%; padding:12px; border-radius:8px; border:1px solid #e2e8f0; background:white; color:#1e293b; font-size:15px; box-sizing:border-box;">
           <option value="">Select a topic</option>
           <option value="bill_question">Question about my bill analysis</option>
           <option value="payment_issue">Payment or billing issue</option>
@@ -1856,7 +1859,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
       </div>
       <div style="margin-bottom:20px;">
         <label style="display:block; color:#8b92a5; font-size:13px; margin-bottom:4px;">Message *</label>
-        <textarea id="ctMessage" placeholder="Tell us how we can help" rows="4" style="width:100%; padding:12px; border-radius:8px; border:1px solid #252a35; background:#1a1e26; color:#e8eaf0; font-size:15px; box-sizing:border-box; resize:vertical;"></textarea>
+        <textarea id="ctMessage" placeholder="Tell us how we can help" rows="4" style="width:100%; padding:12px; border-radius:8px; border:1px solid #e2e8f0; background:white; color:#1e293b; font-size:15px; box-sizing:border-box; resize:vertical;"></textarea>
       </div>
       <button onclick="submitContactForm()" id="ctBtn" style="width:100%; padding:14px; border-radius:8px; background:#2563eb; color:white; font-size:16px; font-weight:600; border:none; cursor:pointer;">Send Message</button>
       <div id="ctSuccess" style="display:none; color:#2ecc8a; font-size:14px; margin-top:12px; text-align:center;"></div>
@@ -1866,13 +1869,13 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
 </div>
 
 <!-- Footer -->
-<div style="background:#080b12; padding:32px 20px; border-top:1px solid #1a2035; text-align:center;">
-  <div style="font-size:13px; color:#5a6175;">&copy; 2026 BillXM LLC. All rights reserved.</div>
-  <div style="font-size:12px; color:#3d4455; margin-top:8px;">A Celesium AI venture, backed by Celesium Capital LP</div>
+<div style="background:#f1f5f9; padding:32px 20px; border-top:1px solid rgba(0,0,0,0.06); text-align:center;">
+  <div style="font-size:13px; color:#64748b;">&copy; 2026 BillXM LLC. All rights reserved.</div>
+  <div style="font-size:12px; color:#94a3b8; margin-top:8px;">A Celesium AI venture, backed by Celesium Capital LP</div>
   <div style="margin-top:12px; display:flex; justify-content:center; gap:16px; font-size:12px;">
-    <a href="#privacy" style="color:#5a6175; text-decoration:none;">Privacy Policy</a>
-    <a href="#terms" style="color:#5a6175; text-decoration:none;">Terms of Service</a>
-    <a href="#contact" style="color:#5a6175; text-decoration:none;">Contact Us</a>
+    <a href="#privacy" style="color:#64748b; text-decoration:none;">Privacy Policy</a>
+    <a href="#terms" style="color:#64748b; text-decoration:none;">Terms of Service</a>
+    <a href="#contact" style="color:#64748b; text-decoration:none;">Contact Us</a>
   </div>
 </div>
 
