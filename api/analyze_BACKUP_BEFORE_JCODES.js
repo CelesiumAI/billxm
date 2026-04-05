@@ -7,7 +7,6 @@ var CMS_RVUS = null;
 var CMS_GPCI = null;
 var CMS_DRG = null;
 var CMS_APC = null;
-var CMS_JCODES = null; // ── CHANGE 1: J-code drug pricing database
 
 function loadCMSData() {
   if (CMS_RVUS) return;
@@ -21,11 +20,6 @@ function loadCMSData() {
   try {
     CMS_APC = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_apc.json'), 'utf8'));
   } catch (e) { console.log('No APC data, continuing without it'); }
-  // ── CHANGE 1: Load J-code drug pricing ──
-  try {
-    CMS_JCODES = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'cms_jcodes.json'), 'utf8'));
-    console.log('Loaded J-code database: ' + Object.keys(CMS_JCODES.drugs || {}).length + ' drugs');
-  } catch (e) { console.log('No J-code data, continuing without it'); }
 }
 
 // ── Normalize a code from a hospital bill ────────────────────
@@ -69,13 +63,6 @@ function getFairRate(code, state, city) {
   if (CMS_RVUS.drugs && CMS_RVUS.drugs[code]) {
     var drug = CMS_RVUS.drugs[code];
     return { rate: drug.r, desc: drug.d, dose: drug.dose, type: 'drug' };
-  }
-  // ── CHANGE 2: J-code drug pricing fallback ──
-  if (CMS_JCODES && CMS_JCODES.drugs && CMS_JCODES.drugs[code]) {
-    var jdrug = CMS_JCODES.drugs[code];
-    if (jdrug.r !== null) {
-      return { rate: jdrug.r, desc: jdrug.d, dose: jdrug.dose, type: 'drug' };
-    }
   }
   if (CMS_RVUS.rvus && CMS_RVUS.rvus[code]) {
     var rvu = CMS_RVUS.rvus[code];
@@ -135,170 +122,6 @@ function estimateDRG(extracted) {
   return null;
 }
 
-// ── CHANGE 4a: Detect summary bill (no CPT codes) ───────────
-function detectSummaryBill(extracted, enrichedItems) {
-  if (!extracted.line_items || extracted.line_items.length === 0) return false;
-  var totalBilled = extracted.total_billed || 0;
-  if (totalBilled < 500) return false;
-
-  // Count items that have a valid CPT/HCPCS code matched to a CMS rate
-  var matchedCount = 0;
-  var totalItems = enrichedItems.length;
-  enrichedItems.forEach(function(item) {
-    if (item.fair_rate !== null && item.code) matchedCount++;
-  });
-
-  // Summary bill = zero or near-zero code matches on a substantial bill
-  // Also check if descriptions look like department categories
-  var deptKeywords = ['room and', 'pharmacy', 'laboratory', 'radiology', 'respiratory',
-    'cardiology', 'pulmonary', 'therapy services', 'emergency room', 'emergency care',
-    'intensive care', 'intermediate care', 'operating room', 'surgery services',
-    'anesthesia', 'blood', 'special services', 'audiology', 'ct scan', 'mri',
-    'medical/surgical', 'iv therapy', 'physical therapy', 'occupational therapy',
-    'other therapeutic', 'professional or physician'];
-  var deptMatchCount = 0;
-  (extracted.line_items || []).forEach(function(item) {
-    var desc = (item.description || '').toLowerCase();
-    for (var i = 0; i < deptKeywords.length; i++) {
-      if (desc.indexOf(deptKeywords[i]) >= 0) { deptMatchCount++; break; }
-    }
-  });
-
-  // It's a summary bill if: very few CPT matches AND most items look like departments
-  var matchRate = totalItems > 0 ? matchedCount / totalItems : 0;
-  var deptRate = totalItems > 0 ? deptMatchCount / totalItems : 0;
-  return matchRate < 0.15 && deptRate > 0.4;
-}
-
-// ── CHANGE 4b: Build summary bill response ──────────────────
-function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBilled, drgEstimate) {
-  var hospital = (extracted.hospital || 'the hospital').trim();
-  var state = (extracted.state || '').trim();
-  var dos = (extracted.date_of_service || '').trim();
-
-  // Identify department breakdown
-  var departments = enrichedItems.map(function(item) {
-    return { description: item.description, billed: item.billed };
-  }).filter(function(d) { return d.billed > 0; })
-  .sort(function(a, b) { return b.billed - a.billed; });
-
-  // Estimate stay length from Room and Care charges
-  var roomCharge = 0;
-  departments.forEach(function(d) {
-    var desc = d.description.toLowerCase();
-    if (desc.indexOf('room') >= 0 || desc.indexOf('care') >= 0 || desc.indexOf('bed') >= 0) {
-      roomCharge += d.billed;
-    }
-  });
-  var estimatedDays = roomCharge > 0 ? Math.round(roomCharge / 3500) : null;
-
-  // Flag disproportionate departments
-  var flags = [];
-  departments.forEach(function(d) {
-    var pct = totalBilled > 0 ? Math.round(d.billed / totalBilled * 100) : 0;
-    var desc = d.description.toLowerCase();
-    if (desc.indexOf('pharmacy') >= 0 && pct > 20) {
-      flags.push({ department: d.description, amount: d.billed, pct: pct, note: 'Pharmacy charges represent ' + pct + '% of total bill -- unusually high. May include markup on individual drugs.' });
-    }
-    if (desc.indexOf('respiratory') >= 0 && pct > 15) {
-      flags.push({ department: d.description, amount: d.billed, pct: pct, note: 'Respiratory therapy charges represent ' + pct + '% of total bill -- warrants line-item review.' });
-    }
-    if ((desc.indexOf('supply') >= 0 || desc.indexOf('surgical') >= 0) && pct > 25) {
-      flags.push({ department: d.description, amount: d.billed, pct: pct, note: 'Supply/surgical charges at ' + pct + '% is unusually high. Hospitals commonly mark up supplies 5-10x cost.' });
-    }
-  });
-
-  // DRG context for inpatient
-  var drgContext = '';
-  if (billType === 'INPATIENT' && drgEstimate) {
-    var multiplier = totalBilled > 0 && drgEstimate.payment > 0 ? (totalBilled / drgEstimate.payment).toFixed(1) : 'N/A';
-    drgContext = 'Based on available information, the estimated Medicare DRG payment for this type of admission would be approximately $' +
-      drgEstimate.payment.toLocaleString() + ' (DRG ' + drgEstimate.code + '). Your bill of $' +
-      totalBilled.toLocaleString() + ' is approximately ' + multiplier + 'x the Medicare benchmark.';
-  }
-
-  // Build summary text
-  var summaryParts = ['This is a summary bill showing $' + totalBilled.toLocaleString() + ' in total charges across ' + departments.length + ' service departments.'];
-  if (estimatedDays) summaryParts.push('The room charges suggest an estimated ' + estimatedDays + '-day hospital stay.');
-  summaryParts.push('This bill does not contain the individual procedure codes (CPT/HCPCS codes) needed for a full line-by-line analysis.');
-  if (drgContext) summaryParts.push(drgContext);
-  summaryParts.push('To unlock your complete BillXM overcharge analysis, request an itemized bill from ' + hospital + ' using the phone script and letter below.');
-
-  // Phone script
-  var phoneScript = 'Hello, I am calling about my account' +
-    (dos ? ' for services received on ' + dos : '') +
-    ' at ' + hospital + '. ' +
-    'I am requesting a fully itemized bill that includes CPT and HCPCS procedure codes, revenue codes, dates of service for each item, and individual charges for every service rendered. ' +
-    'Under federal regulations including the No Surprises Act and CMS Conditions of Participation for Medicare-certified hospitals, I am entitled to a detailed itemized statement. ' +
-    'Please send this to me within 30 business days. ' +
-    'Can you confirm this will be mailed to my address on file? ' +
-    'If I do not receive it within 30 days, I will follow up in writing and may file a complaint with my state attorney general and the Centers for Medicare & Medicaid Services.';
-
-  // Request letter
-  var requestLetter = 'Dear Billing Department,\n\n' +
-    'Re: Request for Itemized Bill\n' +
-    (dos ? 'Date of Service: ' + dos + '\n' : '') +
-    hospital + '\n\n' +
-    'I am writing to formally request a fully itemized statement for my account. The summary bill I received shows total charges of $' + totalBilled.toLocaleString() +
-    ' but does not include the detail necessary for me to verify accuracy.\n\n' +
-    'Specifically, I am requesting a statement that includes:\n' +
-    '1. All CPT and HCPCS procedure codes for each service rendered\n' +
-    '2. Revenue codes for each department charge\n' +
-    '3. Individual dates of service for each line item\n' +
-    '4. Individual charges for each procedure, supply, and medication\n' +
-    '5. The quantity and unit price for each item\n\n' +
-    'Pursuant to federal law, including the No Surprises Act (Public Law 117-169), 42 CFR 180.60, and CMS Conditions of Participation for Medicare-certified hospitals, ' +
-    'I am entitled to receive a complete itemized statement. Many states also have specific statutes requiring hospitals to provide itemized bills upon request.\n\n' +
-    'Please provide this itemized statement within 30 days. I also request that any collection activity on this account be suspended until I have had the opportunity to review the itemized charges.\n\n' +
-    'Thank you for your prompt attention to this matter.\n\n' +
-    'Sincerely,\n[Patient Name]\n[Address]\n[Phone Number]\n[Account Number]';
-
-  return {
-    bill_type: billType,
-    report_type: 'SUMMARY_BILL',
-    grade: 'PENDING',
-    grade_rationale: 'Full analysis requires an itemized bill with procedure codes. Request one using the tools below.',
-    summary: summaryParts.join(' '),
-    hospital: hospital,
-    state: state,
-    date_of_service: dos,
-    total_billed: totalBilled,
-    estimated_fair_value: null,
-    potential_savings: null,
-    drg_estimate: drgEstimate ? {
-      drg_code: drgEstimate.code,
-      drg_description: drgEstimate.desc,
-      drg_payment: drgEstimate.payment,
-      markup_multiplier: (totalBilled > 0 && drgEstimate.payment > 0 ? (totalBilled / drgEstimate.payment).toFixed(1) + 'x' : 'N/A')
-    } : null,
-    estimated_stay_days: estimatedDays,
-    departments: departments,
-    department_flags: flags,
-    phone_script: phoneScript,
-    request_letter: requestLetter,
-    next_steps: [
-      'Call ' + hospital + ' billing department and request a fully itemized bill with CPT codes using the phone script above',
-      'If calling does not work, mail the request letter via certified mail so you have proof of the request',
-      'Once you receive the itemized bill, upload it to BillXM for a complete line-by-line overcharge analysis',
-      'Do NOT pay this bill or agree to a payment plan until you have reviewed the itemized charges',
-      'If the hospital refuses to provide an itemized bill, file a complaint with your state attorney general and CMS'
-    ],
-    issues: [],
-    line_items: enrichedItems.map(function(item) {
-      return {
-        code: item.code || '', description: item.description, billed: item.billed,
-        quantity: item.quantity, fair_rate: null, total_fair: null,
-        markup_pct: 'N/A', status: 'SUMMARY',
-        note: 'Department-level charge -- itemized bill needed for analysis'
-      };
-    }),
-    nsa_eligible: false,
-    financial_assistance_note: hospital + ' may offer financial assistance or charity care programs. Ask the billing department about income-based discounts.',
-    insurance_notes: '',
-    appeal_recommended: false
-  };
-}
-
 // ── Record anonymized analytics ──────────────────────────────
 async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade, issueCount, drgEstimate) {
   try {
@@ -339,10 +162,7 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
       // 2. Increment global counters
       await redis.incrby('counter:bills_analyzed', 1);
       await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
-      // ── CHANGE 4c: Only increment savings if we actually found savings ──
-      if (potentialSavings && potentialSavings > 0) {
-        await redis.incrby('counter:savings_found', Math.round(potentialSavings));
-      }
+      await redis.incrby('counter:savings_found', Math.round(potentialSavings));
 
       // 3. Store per-hospital, per-code pricing data
       for (var j = 0; j < record.codes.length; j++) {
@@ -385,13 +205,12 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
 }
 
 // ── Haiku extraction prompt ──────────────────────────────────
-// ── CHANGE 3: Fixed to prefer Total Charges over Amount Due ──
 var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charge from this bill into structured JSON.\n\n' +
 'Rules:\n' +
 '- Include EVERY line item on the bill, even $0.00 items\n' +
 '- Preserve the exact code shown on the bill (including leading zeros like 036600)\n' +
 '- Use the exact dollar amounts shown on the bill\n' +
-'- CRITICAL: total_billed MUST be the TOTAL CHARGES, Total Patient Services, or Total Amount for Hospital Services. This is the FULL undiscounted amount BEFORE any payments, adjustments, insurance, or discounts. Do NOT use "Amount Due", "Balance Due", "Patient Balance", "Please Pay Now", or any post-payment amount. These are completely different numbers.\n' +
+'- Your total_billed MUST equal the bill\'s stated total. Look for "Total Amount for Hospital Services", "Total Charges", "Amount You Owe", "Total", or similar\n' +
 '- If the bill shows subtotals by category, make sure all items from every category are included\n' +
 '- Count line items carefully. If a service appears multiple times on different dates, each is a separate line item\n' +
 '- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n' +
@@ -442,7 +261,6 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 'ISSUES - only flag items where billed significantly exceeds fair rate:\n' +
 '- EXCESSIVE_MARKUP: billed > 2x fair rate. Severity: HIGH if >300%, MEDIUM if 150-300%, LOW if 100-150%\n' +
 '- DUPLICATE: same code on same date without justification\n' +
-'- DRUG_OVERCHARGE: for J-code drugs, flag when billed > 3x the Medicare ASP+6% payment limit\n' +
 '- Do NOT flag NO_CPT items or items without fair rates\n\n' +
 'Return ONLY valid JSON. No markdown, no backticks:\n' +
 '{\n' +
@@ -451,7 +269,7 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '  "summary": "2-3 sentences in plain English with specific dollar examples of overcharges",\n' +
 '  "issues": [\n' +
 '    {\n' +
-'      "type": "EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED|DRUG_OVERCHARGE",\n' +
+'      "type": "EXCESSIVE_MARKUP|DUPLICATE|UPCODED|UNBUNDLED",\n' +
 '      "severity": "HIGH|MEDIUM|LOW",\n' +
 '      "confidence": 95,\n' +
 '      "code": "CPT code",\n' +
@@ -803,20 +621,6 @@ module.exports = async function handler(req, res) {
       } catch (mapErr) { console.log('CPT mapping failed (non-fatal):', mapErr.message); }
     }
 
-    // ════════════════════════════════════════════════════════════
-    // STEP 2c: Summary bill detection (CHANGE 4)
-    // ════════════════════════════════════════════════════════════
-    if (detectSummaryBill(extracted, enrichedItems)) {
-      console.log('SUMMARY BILL DETECTED -- routing to summary response');
-      var summaryDRG = billType === 'INPATIENT' ? estimateDRG(extracted) : null;
-      var summaryResult = buildSummaryBillResponse(extracted, enrichedItems, billType, totalBilled, summaryDRG);
-
-      // Record analytics: bills_analyzed + charges_reviewed, but NOT savings
-      recordAnalytics(extracted, enrichedItems, billType, totalBilled, 0, 0, 'PENDING', 0, summaryDRG);
-
-      return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
-    }
-
     // ── Determine fair value based on bill type ──
     var estimatedFairValue = 0;
     var drgEstimate = null;
@@ -930,7 +734,6 @@ module.exports = async function handler(req, res) {
         quantity: item.quantity, fair_rate: item.fair_rate, total_fair: item.total_fair,
         markup_pct: item.markup_pct, status: item.status,
         note: item.type === 'no_code' ? 'Facility charge, no CPT code' :
-              item.type === 'drug' ? 'Drug charge -- Medicare ASP+6% benchmark' :
               item.type === 'unknown' ? 'Code not found in CMS database' :
               item.status === 'FLAG' ? 'Exceeds Medicare rate' : 'Within expected range'
       };
