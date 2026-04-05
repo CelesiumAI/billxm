@@ -310,6 +310,14 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     'Thank you for your prompt attention to this matter.\n\n' +
     'Sincerely,\n[Patient Name]\n[Address]\n[Phone Number]\n[Account Number]';
 
+  // Calculate fair value and savings if DRG was matched
+  var estimatedFairValue = null;
+  var potentialSavings = null;
+  if (drgEstimate && drgEstimate.code !== 'UNKNOWN' && drgEstimate.payment > 0) {
+    estimatedFairValue = drgEstimate.payment;
+    potentialSavings = Math.max(0, Math.round((totalBilled - drgEstimate.payment) * 100) / 100);
+  }
+
   return {
     bill_type: billType,
     report_type: 'SUMMARY_BILL',
@@ -320,8 +328,8 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     state: state,
     date_of_service: dos,
     total_billed: totalBilled,
-    estimated_fair_value: null,
-    potential_savings: null,
+    estimated_fair_value: estimatedFairValue,
+    potential_savings: potentialSavings,
     drg_estimate: drgEstimate ? {
       drg_code: drgEstimate.code,
       drg_description: drgEstimate.desc,
@@ -868,8 +876,12 @@ module.exports = async function handler(req, res) {
       var summaryDRG = billType === 'INPATIENT' ? estimateDRG(extracted) : null;
       var summaryResult = buildSummaryBillResponse(extracted, enrichedItems, billType, totalBilled, summaryDRG);
 
-      // Record analytics: bills_analyzed + charges_reviewed, but NOT savings
-      recordAnalytics(extracted, enrichedItems, billType, totalBilled, 0, 0, 'PENDING', 0, summaryDRG);
+      // Record analytics based on whether we found a DRG benchmark
+      var hasDRGMatch = summaryDRG && summaryDRG.code !== 'UNKNOWN' && summaryDRG.payment > 0;
+      var analyticsCharges = hasDRGMatch ? totalBilled : 0;
+      var analyticsFairValue = hasDRGMatch ? summaryDRG.payment : 0;
+      var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : 0;
+      recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG);
 
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
