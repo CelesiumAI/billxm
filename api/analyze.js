@@ -308,7 +308,27 @@ function detectSummaryBill(extracted, enrichedItems) {
   });
   var fairCoverage = totalBilled > 0 ? totalFairValue / totalBilled : 0;
 
+  // Count items that had REAL CPT codes from the original bill (not from our mapping step)
+  var originalCodeCount = 0;
+  enrichedItems.forEach(function(item) {
+    var oc = (item.original_code || '').trim();
+    if (oc && oc !== '0' && oc !== '00000' && !/^0+$/.test(oc)) originalCodeCount++;
+  });
+  var originalCodeRate = totalItems > 0 ? originalCodeCount / totalItems : 0;
+
+  // RULE 1: Very high department match = always summary (60%+ department names is never itemized)
+  if (deptRate > 0.6) {
+    console.log('Summary bill: deptRate ' + deptRate.toFixed(2) + ' > 0.6 threshold');
+    return true;
+  }
+  // RULE 2: Original bill had zero/near-zero real CPT codes AND looks departmental
+  if (originalCodeRate < 0.1 && deptRate > 0.3) {
+    console.log('Summary bill: no original CPT codes (rate ' + originalCodeRate.toFixed(2) + '), deptRate ' + deptRate.toFixed(2));
+    return true;
+  }
+  // RULE 3: Low CPT match rate + departmental (original check)
   if (matchRate < 0.15 && deptRate > 0.4) return true;
+  // RULE 4: Fair value covers almost nothing despite department layout
   if (fairCoverage < 0.05 && deptRate > 0.4 && totalBilled > 1000) return true;
   return false;
 }
