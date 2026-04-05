@@ -273,9 +273,10 @@ function detectSummaryBill(extracted, enrichedItems) {
     'respiratory therapy', 'behavioral health', 'rehabilitation',
     'other therapeutic',
     // Other common departments
-    'blood', 'special services', 'audiology', 'iv therapy', 'miscellaneous',
+    'blood', 'blood adm', 'special services', 'audiology', 'iv therapy', 'miscellaneous',
     'medical/surgical', 'professional or physician', 'professional fee',
-    'extension of', 'room and bed'
+    'extension of', 'room and bed', 'central supply', 'chemo drugs', 'chemo',
+    'infusion', 'med/surg supp', 'implant'
   ];
   var deptMatchCount = 0;
   (extracted.line_items || []).forEach(function(item) {
@@ -558,10 +559,11 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '- Count line items carefully. If a service appears multiple times on different dates, each is a separate line item\n' +
 '- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n' +
 '- For drugs with code 00000, set code to "" and include the drug name in description\n' +
-'- Include adjustments/discounts if shown on the bill\n\n' +
+'- Include adjustments/discounts as a total in the adjustments field, but do NOT include them as line_items. Lines labeled "discount", "uninsured discount", "financial assistance", "write-off", "charity care", "adjustment", "insurance payment", "account balance", or "balance due" are NOT charges.\n' +
+'- Negative amounts (in parentheses or with minus sign) are credits/payments, NOT charges. Do not include them in line_items.\n\n' +
 'Return ONLY valid JSON, no markdown, no explanation:\n' +
 '{\n' +
-'  "hospital": "hospital name",\n' +
+'  "hospital": "FULL hospital name exactly as printed -- include specialty designations like Orthopedic, Cardiac, Cancer Center, Childrens, etc.",\n' +
 '  "state": "2-letter state code",\n' +
 '  "city": "city name",\n' +
 '  "date_of_service": "date or date range",\n' +
@@ -867,27 +869,40 @@ module.exports = async function handler(req, res) {
       } catch (retryErr) { console.log('Retry failed, keeping original'); }
     }
 
-    // ── Check for partial bill (uploaded pages don't cover full bill) ──
-    var partialBillNote = '';
-    var finalLineItemSum = 0;
-    (extracted.line_items || []).forEach(function(item) { finalLineItemSum += (item.billed || 0); });
-    var finalGap = extractedTotal > 0 ? Math.abs(finalLineItemSum - extractedTotal) / extractedTotal : 0;
-    if (finalGap > 0.30 && extractedTotal > finalLineItemSum && finalLineItemSum > 0) {
-      console.log('PARTIAL BILL: Items sum $' + finalLineItemSum.toFixed(2) + ' vs stated total $' + extractedTotal.toFixed(2) + ' (' + Math.round(finalGap * 100) + '% gap). Using line items sum.');
-      var statedTotal = extractedTotal; // save original before overwriting
-      partialBillNote = 'NOTE: This analysis covers $' + finalLineItemSum.toFixed(2) + ' of the $' + statedTotal.toFixed(2) + ' stated total on your bill. ' +
-        'The remaining charges may be on pages that were not uploaded. Upload all pages for a complete analysis.';
-      // Use line items sum as working total -- this is what we actually have data for
-      extractedTotal = finalLineItemSum;
-      extracted.total_billed = finalLineItemSum;
-      extracted.partial_bill = true;
-      extracted.stated_total = statedTotal;
-    }
-
     // ════════════════════════════════════════════════════════════
-    // STEP 1b: Net charge/reversal pairs
+    // STEP 1b: Separate charges from discounts/credits/payments
     // ════════════════════════════════════════════════════════════
     if (extracted.line_items && extracted.line_items.length > 0) {
+      // First: remove discount, credit, payment, and adjustment lines from charges
+      var discountKeywords = ['discount', 'adjustment', 'write-off', 'write off', 'charity',
+        'financial assistance', 'courtesy', 'contractual', 'allowance', 'account balance',
+        'balance due', 'amount due', 'patient responsibility', 'insurance payment',
+        'payment', 'paid', 'credit'];
+      var charges = [];
+      var adjustmentsTotal = 0;
+      extracted.line_items.forEach(function(item) {
+        var desc = (item.description || '').toLowerCase();
+        var isDiscount = false;
+        for (var dk = 0; dk < discountKeywords.length; dk++) {
+          if (desc.indexOf(discountKeywords[dk]) >= 0) { isDiscount = true; break; }
+        }
+        // Negative amounts are always credits/adjustments, not charges
+        if ((item.billed || 0) < 0) {
+          adjustmentsTotal += (item.billed || 0);
+        } else if (isDiscount) {
+          // Positive discount lines (like "Uninsured Discount: 35,673") are adjustments too
+          adjustmentsTotal -= (item.billed || 0);
+        } else {
+          charges.push(item);
+        }
+      });
+      if (charges.length < extracted.line_items.length) {
+        console.log('Separated: ' + charges.length + ' charges from ' + (extracted.line_items.length - charges.length) + ' discounts/credits (adjustments: $' + adjustmentsTotal.toFixed(2) + ')');
+        extracted.line_items = charges;
+        extracted.adjustments = adjustmentsTotal;
+      }
+
+      // Second: net TRUE charge/reversal pairs (same service, same date, similar amounts)
       var grouped = {};
       extracted.line_items.forEach(function(item) {
         var key = (item.description || '').trim().toUpperCase() + '|' + (item.date || '');
@@ -901,7 +916,18 @@ module.exports = async function handler(req, res) {
         if (g.items.length > 1) {
           var hasPos = g.items.some(function(i) { return (i.billed || 0) > 0; });
           var hasNeg = g.items.some(function(i) { return (i.billed || 0) < 0; });
-          if (hasPos && hasNeg) hasReversals = true;
+          if (hasPos && hasNeg) {
+            // Only net if amounts are proportional (reversal should be close to the charge amount)
+            var maxPos = 0, maxNeg = 0;
+            g.items.forEach(function(i) {
+              if ((i.billed || 0) > maxPos) maxPos = i.billed;
+              if ((i.billed || 0) < maxNeg) maxNeg = i.billed;
+            });
+            // Only net if the negative is within 3x of the positive (true reversal, not bulk credit)
+            if (Math.abs(maxNeg) <= maxPos * 3) {
+              hasReversals = true;
+            }
+          }
         }
       });
       if (hasReversals) {
@@ -909,23 +935,59 @@ module.exports = async function handler(req, res) {
         var netted = [];
         Object.keys(grouped).forEach(function(key) {
           var g = grouped[key];
-          var netAmount = Math.round(g.netAmount * 100) / 100;
-          if (Math.abs(netAmount) > 0.01) {
-            var rep = JSON.parse(JSON.stringify(g.items[0]));
-            rep.billed = netAmount;
-            rep.quantity = 1;
-            netted.push(rep);
+          var hasPos = g.items.some(function(i) { return (i.billed || 0) > 0; });
+          var hasNeg = g.items.some(function(i) { return (i.billed || 0) < 0; });
+          if (hasPos && hasNeg) {
+            var maxPos = 0, maxNeg = 0;
+            g.items.forEach(function(i) {
+              if ((i.billed || 0) > maxPos) maxPos = i.billed;
+              if ((i.billed || 0) < maxNeg) maxNeg = i.billed;
+            });
+            if (Math.abs(maxNeg) <= maxPos * 3) {
+              // True reversal -- net it
+              var netAmount = Math.round(g.netAmount * 100) / 100;
+              if (Math.abs(netAmount) > 0.01) {
+                var rep = JSON.parse(JSON.stringify(g.items[0]));
+                rep.billed = netAmount;
+                rep.quantity = 1;
+                netted.push(rep);
+              }
+            } else {
+              // Not a true reversal -- keep all items separately
+              g.items.forEach(function(i) { if ((i.billed || 0) > 0) netted.push(i); });
+            }
+          } else {
+            g.items.forEach(function(i) { netted.push(i); });
           }
         });
         console.log('Netted: ' + extracted.line_items.length + ' -> ' + netted.length + ' items');
         extracted.line_items = netted;
-        if (!extractedTotal || extractedTotal <= 0) {
-          var nettedSum = 0;
-          netted.forEach(function(item) { nettedSum += (item.billed || 0); });
-          extractedTotal = nettedSum;
-          extracted.total_billed = nettedSum;
-        }
       }
+
+      // Recalculate total from remaining charges
+      var chargeSum = 0;
+      extracted.line_items.forEach(function(item) { chargeSum += (item.billed || 0); });
+      if (chargeSum > 0 && Math.abs(chargeSum - extractedTotal) > extractedTotal * 0.1) {
+        console.log('Recalculated total from charges: $' + chargeSum.toFixed(2) + ' (was $' + extractedTotal.toFixed(2) + ')');
+        extractedTotal = chargeSum;
+        extracted.total_billed = chargeSum;
+      }
+    }
+
+    // ── Check for partial bill (uploaded pages don't cover full bill) ──
+    var partialBillNote = '';
+    var finalLineItemSum = 0;
+    (extracted.line_items || []).forEach(function(item) { finalLineItemSum += (item.billed || 0); });
+    var finalGap = extractedTotal > 0 ? Math.abs(finalLineItemSum - extractedTotal) / extractedTotal : 0;
+    if (finalGap > 0.30 && extractedTotal > finalLineItemSum && finalLineItemSum > 0) {
+      console.log('PARTIAL BILL: Items sum $' + finalLineItemSum.toFixed(2) + ' vs stated total $' + extractedTotal.toFixed(2) + ' (' + Math.round(finalGap * 100) + '% gap). Using line items sum.');
+      var statedTotal = extractedTotal;
+      partialBillNote = 'NOTE: This analysis covers $' + finalLineItemSum.toFixed(2) + ' of the $' + statedTotal.toFixed(2) + ' stated total on your bill. ' +
+        'The remaining charges may be on pages that were not uploaded. Upload all pages for a complete analysis.';
+      extractedTotal = finalLineItemSum;
+      extracted.total_billed = finalLineItemSum;
+      extracted.partial_bill = true;
+      extracted.stated_total = statedTotal;
     }
 
     // ════════════════════════════════════════════════════════════
