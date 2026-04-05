@@ -39,8 +39,8 @@ nav .inner{display:flex;align-items:center;justify-content:space-between;height:
 /* HERO */
 .hero{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;padding-top:68px;}
 .hero-left{display:flex;flex-direction:column;justify-content:center;padding:72px 56px 72px 72px;background:var(--white);}
-.hero-right{position:relative;overflow:visible;background:linear-gradient(135deg, #0a1628, #0d1b2a);display:flex;align-items:center;justify-content:center;}
-.hero-right-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 35% 65%,rgba(37,99,235,.13) 0%,transparent 55%),radial-gradient(ellipse at 75% 25%,rgba(37,99,235,.07) 0%,transparent 45%);}
+.hero-right{position:relative;overflow:visible;background:linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);display:flex;align-items:center;justify-content:center;}
+.hero-right-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 35% 65%,rgba(37,99,235,0.06) 0%,transparent 55%),radial-gradient(ellipse at 75% 25%,rgba(37,99,235,0.04) 0%,transparent 45%);}
 .hero-right-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(255,255,255,.018) 47px,rgba(255,255,255,.018) 48px),repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.012) 47px,rgba(255,255,255,.012) 48px);}
 .hero-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:32px 32px 200px;}
 .hero-stat-cards{position:absolute;bottom:32px;left:24px;right:24px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -460,37 +460,56 @@ window.addEventListener('scroll',function(){
 
     <p class="hero-note">Hospital, specialist, lab, urgent care, surgery center — any medical bill &nbsp;·&nbsp; PDF, photo, or paste text &nbsp;·&nbsp; No credit card required</p>
   </div>
-  <div class="hero-right">
-    <div style="position:absolute; width:300px; height:300px; background:radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%);"></div>
+  <div class="hero-right" style="background:linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);">
+    <div style="position:absolute; width:300px; height:300px; background:radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%);"></div>
     <div style="position:relative; z-index:1; padding:48px 40px; text-align:center;">
-      <div style="font-size:13px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:6px;">Live Platform Stats</div>
+      <div style="font-size:13px; color:#475569; text-transform:uppercase; letter-spacing:0.12em; margin-bottom:6px;">Live Platform Stats</div>
       <div style="width:40px; height:2px; background:#2563eb; margin:0 auto 32px;"></div>
       <div style="display:flex; flex-direction:column; gap:28px;">
         <div>
-          <div id="counterBills" style="font-size:42px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">100+</div>
-          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Bills Analyzed</div>
+          <div id="counterBills" style="font-size:42px; font-weight:800; color:#1e293b; letter-spacing:-0.02em;">100+</div>
+          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Bills Analyzed</div>
         </div>
         <div>
-          <div id="counterCharges" style="font-size:42px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$2.0M+</div>
-          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Charges Reviewed</div>
+          <div id="counterCharges" style="font-size:42px; font-weight:800; color:#1e293b; letter-spacing:-0.02em;">$2.0M+</div>
+          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Charges Reviewed</div>
         </div>
         <div>
-          <div id="counterSavings" style="font-size:42px; font-weight:800; color:#2ecc8a; letter-spacing:-0.02em;">$500K+</div>
-          <div style="font-size:12px; color:#8b92a5; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Potential Savings Found</div>
+          <div id="counterSavings" style="font-size:42px; font-weight:800; color:#059669; letter-spacing:-0.02em;">$500K+</div>
+          <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Potential Savings Found</div>
+        </div>
+      </div>
+      <!-- Trust badges integrated under counter -->
+      <div style="margin-top:40px; padding-top:28px; border-top:1px solid rgba(0,0,0,0.08);">
+        <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
+            Compares every charge to official U.S. government rates
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
+            Detects duplicates, upcoding &amp; bundling violations
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
+            Works on any medical bill -- hospital, specialist, lab, or urgent care
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#475569;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#059669; flex-shrink:0;"></span>
+            HIPAA compliant · No data stored
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- TRUST BAR -->
-<div class="trust-bar"><div class="container"><div class="trust-items">
-  <div class="trust-item"><div class="ti-dot"></div>100+ bills tested — significant overcharges found in every single one</div>
-  <div class="trust-item"><div class="ti-dot"></div>Compares every charge to official U.S. government rates — the published fair price for every medical procedure</div>
-  <div class="trust-item"><div class="ti-dot"></div>Detects duplicates, upcoding &amp; bundling violations</div>
-  <div class="trust-item"><div class="ti-dot"></div>Works on any medical bill — hospital, specialist, lab, or urgent care</div>
-  <div class="trust-item"><div class="ti-dot"></div>HIPAA compliant · No data stored</div>
-</div></div></div>
+<!-- TRUST BAR (badges now integrated into hero-right stats panel above) -->
+<div style="padding:12px 0; background:var(--snow); border-bottom:1px solid rgba(0,0,0,0.05);">
+  <div class="container" style="text-align:center;">
+    <span style="font-size:13px; color:var(--mist); font-weight:500;">100+ bills tested -- significant overcharges found in every single one</span>
+  </div>
+</div>
 
 <!-- PATIENT STORIES -->
 <section class="stories-section"><div class="container">
@@ -1628,7 +1647,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
       <div style="margin-bottom:12px;padding:8px 12px;background:#fef3c7;border-radius:8px;border:1px solid #fde68a;">
         <span style="font-size:12px;color:#92400e;font-weight:600;">⏳ Coming Soon — Join the waitlist</span>
       </div>
-      <a href="mailto:contact.billxm@gmail.com?subject=We Negotiate Waitlist" class="btn btn-outline">Join Waitlist</a>
+      <a href="/cdn-cgi/l/email-protection#61020e0f150002154f03080d0d190c21060c00080d4f020e0c5e1214030b0402155c3604412f04060e150800150441360008150d081215" class="btn btn-outline">Join Waitlist</a>
     </div>
 
     <!-- Card 5: Enterprise -->
@@ -1642,7 +1661,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
         <li><span class="ck">✓</span> Dedicated account manager</li>
         <li><span class="ck">✓</span> Volume pricing &amp; SLAs</li>
       </ul>
-      <a href="mailto:contact.billxm@gmail.com?subject=Enterprise Access Request&body=Hi BillXM team,%0A%0AI'm interested in learning more about enterprise access.%0A%0AOrganization:%0AUse case:%0AEstimated claims volume:%0A%0APlease reach out at your convenience." class="btn btn-outline">Contact Sales</a>
+      <a href="/cdn-cgi/l/email-protection#c4a7abaab0a5a7b0eaa6ada8a8bca984a3a9a5ada8eaa7aba9fbb7b1a6aea1a7b0f981aab0a1b6b4b6adb7a1e485a7a7a1b7b7e496a1b5b1a1b7b0e2a6aba0bdf98cade486ada8a89c89e4b0a1a5a9e8e1f485e1f4858de3a9e4adaab0a1b6a1b7b0a1a0e4adaae4a8a1a5b6aaadaaa3e4a9abb6a1e4a5a6abb1b0e4a1aab0a1b6b4b6adb7a1e4a5a7a7a1b7b7eae1f485e1f4858bb6a3a5aaadbea5b0adabaafee1f48591b7a1e4a7a5b7a1fee1f48581b7b0ada9a5b0a1a0e4a7a8a5ada9b7e4b2aba8b1a9a1fee1f485e1f48594a8a1a5b7a1e4b6a1a5a7ace4abb1b0e4a5b0e4bdabb1b6e4a7abaab2a1aaada1aaa7a1ea" class="btn btn-outline">Contact Sales</a>
     </div>
 
     <!-- Card 6: Financial Assistance — last, separate from paid options -->
@@ -1660,7 +1679,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
       <p style="font-size:12px;color:#065f46;margin:10px 0 14px;line-height:1.6;background:#d1fae5;padding:10px 12px;border-radius:8px;">
         Our mission is to make sure an unfair bill doesn't go unchallenged because of cost.
       </p>
-      <a href="mailto:contact.billxm@gmail.com?subject=Free Report Program Application&body=Hi BillXM team,%0A%0AI would like to apply for the Free Report Program.%0A%0AHospital name:%0ABill amount:%0AHousehold size:%0AApproximate annual household income:%0ABrief description of my situation:%0A%0AThank you." class="btn" style="background:#059669;color:white;border:none;width:100%;text-align:center;box-sizing:border-box;">Apply for Free Report</a>
+      <a href="/cdn-cgi/l/email-protection#ed8e8283998c8e99c38f8481819580ad8a808c8481c38e8280d29e988f87888e99d0ab9f8888cdbf889d829f99cdbd9f828a9f8c80cdac9d9d81848e8c99848283cb8f828994d0a584cdaf848181b5a0cd99888c80c1c8ddacc8ddaca4cd9a82988189cd81848688cd9982cd8c9d9d8194cd8b829fcd998588cdab9f8888cdbf889d829f99cdbd9f828a9f8c80c3c8ddacc8ddaca5829e9d84998c81cd838c8088d7c8ddacaf848181cd8c8082988399d7c8ddaca582989e8885828189cd9e849788d7c8ddacac9d9d9f829584808c9988cd8c8383988c81cd8582989e8885828189cd84838e828088d7c8ddacaf9f84888bcd89889e8e9f849d99848283cd828bcd8094cd9e8499988c99848283d7c8ddacc8ddacb9858c8386cd948298c3" class="btn" style="background:#059669;color:white;border:none;width:100%;text-align:center;box-sizing:border-box;">Apply for Free Report</a>
     </div>
 
   </div>
@@ -1867,7 +1886,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
   <!-- React app mounts here -->
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // Load live counters
 fetch('/api/counters').then(function(r) { return r.json(); }).then(function(data) {
   if (data.display) {
@@ -1950,10 +1969,31 @@ function launchEnterprise() {
 }
 
 // Back button closes the overlay (no-op in iframe if pushState was blocked)
+// Smart handling: if paywall is showing, close paywall. If on report screen, go back to upload. Only close overlay from upload.
 window.addEventListener('popstate', function(e) {
   try {
     var el = document.getElementById('billxm-root');
     if (el && el.style.display !== 'none') {
+      // Check if paywall modal is visible
+      var paywallBackdrop = document.querySelector('[style*="position: fixed"][style*="rgba(0,0,0,0.65)"]') ||
+                            document.querySelector('[style*="position: fixed"][style*="rgba(0, 0, 0, 0.65)"]');
+      if (paywallBackdrop) {
+        // Just close the paywall, don't navigate away
+        paywallBackdrop.click();
+        try { history.pushState({ billxmOpen: true }, '', '#analyze'); } catch(ex) {}
+        return;
+      }
+      // Check if we're on the report screen (has the report header)
+      var reportHeader = el.querySelector('[style*="Analysis Complete"]') || el.querySelector('h1');
+      var isReport = reportHeader && reportHeader.textContent && reportHeader.textContent.indexOf('Analysis Complete') >= 0;
+      if (isReport) {
+        // Go back to upload screen instead of closing overlay
+        try { history.pushState({ billxmOpen: true }, '', '#analyze'); } catch(ex) {}
+        // Trigger React to go back to upload by dispatching a custom event
+        window.dispatchEvent(new CustomEvent('billxm-back-to-upload'));
+        return;
+      }
+      // On upload screen: close the overlay
       el.style.display = 'none';
       document.body.style.overflow = '';
     }
@@ -2372,6 +2412,16 @@ function BillXM() {
     return function() { clearInterval(interval); };
   }, [screen]);
 
+  // Listen for back button navigation from report to upload
+  useEffect(function() {
+    function handleBackToUpload() {
+      setShowPaywall(false);
+      setScreen("upload");
+    }
+    window.addEventListener('billxm-back-to-upload', handleBackToUpload);
+    return function() { window.removeEventListener('billxm-back-to-upload', handleBackToUpload); };
+  }, []);
+
   function tryUnlock(targetTier) {
     const code = unlockCode.trim().toUpperCase();
     if (DEMO_CODES.includes(code)) { setTier("demo"); setShowPaywall(false); setUnlockCode(""); setUnlockError(""); return; }
@@ -2458,7 +2508,7 @@ function BillXM() {
     if (!gateConsent) { setGateError("Please agree to the terms."); return; }
     setGateError(""); setGateLoading(true);
     fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "register", email: gateEmail }) })
-      .then(function(r) { return r.json(); })
+      .then(function(r) { if (r.status === 429) throw new Error("RATE_LIMIT"); return r.json(); })
       .then(function(data) {
         if (data.error) { setGateError(data.error); return; }
         localStorage.setItem("billxm_email", gateEmail);
@@ -2466,7 +2516,7 @@ function BillXM() {
         if (data.free_grades_remaining !== undefined) setFreeGradesRemaining(data.free_grades_remaining);
         setShowGate(false);
       })
-      .catch(function() { setGateError("Connection error. Please try again."); })
+      .catch(function(err) { if (err.message === "RATE_LIMIT") { setGateError("You've made too many requests. Please wait a few minutes and try again."); } else { setGateError("Connection error. Please try again."); } })
       .finally(function() { setGateLoading(false); });
   }
 
@@ -2476,14 +2526,14 @@ function BillXM() {
     var email = localStorage.getItem("billxm_email");
     if (!email) { setShowGate(true); return Promise.resolve(false); }
     return fetch("/api/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "check", email: email, tier: analysisTier }) })
-      .then(function(r) { return r.json(); })
+      .then(function(r) { if (r.status === 429) throw new Error("RATE_LIMIT"); return r.json(); })
       .then(function(data) {
         if (data.allowed) return true;
         if (data.gate === "free_limit_reached" || data.gate === "payment_required") { setShowPaywall(true); return false; }
         if (data.gate === "email_required") { setShowGate(true); return false; }
         return false;
       })
-      .catch(function() { return true; }); // fail open
+      .catch(function(err) { if (err.message === "RATE_LIMIT") { setError("Too many requests. Please wait a few minutes and try again."); return false; } return true; }); // fail open on other errors
   }
 
   function recordGradeUsed() {
@@ -2560,7 +2610,7 @@ function BillXM() {
       const f = fileList[i];
       if (f.size > 50 * 1024 * 1024) { setError("File too large — maximum 50MB per file."); continue; }
       const fType = getFileType(f);
-      if (fType === "unknown") { setError("Unsupported file type: " + f.name + ". Please upload a PDF, image, Excel, CSV, or text file."); continue; }
+      if (fType === "unknown") { setError("Unsupported file type: " + f.name + ". Please upload a PDF, JPEG, PNG, GIF, or WebP file."); continue; }
       if (fType === "image") {
         pending.push(readFileAsBase64(f).then(b64 => ({ name: f.name, fileType: "image", b64, preview: `data:${f.type};base64,${b64}`, mimeType: f.type })));
       } else if (fType === "pdf") {
@@ -3559,10 +3609,10 @@ function BillXM() {
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 6 }}>
                   {dragOver ? "Release to upload" : "Drop your bill here, or click to browse"}
                 </div>
-                <div style={{ fontSize: 12, color: "#94a3b8" }}>PDF · Image · Excel · CSV · Text · Up to 10 files, 50MB each</div>
+                <div style={{ fontSize: 12, color: "#94a3b8" }}>PDF · JPEG · PNG · GIF · WebP · Up to 10 files, 50MB each</div>
                 <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Tip: For very large bills, upload each admission separately for best results</div>
               </div>
-              <input ref={fileRef} type="file" accept="image/*,.pdf,.xlsx,.xls,.xlsm,.csv,.txt,.text" multiple onChange={onFileInput} style={{ display: "none" }} />
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,.pdf,.jpg,.jpeg,.png,.gif,.webp" multiple onChange={onFileInput} style={{ display: "none" }} />
               {files.length > 0 && (
                 <div style={{ marginTop: 14 }}>
                   {files.map((f, i) => (
@@ -3683,17 +3733,20 @@ function BillXM() {
      SCREEN: REPORT
   ════════════════════════════════════════════════════════════ */
   if (screen === "report" && report) {
+    const isSummaryBill = report.report_type === "SUMMARY_BILL" || report.grade === "PENDING";
     const TABS = [
       { id: "overview",  label: "📊 Overview",               locked: false },
-      { id: "issues",    label: `🚨 Issues (${issues.length})`, locked: !isPaid },
-      { id: "lineitems", label: "📋 Line Items",              locked: !isPaid },
-      { id: "scripts",   label: "📞 Phone Scripts",           locked: !hasFull },
-      { id: "letter",    label: "✉️ Dispute Letter",          locked: !hasFull },
+      { id: "issues",    label: `🚨 Issues (${issues.length})`, locked: isSummaryBill ? false : !isPaid },
+      { id: "lineitems", label: "📋 Line Items",              locked: isSummaryBill ? false : !isPaid },
+      { id: "scripts",   label: "📞 Phone Scripts",           locked: isSummaryBill ? false : !hasFull },
+      { id: "letter",    label: "✉️ Dispute Letter",          locked: isSummaryBill ? false : !hasFull },
       { id: "negotiate", label: "🤝 We Negotiate",            locked: false },
     ];
 
     function handleTabClick(tab) {
       if (tab.id === "negotiate") { setActiveTab(tab.id); return; }
+      // Summary bills: all tabs unlocked for free
+      if (isSummaryBill) { setActiveTab(tab.id); return; }
       if ((tab.id === "letter" || tab.id === "scripts") && !hasFull) {
         // If user already has report tier, show $5 upgrade instead of full paywall
         if (isPaid && !hasFull) { setPaywallTarget(tab.id); setShowPaywall(true); return; }
@@ -3724,7 +3777,7 @@ function BillXM() {
               <div style={{ flex: 1, minWidth: 220 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <h1 style={{ color: "white", fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em" }}>Analysis Complete</h1>
-                  <span style={{ fontSize: 11, color: "#93c5fd", background: "rgba(96,165,250,0.12)", padding: "3px 10px", borderRadius: 16, border: "1px solid rgba(96,165,250,0.25)" }}>Grade: {report.grade}</span>
+                  <span style={{ fontSize: 11, color: "#93c5fd", background: "rgba(96,165,250,0.12)", padding: "3px 10px", borderRadius: 16, border: "1px solid rgba(96,165,250,0.25)" }}>Grade: {report.grade}{report.grade === "A" ? " -- Fair Bill" : report.grade === "B" ? " -- Slightly Overcharged" : report.grade === "C" ? " -- Moderately Overcharged" : report.grade === "D" ? " -- Heavily Overcharged" : report.grade === "F" ? " -- Severely Overcharged" : report.grade === "PENDING" ? " -- Itemized Bill Needed" : ""}</span>
                 </div>
                 <p style={{ color: "#93c5fd", fontSize: 13, marginTop: 6, lineHeight: 1.65, maxWidth: 580 }}>{report.summary}</p>
                 {report.grade_rationale && <p style={{ color: "rgba(147,197,253,0.7)", fontSize: 12, marginTop: 4 }}>{report.grade_rationale}</p>}
@@ -4203,7 +4256,7 @@ function BillXM() {
     );
   } catch(e) {
     console.error('BillXM mount failed:', e);
-    container.innerHTML = '<div style="font-family:system-ui;padding:40px;text-align:center;background:#eef2f7;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:48px;margin-bottom:16px">⚠️</div><h2 style="color:#0f2444;margin-bottom:8px">Unable to load BillXM</h2><p style="color:#64748b;margin-bottom:24px">Please refresh the page and try again.</p><button onclick="location.reload()" style="padding:12px 28px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Refresh Page</button></div>';
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:DM Sans,sans-serif;flex-direction:column;gap:16px;padding:24px;text-align:center"><div style="font-size:48px">⚠️</div><h2 style="font-size:20px;color:#1e293b">Unable to load BillXM</h2><p style="color:#64748b;font-size:14px">Please refresh the page. If this continues, try a different browser.</p><button onclick="location.reload()" style="padding:12px 32px;border-radius:10px;background:#2563eb;color:white;border:none;font-size:15px;font-weight:700;cursor:pointer">Refresh Page</button></div>';
   }
 })();
 </script>
