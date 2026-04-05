@@ -203,9 +203,9 @@ function detectSummaryBill(extracted, enrichedItems) {
     'respiratory therapy', 'behavioral health', 'rehabilitation',
     'other therapeutic',
     // Other common departments
-    'blood', 'special services', 'audiology', 'iv therapy',
+    'blood', 'special services', 'audiology', 'iv therapy', 'miscellaneous',
     'medical/surgical', 'professional or physician', 'professional fee',
-    'extension of'
+    'extension of', 'room and bed'
   ];
   var deptMatchCount = 0;
   (extracted.line_items || []).forEach(function(item) {
@@ -218,7 +218,18 @@ function detectSummaryBill(extracted, enrichedItems) {
   // It's a summary bill if: very few CPT matches AND most items look like departments
   var matchRate = totalItems > 0 ? matchedCount / totalItems : 0;
   var deptRate = totalItems > 0 ? deptMatchCount / totalItems : 0;
-  return matchRate < 0.15 && deptRate > 0.4;
+
+  // Also check fair value coverage: if matched fair values cover less than 5% of total billed,
+  // it's effectively a summary bill even if CPT mapping matched a couple of therapy codes
+  var totalFairValue = 0;
+  enrichedItems.forEach(function(item) {
+    if (item.total_fair) totalFairValue += item.total_fair;
+  });
+  var fairCoverage = totalBilled > 0 ? totalFairValue / totalBilled : 0;
+
+  if (matchRate < 0.15 && deptRate > 0.4) return true;
+  if (fairCoverage < 0.05 && deptRate > 0.4 && totalBilled > 1000) return true;
+  return false;
 }
 
 // ── CHANGE 4b: Build summary bill response ──────────────────
