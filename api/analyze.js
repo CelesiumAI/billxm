@@ -450,7 +450,7 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
     date_of_service: dos,
     total_billed: totalBilled,
     estimated_fair_value: estimatedFairValue,
-    potential_savings: potentialSavings,
+    potential_savings: null, // Don't show OVERCHARGED for PENDING -- we can't verify without itemized bill
     drg_estimate: drgEstimate ? {
       drg_code: drgEstimate.code,
       drg_description: drgEstimate.desc,
@@ -914,6 +914,25 @@ module.exports = async function handler(req, res) {
     var itemCount = (extracted.line_items || []).length;
     console.log('Extracted: ' + itemCount + ' items, total: $' + extractedTotal.toFixed(2));
 
+    // ── FIX: If Haiku reported total_before_adjustments < total_billed, use it ──
+    // This means Haiku saw discounts/adjustments but may have included them in line_items
+    if (extracted.total_before_adjustments > 0 && extracted.total_before_adjustments < extractedTotal) {
+      console.log('Using total_before_adjustments: $' + extracted.total_before_adjustments.toFixed(2) + ' (was $' + extractedTotal.toFixed(2) + ')');
+      extractedTotal = extracted.total_before_adjustments;
+      extracted.total_billed = extracted.total_before_adjustments;
+    }
+
+    // ── FIX: If Haiku reported adjustments, the real total is total + adjustments ──
+    // adjustments are negative, so total_billed + adjustments = net charges
+    if (!extracted.total_before_adjustments && extracted.adjustments && extracted.adjustments < 0) {
+      var adjustedTotal = extractedTotal + extracted.adjustments; // adjustments is negative
+      if (adjustedTotal > 0 && adjustedTotal < extractedTotal) {
+        console.log('Adjusting total by reported adjustments: $' + extractedTotal.toFixed(2) + ' + $' + extracted.adjustments.toFixed(2) + ' = $' + adjustedTotal.toFixed(2));
+        // Don't auto-apply -- but use it as a reference for the line item filter
+        extracted._expectedTotal = adjustedTotal;
+      }
+    }
+
     // ── Validate: do line items sum match stated total? ──
     var lineItemSum = 0;
     (extracted.line_items || []).forEach(function(item) { lineItemSum += (item.billed || 0); });
@@ -1033,6 +1052,41 @@ module.exports = async function handler(req, res) {
           var newSum = 0;
           extracted.line_items.forEach(function(item) { newSum += (item.billed || 0); });
           console.log('After sanity check: ' + extracted.line_items.length + ' items, $' + newSum.toFixed(2));
+        }
+      }
+
+      // ── FIX: Last resort -- if total_before_adjustments suggests items still include a discount ──
+      // Discounts/account balance lines are always the LAST items on a bill
+      // If removing the last 1-2 items brings total closer to total_before_adjustments, they're discounts
+      var targetTotal = extracted.total_before_adjustments || extracted._expectedTotal || 0;
+      if (targetTotal > 0 && extracted.line_items.length > 3) {
+        var currentSum = 0;
+        extracted.line_items.forEach(function(item) { currentSum += (item.billed || 0); });
+        var currentGap = Math.abs(currentSum - targetTotal);
+
+        if (currentGap > targetTotal * 0.10) { // more than 10% off from expected
+          // Try removing just the last item
+          var lastItem = extracted.line_items[extracted.line_items.length - 1];
+          var sumWithoutLast = currentSum - (lastItem.billed || 0);
+          var gapWithoutLast = Math.abs(sumWithoutLast - targetTotal);
+
+          if (gapWithoutLast < currentGap * 0.5) { // removing last item gets us at least 50% closer
+            console.log('BOTTOM-OF-BILL: Removed last item as suspected discount: "' + lastItem.description + '" $' + (lastItem.billed || 0).toFixed(2) + ' (gap reduced from $' + currentGap.toFixed(2) + ' to $' + gapWithoutLast.toFixed(2) + ')');
+            extracted.line_items.pop();
+            currentSum = sumWithoutLast;
+            currentGap = gapWithoutLast;
+
+            // Try removing the new last item too (account balance after discount)
+            if (currentGap > targetTotal * 0.05 && extracted.line_items.length > 3) {
+              var nextLast = extracted.line_items[extracted.line_items.length - 1];
+              var sumWithoutTwo = currentSum - (nextLast.billed || 0);
+              var gapWithoutTwo = Math.abs(sumWithoutTwo - targetTotal);
+              if (gapWithoutTwo < currentGap * 0.5) {
+                console.log('BOTTOM-OF-BILL: Also removed: "' + nextLast.description + '" $' + (nextLast.billed || 0).toFixed(2));
+                extracted.line_items.pop();
+              }
+            }
+          }
         }
       }
 

@@ -19,7 +19,9 @@
       "Bash(cp -r api/ ../billxm_backup_v1.0/api/)",
       "Bash(cp index.html ../billxm_backup_v1.0/index.html)",
       "Bash(cp package.json ../billxm_backup_v1.0/package.json)",
-      "Bash(cp vercel.json ../billxm_backup_v1.0/vercel.json)"
+      "Bash(cp vercel.json ../billxm_backup_v1.0/vercel.json)",
+      "Bash(node reset_counters.js)",
+      "Bash(rm:*)"
     ]
   }
 }
