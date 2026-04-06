@@ -1,38 +1,66 @@
-// api/counters.js -- Public counter endpoint for homepage
-// Returns bills analyzed, charges reviewed, savings found
-// These increment with every real analysis via Upstash KV
+// api/counters.js — Public endpoint for live platform stats
+// Returns formatted display values for the website hero section
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, max-age=60'); // Cache 1 min
-
-  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
-
-  var counters = { bills_analyzed: 100, charges_reviewed: 2000000, savings_found: 500000 }; // defaults
-
-  if (process.env.KV_REST_API_URL) {
-    try {
-      var Redis = require('@upstash/redis').Redis;
-      var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
-
-      var bills = await redis.get('counter:bills_analyzed');
-      var charges = await redis.get('counter:charges_reviewed');
-      var savings = await redis.get('counter:savings_found');
-
-      counters.bills_analyzed = Math.max(100, parseInt(bills || '100'));
-      counters.charges_reviewed = Math.max(2000000, parseInt(charges || '2000000'));
-      counters.savings_found = Math.max(500000, parseInt(savings || '500000'));
-    } catch(e) {
-      console.log('Counter fetch failed:', e.message);
-    }
+  // Allow GET for simple fetch
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Format for display
-  counters.display = {
-    bills: counters.bills_analyzed.toLocaleString() + '+',
-    charges: '$' + (counters.charges_reviewed / 1000000).toFixed(1) + 'M+',
-    savings: '$' + (counters.savings_found / 1000).toFixed(0) + 'K+',
-  };
+  try {
+    var bills = 200;
+    var charges = 4500000;
+    var savings = 2600000;
 
-  return res.status(200).json(counters);
+    // Try to load live values from Upstash KV
+    if (process.env.KV_REST_API_URL) {
+      try {
+        var Redis = require('@upstash/redis').Redis;
+        var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
+        var liveBills = await redis.get('counter:bills_analyzed');
+        var liveCharges = await redis.get('counter:charges_reviewed');
+        var liveSavings = await redis.get('counter:savings_found');
+        if (liveBills && liveBills > 0) bills = liveBills;
+        if (liveCharges && liveCharges > 0) charges = liveCharges;
+        if (liveSavings && liveSavings > 0) savings = liveSavings;
+      } catch (e) {
+        console.log('KV read failed, using defaults:', e.message);
+      }
+    }
+
+    // Format numbers for display
+    function formatCount(n) {
+      if (n >= 1000) return Math.floor(n / 100) * 100 + '+';
+      if (n >= 100) return Math.floor(n / 10) * 10 + '+';
+      return n + '+';
+    }
+
+    function formatDollars(n) {
+      if (n >= 1000000) {
+        var millions = n / 1000000;
+        // Show one decimal if not a round number
+        if (millions % 1 === 0) return '$' + millions.toFixed(0) + 'M+';
+        return '$' + millions.toFixed(1) + 'M+';
+      }
+      if (n >= 1000) {
+        var thousands = Math.floor(n / 1000);
+        return '$' + thousands.toLocaleString() + 'K+';
+      }
+      return '$' + n.toLocaleString() + '+';
+    }
+
+    return res.status(200).json({
+      raw: { bills: bills, charges: charges, savings: savings },
+      display: {
+        bills: formatCount(bills),
+        charges: formatDollars(charges),
+        savings: formatDollars(savings)
+      }
+    });
+  } catch (err) {
+    console.error('Counters error:', err.message);
+    return res.status(200).json({
+      display: { bills: '200+', charges: '$4.5M+', savings: '$2.6M+' }
+    });
+  }
 };

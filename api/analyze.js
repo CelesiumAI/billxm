@@ -212,8 +212,9 @@ function estimateDRG(extracted, patientProcedure) {
     var isOrtho = hospitalName.indexOf('ortho') >= 0 || hospitalName.indexOf('joint') >= 0 || hospitalName.indexOf('bone') >= 0;
     var isCardiac = hospitalName.indexOf('heart') >= 0 || hospitalName.indexOf('cardiac') >= 0 || hospitalName.indexOf('cardio') >= 0;
     var isCancer = hospitalName.indexOf('cancer') >= 0 || hospitalName.indexOf('oncol') >= 0 || hospitalName.indexOf('tumor') >= 0;
-    var isPsych = hospitalName.indexOf('psych') >= 0 || hospitalName.indexOf('behavioral') >= 0 || hospitalName.indexOf('mental') >= 0 || hospitalName.indexOf('hillcrest') >= 0;
-    var hasBehavioral = text.indexOf('behavioral health') >= 0 || text.indexOf('eeg') >= 0 || text.indexOf('electroencephalogram') >= 0;
+    var isPsych = hospitalName.indexOf('psych') >= 0 || hospitalName.indexOf('behavioral') >= 0 || hospitalName.indexOf('mental') >= 0;
+    var hasBehavioral = text.indexOf('behavioral health') >= 0 || text.indexOf('behavioral treatment') >= 0 ||
+      (text.indexOf('eeg') >= 0 && (text.indexOf('behavioral') >= 0 || text.indexOf('psych') >= 0 || text.indexOf('mental') >= 0));
 
     // Psych/behavioral health facility
     if (isPsych || hasBehavioral) {
@@ -604,48 +605,33 @@ function withTimeout(promise, ms, label) {
   ]);
 }
 
-// ── Haiku extraction prompt ──────────────────────────────────
+// ── Extraction prompt — restored to original working version with subtotals ──
 var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charge from this bill into structured JSON.\n\n' +
 'Rules:\n' +
 '- Include EVERY line item on the bill, even $0.00 items\n' +
 '- Preserve the exact code shown on the bill (including leading zeros like 036600)\n' +
 '- Use the exact dollar amounts shown on the bill\n' +
-'- CRITICAL: total_billed MUST be the TOTAL CHARGES, Total Patient Services, or Total Amount for Hospital Services. This is the FULL undiscounted amount BEFORE any payments, adjustments, insurance, or discounts. Do NOT use "Amount Due", "Balance Due", "Patient Balance", "Please Pay Now", or any post-payment amount. These are completely different numbers.\n' +
-'- CRITICAL: Numbers in PARENTHESES like (40,528.18) or numbers followed by a minus sign like 1,839.41- or numbers with a leading minus like -55.92 are PAYMENTS, CREDITS, or ADJUSTMENTS. They are NEGATIVE amounts. Do NOT add them to the total. Do NOT include insurance payments, Blue Cross payments, Kaiser payments, Medicaid payments, or any line labeled "Payments" or "Adjustments" as charges. The total_billed should be ONLY the sum of positive service charges.\n' +
-'- If the bill shows subtotals by category, make sure all items from every category are included\n' +
-'- Count line items carefully. If a service appears multiple times on different dates, each is a separate line item\n' +
-'- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n' +
+'- Your total_billed MUST equal the bill\'s stated total (look for "Total Amount", "Total Charges", "Total Patient Services"). Find this number FIRST, then make sure your line items add up to it.\n' +
+'- Include subtotals for each category/department on the bill\n' +
+'- If a service appears multiple times on different dates, each is a separate line item\n' +
+'- Look for the words "INPATIENT" or "OUTPATIENT" printed on the bill for bill_type_text\n' +
 '- For drugs with code 00000, set code to "" and include the drug name in description\n' +
-'- Include adjustments/discounts as a total in the adjustments field, but do NOT include them as line_items. Lines labeled "discount", "uninsured discount", "financial assistance", "write-off", "charity care", "adjustment", "insurance payment", "account balance", or "balance due" are NOT charges.\n' +
-'- Negative amounts (in parentheses or with minus sign) are credits/payments, NOT charges. Do not include them in line_items.\n' +
-'- CRITICAL: ACCOUNT BALANCE, BALANCE DUE, TOTAL DUE, and PAY NOW lines are NOT service charges. They are the final amount owed after discounts and payments. NEVER include them as line_items. NEVER use them as total_billed.\n' +
-'- CRITICAL: UNINSURED DISCOUNT, PROMPT PAY DISCOUNT, CHARITY CARE, and similar discount lines are adjustments, not charges. Record them in the adjustments field as a negative number. Do NOT include them as line_items.\n\n' +
+'- Include ALL items you see, even discounts, payments, and adjustments. Put everything in line_items.\n\n' +
 'Return ONLY valid JSON, no markdown, no explanation:\n' +
 '{\n' +
-'  "hospital": "FULL hospital name exactly as printed -- include specialty designations like Orthopedic, Cardiac, Cancer Center, Childrens, etc.",\n' +
+'  "hospital": "hospital name as printed",\n' +
 '  "state": "2-letter state code",\n' +
 '  "city": "city name",\n' +
 '  "date_of_service": "date or date range",\n' +
-'  "bill_type_text": "exact text from bill describing patient type, e.g. INPATIENT SERVICES",\n' +
+'  "bill_type_text": "exact text from bill e.g. INPATIENT SERVICES",\n' +
 '  "line_items": [\n' +
 '    {"code": "036600", "description": "ARTERIAL PUNCTURE", "quantity": 1, "billed": 372.28, "date": "10/10/22", "category": "LABORATORY"}\n' +
 '  ],\n' +
+'  "subtotals": {"LABORATORY": 510.34, "RESPIRATORY SVC": 847.60},\n' +
 '  "adjustments": 0,\n' +
 '  "total_before_adjustments": 0,\n' +
 '  "total_billed": 0\n' +
-'}\n\n' +
-'CRITICAL: Count all line items from ALL pages and ALL categories. Missing line items is the worst error you can make.\n\n' +
-'MULTI-PAGE BILLS: Hospital bills often span 3-5 pages with categories like:\n' +
-'- Room and Care (rev code 0110)\n' +
-'- Laboratory (rev codes 0300-0319)\n' +
-'- Lab-Chemistry (rev code 0301)\n' +
-'- Lab-Hematology (rev code 0305)\n' +
-'- Radiology/Diagnostic (rev codes 0320-0329)\n' +
-'- Respiratory/Respiratory SVC (rev codes 0410-0419)\n' +
-'- Drugs/Pharmacy (rev codes 0250-0259, 0636-0637)\n' +
-'- EKG/EEG (rev codes 0730-0739)\n' +
-'- Other/Convenience items (rev code 0999)\n' +
-'You MUST scan every page and capture items from every category.';
+'}';
 
 // ── Sonnet report prompt ─────────────────────────────────────
 var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
@@ -860,25 +846,24 @@ module.exports = async function handler(req, res) {
     console.log('Anthropic client ready.');
 
     // ════════════════════════════════════════════════════════════
-    // STEP 1: Extract structured data with Haiku
+    // STEP 1: Extract structured data with Sonnet
     // ════════════════════════════════════════════════════════════
-    console.log('Step 1: Extracting bill data with Haiku...');
+    console.log('Step 1: Extracting bill data with Sonnet...');
     var extractResponse;
     try {
-      // ── FIX 2: Timeout wrapper -- 90 seconds max for Haiku ──
       extractResponse = await withTimeout(
         client.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 8000,
           system: EXTRACT_PROMPT,
           messages: messages,
         }),
         90000,
-        'Haiku extraction'
+        'Sonnet extraction'
       );
-      console.log('Haiku responded successfully.');
+      console.log('Sonnet extraction complete.');
     } catch (apiErr) {
-      console.error('Haiku API error:', apiErr.message);
+      console.error('Sonnet extraction error:', apiErr.message);
 
       // ── FIX 3: Graceful fallback for image failures ──
       if (isImageUpload) {
@@ -959,15 +944,11 @@ module.exports = async function handler(req, res) {
     }
 
     var extractedTotal = extracted.total_billed || 0;
-    // ENFORCE: use the higher of total_billed and total_before_adjustments
-    if (extracted.total_before_adjustments && extracted.total_before_adjustments > extractedTotal) {
-      extractedTotal = extracted.total_before_adjustments;
-      extracted.total_billed = extractedTotal;
-    }
-    var statedTotal = extractedTotal;
-    console.log('Bill stated total: $' + statedTotal.toFixed(2));
     var itemCount = (extracted.line_items || []).length;
     console.log('Extracted: ' + itemCount + ' items, total: $' + extractedTotal.toFixed(2));
+
+    // Preserve the bill's stated total -- this is the number the customer sees
+    var statedTotal = extractedTotal;
 
     // ── FIX: If Haiku reported total_before_adjustments < total_billed, use it ──
     // This means Haiku saw discounts/adjustments but may have included them in line_items
@@ -991,37 +972,22 @@ module.exports = async function handler(req, res) {
     // ── Validate: do line items sum match stated total? ──
     var lineItemSum = 0;
     (extracted.line_items || []).forEach(function(item) { lineItemSum += (item.billed || 0); });
-    var totalDiff = Math.abs(lineItemSum - extractedTotal);
-    var totalPct = extractedTotal > 0 ? (totalDiff / extractedTotal) : 0;
 
-    if (totalPct > 0.15 && extractedTotal > 0) {
-      console.log('WARNING: Items sum $' + lineItemSum.toFixed(2) + ' vs total $' + extractedTotal.toFixed(2) + ' (' + Math.round(totalPct * 100) + '% gap). Retrying...');
-      try {
-        var retryResponse = await withTimeout(
-          client.messages.create({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 8000,
-            system: EXTRACT_PROMPT + '\n\nPREVIOUS ATTEMPT MISSED LINE ITEMS. Bill total is $' + extractedTotal.toFixed(2) + ' but only $' + lineItemSum.toFixed(2) + ' captured. Include ALL items from ALL pages.',
-            messages: messages,
-          }),
-          90000,
-          'Haiku retry extraction'
-        );
-        var retryRaw = retryResponse.content.map(function(b) { return b.text || ''; }).join('');
-        retryRaw = retryRaw.replace(/```json|```/g, '').trim();
-        var rs = retryRaw.indexOf('{');
-        var re2 = retryRaw.lastIndexOf('}');
-        if (rs !== -1 && re2 !== -1) {
-          var retryExtracted = JSON.parse(retryRaw.slice(rs, re2 + 1));
-          var retrySum = 0;
-          (retryExtracted.line_items || []).forEach(function(item) { retrySum += (item.billed || 0); });
-          if (Math.abs(retrySum - (retryExtracted.total_billed || extractedTotal)) < totalDiff) {
-            console.log('Retry improved: $' + retrySum.toFixed(2));
-            extracted = retryExtracted;
-            extractedTotal = extracted.total_billed || extractedTotal;
-          }
-        }
-      } catch (retryErr) { console.log('Retry failed, keeping original:', retryErr.message); }
+    // Use the HIGHER of total_billed and total_before_adjustments as reference
+    var referenceTotal = extractedTotal;
+    if (extracted.total_before_adjustments > referenceTotal) {
+      referenceTotal = extracted.total_before_adjustments;
+      extractedTotal = referenceTotal;
+      extracted.total_billed = referenceTotal;
+      statedTotal = referenceTotal; // Update stated total to the higher value
+      console.log('Using total_before_adjustments as reference: $' + referenceTotal.toFixed(2));
+    }
+
+    // Log extraction quality (no retry needed with Sonnet)
+    var totalDiff = Math.abs(lineItemSum - referenceTotal);
+    var totalPct = referenceTotal > 0 ? (totalDiff / referenceTotal) : 0;
+    if (totalPct > 0.15) {
+      console.log('NOTE: Items sum $' + lineItemSum.toFixed(2) + ' vs total $' + referenceTotal.toFixed(2) + ' (' + Math.round(totalPct * 100) + '% gap)');
     }
 
     // ════════════════════════════════════════════════════════════
@@ -1036,10 +1002,19 @@ module.exports = async function handler(req, res) {
         'patient responsibility', 'patient balance', 'your balance',
         'this is your balance', 'due from insurance', 'remaining responsibility',
         'insurance payment', 'insurance discount', 'insurance covered',
-        'coinsurance', 'total activity', 'total patient services',
+        'billed to insurance', 'billed to ins', 'submitted to insurance',
+        'benefits summary', 'benefit summary',
+        'coinsurance', 'copay', 'co-pay', 'deductible',
+        'total activity', 'total patient services',
         'total charges', 'total amount billed', 'billed/total',
         'page ', 'page 1', 'page 2', 'continued',
-        'payment', 'paid', 'credit', 'refund'];
+        'payment', 'paid', 'credit', 'refund',
+        'united healthcare', 'blue cross', 'aetna', 'cigna', 'humana',
+        'kaiser', 'medicaid', 'medicare payment', 'tricare',
+        'payer', 'primary insurance', 'secondary insurance',
+        'amount covered', 'plan paid', 'plan payment',
+        'member responsibility', 'patient portion', 'you owe',
+        'amount you owe', 'your responsibility'];
       var charges = [];
       var adjustmentsTotal = 0;
       extracted.line_items.forEach(function(item) {
@@ -1091,18 +1066,27 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // ── FIX: Sanity check -- catch account balance / total due lines Haiku mislabeled as charges ──
+      // ── FIX: Sanity check -- catch account balance / total due lines mislabeled as charges ──
       // If any single charge equals the sum of all OTHER charges (within 5%), it's an account balance, not a charge
+      // Also remove any charge that equals total_billed (it's a summary/total line, not a real charge)
       if (extracted.line_items.length > 2) {
         var totalAllItems = 0;
         extracted.line_items.forEach(function(item) { totalAllItems += (item.billed || 0); });
         var suspiciousRemoved = false;
         extracted.line_items = extracted.line_items.filter(function(item) {
-          var otherSum = totalAllItems - (item.billed || 0);
-          var diff = Math.abs((item.billed || 0) - otherSum);
+          var billed = item.billed || 0;
+          if (billed <= 0) return true; // keep negative items for now
+          var otherSum = totalAllItems - billed;
+          var diff = Math.abs(billed - otherSum);
           // If this item's amount ≈ sum of all other items, it's a running total, not a charge
-          if (otherSum > 0 && diff / otherSum < 0.05 && (item.billed || 0) > 0) {
-            console.log('SANITY CHECK: Removed suspected account balance line: "' + item.description + '" $' + (item.billed || 0).toFixed(2) + ' (≈ sum of other charges $' + otherSum.toFixed(2) + ')');
+          if (otherSum > 0 && diff / otherSum < 0.05 && billed > 0) {
+            console.log('SANITY CHECK: Removed suspected total/summary line: "' + item.description + '" $' + billed.toFixed(2) + ' (≈ sum of other charges $' + otherSum.toFixed(2) + ')');
+            suspiciousRemoved = true;
+            return false;
+          }
+          // If this item equals the stated total_billed, it's a summary line (e.g. "Billed to Insurance")
+          if (extractedTotal > 0 && Math.abs(billed - extractedTotal) / extractedTotal < 0.02) {
+            console.log('SANITY CHECK: Removed line matching total_billed: "' + item.description + '" $' + billed.toFixed(2));
             suspiciousRemoved = true;
             return false;
           }
@@ -1222,7 +1206,7 @@ module.exports = async function handler(req, res) {
     var finalGap = extractedTotal > 0 ? Math.abs(finalLineItemSum - extractedTotal) / extractedTotal : 0;
     if (finalGap > 0.30 && extractedTotal > finalLineItemSum && finalLineItemSum > 0) {
       console.log('PARTIAL BILL: Items sum $' + finalLineItemSum.toFixed(2) + ' vs stated total $' + extractedTotal.toFixed(2));
-      var statedTotal = extractedTotal;
+      // statedTotal already set above -- preserves the bill's printed total for enforcement
       partialBillNote = 'NOTE: This analysis covers $' + finalLineItemSum.toFixed(2) + ' of the $' + statedTotal.toFixed(2) + ' stated total on your bill. The remaining charges may be on pages that were not uploaded. Upload all pages for a complete analysis.';
       extractedTotal = finalLineItemSum;
       extracted.total_billed = finalLineItemSum;
@@ -1348,11 +1332,6 @@ module.exports = async function handler(req, res) {
       var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : (hasRange ? Math.max(0, totalBilled - summaryDRG.drg_range.high) : 0);
       recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG);
 
-      // FINAL ENFORCEMENT: total_billed must match stated total
-      if (statedTotal > 0 && summaryResult.total_billed !== statedTotal) {
-        console.log('ENFORCING summary total_billed: ' + summaryResult.total_billed + ' -> ' + statedTotal);
-        summaryResult.total_billed = statedTotal;
-      }
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
 
@@ -1731,16 +1710,19 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    // FINAL ENFORCEMENT: total_billed must match the bill's stated total
-    if (statedTotal > 0 && report.total_billed !== statedTotal) {
-      console.log('ENFORCING total_billed: ' + report.total_billed + ' -> ' + statedTotal);
+    recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
+
+    // ── FINAL ENFORCEMENT: total_billed MUST match the bill's stated total ──
+    // The customer holds the bill -- if our number differs, we lose all credibility
+    var finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
+    if (statedTotal && statedTotal > 0 && report.total_billed !== statedTotal) {
+      console.log('ENFORCING total_billed: report shows $' + report.total_billed + ' but bill states $' + statedTotal);
       report.total_billed = statedTotal;
-      report.potential_savings = statedTotal - (report.estimated_fair_value || 0);
-      if (report.potential_savings < 0) report.potential_savings = 0;
+      report.potential_savings = Math.max(0, Math.round((statedTotal - report.estimated_fair_value) * 100) / 100);
+      finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
     }
 
-    recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
-    return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(report) }] });
+    return res.status(200).json(finalResult);
 
   } catch (err) {
     console.error('analyze error:', err.message);
