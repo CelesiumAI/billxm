@@ -1840,6 +1840,57 @@ module.exports = async function handler(req, res) {
       console.log('DRG ENFORCEMENT: fair_value=$' + drgEstimate.drg_payment.toFixed(2) + ', savings=$' + report.potential_savings.toFixed(2));
     }
 
+    // ── GRADE ENFORCEMENT: grade must match the actual overcharge percentage ──
+    var enforcedOverchargePct = report.total_billed > 0 ? Math.round((report.potential_savings / report.total_billed) * 100) : 0;
+    var correctGrade;
+    if (enforcedOverchargePct < 10) correctGrade = 'A';
+    else if (enforcedOverchargePct < 25) correctGrade = 'B';
+    else if (enforcedOverchargePct < 50) correctGrade = 'C';
+    else if (enforcedOverchargePct < 75) correctGrade = 'D';
+    else correctGrade = 'F';
+    if (report.grade && report.grade !== correctGrade) {
+      console.log('GRADE ENFORCEMENT: ' + report.grade + ' -> ' + correctGrade + ' (' + enforcedOverchargePct + '%)');
+      report.grade = correctGrade;
+    }
+
+    // ── NARRATIVE ENFORCEMENT: summary must match the enforced numbers ──
+    // Sonnet sometimes invents its own totals in the narrative text.
+    // Strip any sentence with wrong dollar amounts and append the correct closing.
+    if (report.summary) {
+      var enforcedBilled = report.total_billed;
+      var enforcedFair = report.estimated_fair_value;
+      var enforcedSavings = report.potential_savings;
+      var sentences = report.summary.split(/(?<=\.)\s+/);
+      var cleaned = sentences.filter(function(s) {
+        var lower = s.toLowerCase();
+        // Remove sentences that state wrong total savings or wrong bill totals
+        if ((lower.indexOf('total potential savings') >= 0 || lower.indexOf('total savings') >= 0 ||
+             lower.indexOf('overall savings') >= 0 || lower.indexOf('out of a $') >= 0) &&
+            s.indexOf('$' + enforcedSavings.toLocaleString()) < 0 && s.indexOf('$' + enforcedBilled.toLocaleString()) < 0) {
+          console.log('NARRATIVE STRIP: ' + s.substring(0, 80));
+          return false;
+        }
+        // Remove sentences that claim a different total bill amount
+        var dollarMatches = s.match(/\$[\d,]+\.?\d*/g) || [];
+        for (var dm = 0; dm < dollarMatches.length; dm++) {
+          var val = parseFloat(dollarMatches[dm].replace(/[$,]/g, ''));
+          // If a sentence claims to be the total bill but uses a wrong number
+          if ((lower.indexOf('total bill') >= 0 || lower.indexOf('total charge') >= 0 || lower.indexOf('your bill of') >= 0) &&
+              val > 1000 && Math.abs(val - enforcedBilled) > 100 && Math.abs(val - enforcedSavings) > 100 && Math.abs(val - enforcedFair) > 100) {
+            console.log('NARRATIVE STRIP (wrong total): ' + s.substring(0, 80));
+            return false;
+          }
+        }
+        return true;
+      });
+      // Append the correct closing sentence
+      var drgNote = drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE' ?
+        ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + enforcedFair.toLocaleString() + '.' : '';
+      cleaned.push('Your total bill of $' + enforcedBilled.toLocaleString() + ' has $' + enforcedSavings.toLocaleString() + ' in potential savings.' + drgNote);
+      report.summary = cleaned.join(' ');
+      console.log('NARRATIVE ENFORCED: ' + report.summary.substring(report.summary.length - 120));
+    }
+
     // ── FINAL ENFORCEMENT: total_billed MUST match the bill's stated total ──
     // The customer holds the bill -- if our number differs, we lose all credibility
     var finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
