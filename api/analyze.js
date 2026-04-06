@@ -89,17 +89,45 @@ function getFairRate(code, state, city) {
 function detectBillType(extracted) {
   var text = (extracted.bill_type_text || '').toLowerCase();
   if (text.indexOf('inpatient') >= 0) return 'INPATIENT';
-  if (text.indexOf('outpatient') >= 0) return 'OUTPATIENT';
-  if (text.indexOf('emergency') >= 0) return 'OUTPATIENT';
+  // "EMERGENCY-IP" means ER admission to inpatient
+  if (text.indexOf('emergency-ip') >= 0 || text.indexOf('emergency ip') >= 0) return 'INPATIENT';
   if (text.indexOf('observation') >= 0) return 'OUTPATIENT';
+
+  // Check for ER codes and ER department descriptions
   var hasER = false;
+  var hasMultiDayRoom = false;
+  var hasERDept = false;
+  var roomCount = 0;
+
   (extracted.line_items || []).forEach(function(item) {
     var c = normalizeCode(item.code);
     if (['99281','99282','99283','99284','99285'].indexOf(c) >= 0) hasER = true;
+    var desc = (item.description || '').toLowerCase();
+    // Check for ER department-level charges
+    if (desc.indexOf('emerg') >= 0 || desc.indexOf('emergency') >= 0 || desc.indexOf('ed care') >= 0 || desc.indexOf('ed visit') >= 0 || desc.indexOf('ed level') >= 0) hasERDept = true;
+    // Check for room/board charges (each line = ~1 day)
+    if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('bed') >= 0 ||
+        desc.indexOf('r&b') >= 0 || desc.indexOf('r & b') >= 0 || desc.indexOf('nursing') >= 0) {
+      roomCount++;
+      if (roomCount >= 2) hasMultiDayRoom = true;
+    }
   });
-  if (hasER) return 'OUTPATIENT';
+
+  // Multi-day date range = likely inpatient
   var dos = extracted.date_of_service || '';
-  if (dos.indexOf('-') >= 0 || dos.indexOf('to') >= 0 || dos.indexOf('thru') >= 0) return 'INPATIENT';
+  var hasDateRange = dos.indexOf('-') >= 0 || dos.indexOf('to') >= 0 || dos.indexOf('thru') >= 0;
+
+  // ER-to-inpatient: ER charges + multi-day room OR date range
+  if ((hasER || hasERDept) && (hasMultiDayRoom || hasDateRange)) {
+    return 'INPATIENT';
+  }
+
+  // Pure ER visit (no multi-day stay)
+  if (hasER || hasERDept) return 'OUTPATIENT';
+  // Pure outpatient with ER text
+  if (text.indexOf('outpatient') >= 0 || text.indexOf('emergency') >= 0) return 'OUTPATIENT';
+  // Date range without ER = inpatient
+  if (hasDateRange) return 'INPATIENT';
   return 'OUTPATIENT';
 }
 
@@ -142,6 +170,8 @@ function estimateDRG(extracted, patientProcedure) {
     if (proc.indexOf('lung cancer') >= 0 || proc.indexOf('lobectomy') >= 0) candidates.push('163', '164', '165');
     if (proc.indexOf('colon cancer') >= 0 || proc.indexOf('colorectal') >= 0) candidates.push('329', '330', '331');
     if (proc.indexOf('radiation') >= 0 || proc.indexOf('radiotherapy') >= 0) candidates.push('693', '694');
+    // PSYCH / BEHAVIORAL HEALTH procedures
+    if (proc.indexOf('psychiatric') >= 0 || proc.indexOf('psych') >= 0 || proc.indexOf('mental health') >= 0 || proc.indexOf('behavioral') >= 0) candidates.push('885', '886');
   }
 
   // SECOND: Diagnosis keywords from bill text
@@ -168,6 +198,9 @@ function estimateDRG(extracted, patientProcedure) {
     if (text.indexOf('cancer') >= 0 || text.indexOf('oncology') >= 0 || text.indexOf('neoplasm') >= 0 || text.indexOf('tumor') >= 0 || text.indexOf('malignant') >= 0) candidates.push('693', '694', '695');
     if (text.indexOf('radiation') >= 0 || text.indexOf('radiotherapy') >= 0) candidates.push('693', '694');
     if (text.indexOf('seizure') >= 0 || text.indexOf('epilep') >= 0) candidates.push('101', '100');
+    // PSYCH / BEHAVIORAL HEALTH
+    if (text.indexOf('behavioral health') >= 0 || text.indexOf('psychiatric') >= 0 || text.indexOf('psych') >= 0 || text.indexOf('mental health') >= 0) candidates.push('885', '886');
+    if (text.indexOf('eeg') >= 0 && text.indexOf('behavioral') >= 0) candidates.push('885', '886');
   }
 
   // THIRD: Hospital name + bill pattern clues
@@ -179,6 +212,21 @@ function estimateDRG(extracted, patientProcedure) {
     var isOrtho = hospitalName.indexOf('ortho') >= 0 || hospitalName.indexOf('joint') >= 0 || hospitalName.indexOf('bone') >= 0;
     var isCardiac = hospitalName.indexOf('heart') >= 0 || hospitalName.indexOf('cardiac') >= 0 || hospitalName.indexOf('cardio') >= 0;
     var isCancer = hospitalName.indexOf('cancer') >= 0 || hospitalName.indexOf('oncol') >= 0 || hospitalName.indexOf('tumor') >= 0;
+    var isPsych = hospitalName.indexOf('psych') >= 0 || hospitalName.indexOf('behavioral') >= 0 || hospitalName.indexOf('mental') >= 0 || hospitalName.indexOf('hillcrest') >= 0;
+    var hasBehavioral = text.indexOf('behavioral health') >= 0 || text.indexOf('eeg') >= 0 || text.indexOf('electroencephalogram') >= 0;
+
+    // Psych/behavioral health facility
+    if (isPsych || hasBehavioral) {
+      return {
+        code: 'RANGE',
+        desc: 'Psychiatric/behavioral health admission. Tell us your diagnosis for a precise benchmark.',
+        payment: 0,
+        los: 0,
+        admission_type: 'MEDICAL',
+        drg_range: { low: 5000, high: 15000, typical_drg: '885', typical_desc: 'Psychoses' },
+        prompt_procedure: true
+      };
+    }
 
     // Cancer center
     if (isCancer || text.indexOf('chemo drugs') >= 0 || text.indexOf('infusion') >= 0) {
@@ -563,7 +611,7 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '- Preserve the exact code shown on the bill (including leading zeros like 036600)\n' +
 '- Use the exact dollar amounts shown on the bill\n' +
 '- CRITICAL: total_billed MUST be the TOTAL CHARGES, Total Patient Services, or Total Amount for Hospital Services. This is the FULL undiscounted amount BEFORE any payments, adjustments, insurance, or discounts. Do NOT use "Amount Due", "Balance Due", "Patient Balance", "Please Pay Now", or any post-payment amount. These are completely different numbers.\n' +
-'- CRITICAL: Numbers in PARENTHESES like (40,528.18) or numbers followed by a minus sign like 1,839.41- are PAYMENTS, CREDITS, or ADJUSTMENTS. They are NEGATIVE amounts. Do NOT add them to the total. Do NOT include insurance payments, Blue Cross payments, Medicaid payments, or any line labeled "Payments" or "Adjustments" as charges. The total_billed should be ONLY the sum of positive service charges.\n' +
+'- CRITICAL: Numbers in PARENTHESES like (40,528.18) or numbers followed by a minus sign like 1,839.41- or numbers with a leading minus like -55.92 are PAYMENTS, CREDITS, or ADJUSTMENTS. They are NEGATIVE amounts. Do NOT add them to the total. Do NOT include insurance payments, Blue Cross payments, Kaiser payments, Medicaid payments, or any line labeled "Payments" or "Adjustments" as charges. The total_billed should be ONLY the sum of positive service charges.\n' +
 '- If the bill shows subtotals by category, make sure all items from every category are included\n' +
 '- Count line items carefully. If a service appears multiple times on different dates, each is a separate line item\n' +
 '- Identify bill type: look for the words "INPATIENT" or "OUTPATIENT" printed on the bill\n' +
@@ -978,7 +1026,12 @@ module.exports = async function handler(req, res) {
         'financial assistance', 'courtesy', 'contractual', 'allowance',
         'account balance', 'account bal', 'acct bal', 'acct balance',
         'balance due', 'amount due', 'total due', 'pay now', 'please pay',
-        'patient responsibility', 'insurance payment',
+        'patient responsibility', 'patient balance', 'your balance',
+        'this is your balance', 'due from insurance', 'remaining responsibility',
+        'insurance payment', 'insurance discount', 'insurance covered',
+        'coinsurance', 'total activity', 'total patient services',
+        'total charges', 'total amount billed', 'billed/total',
+        'page ', 'page 1', 'page 2', 'continued',
         'payment', 'paid', 'credit', 'refund'];
       var charges = [];
       var adjustmentsTotal = 0;
