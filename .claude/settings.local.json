@@ -21,7 +21,15 @@
       "Bash(cp package.json ../billxm_backup_v1.0/package.json)",
       "Bash(cp vercel.json ../billxm_backup_v1.0/vercel.json)",
       "Bash(node reset_counters.js)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const f=fs.readFileSync\\('public/samplebills/Sample ER Bill.pdf'\\); console.log\\('Size:', f.length, 'bytes'\\); console.log\\('Pages:', \\(f.toString\\(\\).match\\(/\\\\/Type\\\\s*\\\\/Page[^s]/g\\)||[]\\).length\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const f=fs.readFileSync\\('samplebills/Sample ER Bill.pdf'\\); console.log\\('Size:', f.length, 'bytes'\\); console.log\\('Pages:', \\(f.toString\\(\\).match\\(/\\\\/Type\\\\s*\\\\/Page[^s]/g\\)||[]\\).length\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const t=fs.readFileSync\\('samplebills/Sample ER Bill.pdf','utf8'\\); const pages=t.split\\(/\\\\/Type\\\\s*\\\\/Page[^s]/\\); pages.forEach\\(\\(p,i\\)=>{if\\(i===0\\)return; const hasText=p.includes\\('/Font'\\)||p.includes\\('BT'\\); const hasImage=p.includes\\('/Image'\\)||p.includes\\('/XObject'\\); console.log\\('Page '+i+': text='+hasText+' image='+hasImage+' size='+p.length\\)}\\)\")",
+      "Bash(sed -i 's/file a complaint with the Texas Department of Insurance and the state Attorney General'\\\\''s Consumer Protection Division/file a complaint with the Better Business Bureau \\(BBB\\), the Centers for Medicare \\\\& Medicaid Services \\(CMS\\), and my state'\\\\''s Attorney General/g' index.html)",
+      "Bash(sed -i 's/I will escalate to the Texas Department of Insurance, the Office of the Texas Attorney General Consumer Protection Division, and the CMS complaint portal/I will escalate to the Better Business Bureau \\(BBB\\), the CMS complaint portal at medicare.gov, and my state'\\\\''s Attorney General/g' index.html)",
+      "Bash(sed -i 's/complaints filed with the Texas Department of Insurance, CMS complaint portal \\(medicare.gov\\\\/claims-appeals\\), and Texas Attorney General Consumer Protection Division/complaints filed with the Better Business Bureau \\(BBB\\), CMS complaint portal \\(medicare.gov\\\\/claims-appeals\\), and your state'\\\\''s Attorney General/g' index.html)",
+      "Bash(sed -i 's/the Texas Department of Insurance, the CMS complaint portal, and the Texas Attorney General Consumer Protection Division/the Better Business Bureau \\(BBB\\), the CMS complaint portal at medicare.gov, and your state'\\\\''s Attorney General/g' index.html)",
+      "Bash(sed -i 's/the Texas Department of Insurance, the CMS complaint portal at medicare.gov, and the Texas Attorney General Consumer Protection Division/the Better Business Bureau \\(BBB\\), the CMS complaint portal at medicare.gov, and your state'\\\\''s Attorney General/g' index.html)"
     ]
   }
 }

@@ -1495,7 +1495,7 @@ window.addEventListener('scroll',function(){
         </div>
         <div class="sr-escalation">
           <h4>If They Refuse or Stall</h4>
-          <div class="sr-quote" style="margin-top:10px;">"I'd like to speak with a billing supervisor. If we cannot resolve this today, I will submit a formal written dispute, file a complaint with the Texas Department of Insurance and the state Attorney General's Consumer Protection Division, and contact Memorial Hermann's Patient Advocate. Can we schedule a follow-up call with someone who has authority to adjust these charges?"</div>
+          <div class="sr-quote" style="margin-top:10px;">"I'd like to speak with a billing supervisor. If we cannot resolve this today, I will submit a formal written dispute, file a complaint with the Better Business Bureau (BBB), the Centers for Medicare & Medicaid Services (CMS), and my state's Attorney General, and contact Memorial Hermann's Patient Advocate. Can we schedule a follow-up call with someone who has authority to adjust these charges?"</div>
         </div>
       </div>
     </div>
@@ -1556,7 +1556,7 @@ Additionally, I am requesting a clinical review of the upcoding of midline cathe
 4. Adjust all charges in the enclosed BillXM report to reflect rates reasonably related to the services performed.
 5. Provide information on Memorial Hermann's Financial Assistance Policy under IRS Section 501(r).
 
-<strong>Please respond in writing within 30 days.</strong> If unresolved, I will escalate to the Texas Department of Insurance, the Office of the Texas Attorney General Consumer Protection Division, and the CMS complaint portal.
+<strong>Please respond in writing within 30 days.</strong> If unresolved, I will escalate to the Better Business Bureau (BBB), the CMS complaint portal at medicare.gov, and my state's Attorney General.
 
 Sincerely,
 
@@ -2112,7 +2112,7 @@ REQUIREMENTS:
 - If nsa_eligible is true: cite No Surprises Act (42 U.S.C. §300gg-111) and patient's federal dispute rights
 - Middle section: cite relevant Texas state protections (Texas Insurance Code §1301)
 - Closing demand paragraph: request written correction within 30 days, corrected itemized bill, and written acknowledgment of receipt
-- Escalation paragraph: state that failure to respond will result in complaints filed with the Texas Department of Insurance, CMS complaint portal (medicare.gov/claims-appeals), and Texas Attorney General Consumer Protection Division
+- Escalation paragraph: state that failure to respond will result in complaints filed with the Better Business Bureau (BBB), CMS complaint portal (medicare.gov/claims-appeals), and your state's Attorney General
 - Final paragraph: one sentence stating you look forward to resolving this matter promptly and professionally
 - Formal closing block on its own lines, exactly as follows:
   Sincerely,
@@ -2982,7 +2982,7 @@ function BillXM() {
     const dateStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
     const n = issues.length;
     const intro = `Hi, my name is [YOUR NAME] and I'm calling regarding account [ACCOUNT NUMBER]. I have reviewed my itemized bill totaling ${fmt(r.total_billed)} and identified ${n} billing issues totaling approximately ${fmt(r.potential_savings)} in potential overcharges. Could you please pull up my account?`;
-    const closing = `Before we end this call I need the following: your full name, a reference number for this call, and your direct line. If this matter is not resolved in writing within 30 days I will escalate to the Texas Department of Insurance, the CMS complaint portal at medicare.gov, and the Texas Attorney General Consumer Protection Division.`;
+    const closing = `Before we end this call I need the following: your full name, a reference number for this call, and your direct line. If this matter is not resolved in writing within 30 days I will escalate to the Better Business Bureau (BBB), the CMS complaint portal at medicare.gov, and your state's Attorney General.`;
 
     let h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>BillXM — Bill Examination Report</title>`;
     h += `<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;max-width:860px;margin:0 auto;padding:32px 24px;color:#1e293b;font-size:13px;line-height:1.5}h1{color:#0f2444;font-size:22px;margin-bottom:4px}h2{color:#0f2444;font-size:17px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin:28px 0 14px}h3{font-size:14px;margin:14px 0 8px;color:#0f2444}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#0f2444;color:white;padding:8px 6px;text-align:left;font-size:11px}td{padding:6px;border-bottom:1px solid #e2e8f0}.hero{background:linear-gradient(135deg,#0f2444,#1e3a5f);color:white;padding:24px;border-radius:12px;margin:16px 0}.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}.high{border-left:4px solid #dc2626;background:#fef2f2}.med{border-left:4px solid #d97706;background:#fffbeb}.low{border-left:4px solid #059669;background:#f0fdf4}.issue{padding:12px;border-radius:8px;margin:6px 0}.script{background:#eff6ff;border-left:3px solid #2563eb;padding:12px;border-radius:6px;margin:10px 0;font-style:italic;font-size:13px;color:#1e40af;line-height:1.7}.letter{background:#f8fafc;padding:24px;border:1px solid #e2e8f0;border-radius:8px;white-space:pre-wrap;font-family:Georgia,serif;font-size:13px;line-height:1.9;color:#1e293b}.footer{margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:11px;text-align:center}@media print{.page-break{page-break-before:always}}</style></head><body>`;
@@ -3058,7 +3058,7 @@ function BillXM() {
   const medCount = issues.filter(i => i.severity === "MEDIUM").length;
   const lowCount = issues.filter(i => i.severity === "LOW").length;
   const introText = `Hi, my name is [YOUR NAME] and I'm calling regarding account [ACCOUNT NUMBER]. I have reviewed my itemized bill totaling ${fmt(report?.total_billed)} and identified ${issues.length} billing issues totaling approximately ${fmt(report?.potential_savings)} in potential overcharges. Could you please pull up my account?`;
-  const closingText = `Before we end this call I need the following: your full name, a reference number for this call, and your direct contact number. If this matter is not resolved in writing within 30 days I will escalate to the Texas Department of Insurance, the CMS complaint portal, and the Texas Attorney General Consumer Protection Division.`;
+  const closingText = `Before we end this call I need the following: your full name, a reference number for this call, and your direct contact number. If this matter is not resolved in writing within 30 days I will escalate to the Better Business Bureau (BBB), the CMS complaint portal at medicare.gov, and your state's Attorney General.`;
 
   // ── PAYWALL MODAL ──────────────────────────────────────────
   const PLANS = [
