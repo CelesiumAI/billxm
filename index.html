@@ -2712,14 +2712,14 @@ function BillXM() {
             return pdf.getPage(pageNum).then(function(page) {
               var viewport = page.getViewport({ scale: 1.0 });
               // High quality render for reliable OCR
-              var scale = Math.min(2.5, 2400 / viewport.width);
+              var scale = Math.min(1.8, 1800 / viewport.width);
               var scaled = page.getViewport({ scale: scale });
               var canvas = document.createElement("canvas");
               canvas.width = scaled.width;
               canvas.height = scaled.height;
               var ctx = canvas.getContext("2d");
               return page.render({ canvasContext: ctx, viewport: scaled }).promise.then(function() {
-                var dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+                var dataUrl = canvas.toDataURL("image/jpeg", 0.75);
                 images.push({ page: pageNum, b64: dataUrl.split(",")[1].replace(/\s/g, "") });
               });
             });
