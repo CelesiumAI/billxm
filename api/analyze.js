@@ -959,6 +959,13 @@ module.exports = async function handler(req, res) {
     }
 
     var extractedTotal = extracted.total_billed || 0;
+    // ENFORCE: use the higher of total_billed and total_before_adjustments
+    if (extracted.total_before_adjustments && extracted.total_before_adjustments > extractedTotal) {
+      extractedTotal = extracted.total_before_adjustments;
+      extracted.total_billed = extractedTotal;
+    }
+    var statedTotal = extractedTotal;
+    console.log('Bill stated total: $' + statedTotal.toFixed(2));
     var itemCount = (extracted.line_items || []).length;
     console.log('Extracted: ' + itemCount + ' items, total: $' + extractedTotal.toFixed(2));
 
@@ -1341,6 +1348,11 @@ module.exports = async function handler(req, res) {
       var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : (hasRange ? Math.max(0, totalBilled - summaryDRG.drg_range.high) : 0);
       recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG);
 
+      // FINAL ENFORCEMENT: total_billed must match stated total
+      if (statedTotal > 0 && summaryResult.total_billed !== statedTotal) {
+        console.log('ENFORCING summary total_billed: ' + summaryResult.total_billed + ' -> ' + statedTotal);
+        summaryResult.total_billed = statedTotal;
+      }
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
 
@@ -1718,6 +1730,14 @@ module.exports = async function handler(req, res) {
         note: item.note || defaultNote
       };
     });
+
+    // FINAL ENFORCEMENT: total_billed must match the bill's stated total
+    if (statedTotal > 0 && report.total_billed !== statedTotal) {
+      console.log('ENFORCING total_billed: ' + report.total_billed + ' -> ' + statedTotal);
+      report.total_billed = statedTotal;
+      report.potential_savings = statedTotal - (report.estimated_fair_value || 0);
+      if (report.potential_savings < 0) report.potential_savings = 0;
+    }
 
     recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
     return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(report) }] });
