@@ -1347,9 +1347,19 @@ module.exports = async function handler(req, res) {
     // ── Re-detect bill type after CPT mapping ──
     var hasERCode = enrichedItems.some(function(item) { return ['99281','99282','99283','99284','99285'].indexOf(item.code) >= 0; });
     var hasObservation = enrichedItems.some(function(item) { return (item.description || '').toLowerCase().indexOf('observation') >= 0; });
+    // Only flip to OUTPATIENT if there's no multi-day room (preserve ER-to-inpatient admissions)
     if (hasERCode && billType === 'INPATIENT') {
-      billType = 'OUTPATIENT';
-      console.log('Bill type corrected to OUTPATIENT (ER code found after CPT mapping)');
+      var hasRoomCharges = enrichedItems.some(function(item) {
+        var desc = (item.description || '').toLowerCase();
+        return (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('r&b') >= 0 ||
+                desc.indexOf('bed') >= 0 || desc.indexOf('nursing') >= 0) && item.billed > 1000;
+      });
+      if (!hasRoomCharges) {
+        billType = 'OUTPATIENT';
+        console.log('Bill type corrected to OUTPATIENT (ER code found, no room charges)');
+      } else {
+        console.log('Bill type stays INPATIENT (ER code found BUT room charges present -- ER-to-inpatient admission)');
+      }
     }
 
     // ── Determine fair value based on bill type ──
@@ -1390,8 +1400,81 @@ module.exports = async function handler(req, res) {
             drgFacilityItems[di].status = 'FLAG';
           }
         }
+      } else if (drg && drg.code === 'RANGE' && drg.drg_range) {
+        // RANGE DRG: use high end as conservative estimate + CPT rates
+        var rangeHigh = drg.drg_range.high || 0;
+        estimatedFairValue = rangeHigh > 0 ? rangeHigh : totalFairCPT;
+        var rangeMarkup = totalBilled > 0 && rangeHigh > 0 ? (totalBilled / rangeHigh).toFixed(1) : 'N/A';
+        drgEstimate = {
+          drg_code: 'RANGE', drg_description: drg.desc,
+          drg_payment: rangeHigh,
+          drg_range_low: drg.drg_range.low, drg_range_high: rangeHigh,
+          markup_multiplier: rangeMarkup + 'x'
+        };
+        console.log('DRG RANGE: $' + (drg.drg_range.low || 0) + '-$' + rangeHigh + ' (' + rangeMarkup + 'x)');
+        // Mark room/board as covered by facility benchmark
+        enrichedItems.forEach(function(item) {
+          if (item.fair_rate === null && item.billed > 0) {
+            var desc = (item.description || '').toLowerCase();
+            if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care unit') >= 0 ||
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
+              item.status = 'DRG_COVERED';
+              item.type = 'facility_drg';
+              item.note = 'Facility charge -- covered by estimated DRG benchmark';
+            }
+          }
+        });
       } else {
-        estimatedFairValue = totalFairCPT;
+        // UNKNOWN DRG or no DRG match: add generic facility benchmark to CPT rates
+        // Calculate total room/facility charges on the bill
+        var facilityCharges = 0;
+        enrichedItems.forEach(function(item) {
+          if (item.fair_rate === null && item.billed > 0) {
+            var desc = (item.description || '').toLowerCase();
+            if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care') >= 0 ||
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0 ||
+                desc.indexOf('recovery') >= 0 || desc.indexOf('or services') >= 0 || desc.indexOf('operating') >= 0 ||
+                desc.indexOf('anesthesia') >= 0 || desc.indexOf('emerg') >= 0) {
+              facilityCharges += item.billed;
+            }
+          }
+        });
+
+        // Use generic DRG benchmarks based on surgical vs medical
+        var isSurgicalBill = enrichedItems.some(function(item) {
+          var desc = (item.description || '').toLowerCase();
+          return desc.indexOf('or services') >= 0 || desc.indexOf('operating') >= 0 ||
+                 desc.indexOf('surgery') >= 0 || desc.indexOf('anesthesia') >= 0 || desc.indexOf('recovery room') >= 0;
+        });
+
+        // CMS 2026 median DRG benchmarks (conservative estimates)
+        var genericFacilityBenchmark = isSurgicalBill ? 8000 : 5000; // Surgical vs Medical median
+        estimatedFairValue = totalFairCPT + genericFacilityBenchmark;
+
+        var genericDesc = isSurgicalBill ?
+          'Estimated surgical admission facility benchmark (median Medicare DRG for surgical admissions)' :
+          'Estimated medical admission facility benchmark (median Medicare DRG for medical admissions)';
+        var genericMarkup = totalBilled > 0 ? (totalBilled / estimatedFairValue).toFixed(1) : 'N/A';
+        drgEstimate = {
+          drg_code: 'ESTIMATED', drg_description: genericDesc,
+          drg_payment: genericFacilityBenchmark,
+          markup_multiplier: genericMarkup + 'x',
+          note: 'Exact DRG could not be determined. Using conservative Medicare median. Tell us your diagnosis or procedure for a precise benchmark.'
+        };
+        console.log('GENERIC facility benchmark: $' + genericFacilityBenchmark + ' (' + (isSurgicalBill ? 'surgical' : 'medical') + ') + CPT $' + totalFairCPT.toFixed(2));
+
+        // Mark facility items
+        enrichedItems.forEach(function(item) {
+          if (item.fair_rate === null && item.billed > 0) {
+            var desc = (item.description || '').toLowerCase();
+            if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care') >= 0 ||
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
+              item.status = 'DRG_COVERED';
+              item.type = 'facility_drg';
+              item.note = 'Facility charge -- estimated DRG benchmark applied. Provide procedure details for exact comparison.';
+            }
+          }
+        });
       }
     } else {
       estimatedFairValue = totalFairCPT;
