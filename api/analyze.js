@@ -1431,19 +1431,37 @@ module.exports = async function handler(req, res) {
           }
         });
         if (drgFacilityItems.length > 0) {
-          drgFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
-          drgFacilityItems[0].fair_rate = drg.payment;
-          drgFacilityItems[0].total_fair = drg.payment;
-          drgFacilityItems[0].markup_pct = drg.payment > 0 ? Math.round((drgFacilityItems[0].billed / drg.payment - 1) * 100) + '%' : 'N/A';
-          drgFacilityItems[0].note = 'Medicare DRG benchmark covers ALL facility services for this admission';
-          for (var di = 1; di < drgFacilityItems.length; di++) {
-            drgFacilityItems[di].fair_rate = 0;
-            drgFacilityItems[di].total_fair = 0;
-            drgFacilityItems[di].markup_pct = 'NOT ALLOWED';
-            drgFacilityItems[di].note = 'NOT SEPARATELY PAYABLE -- packaged into DRG payment. Dispute this charge.';
-            drgFacilityItems[di].status = 'FLAG';
+          for (var di = 0; di < drgFacilityItems.length; di++) {
+            drgFacilityItems[di].fair_rate = null;
+            drgFacilityItems[di].total_fair = null;
+            drgFacilityItems[di].markup_pct = '--';
+            drgFacilityItems[di].note = 'Packaged into DRG ' + drg.code + ' (' + (drg.desc || '').split(' ').slice(0, 6).join(' ') + ') -- not separately payable';
+            drgFacilityItems[di].status = 'DRG_COVERED';
           }
         }
+        // Tag no-code drug items as DRG-packaged (drugs are covered by DRG for inpatient)
+        var drugKeywords = ['mg', 'ml', 'gm', 'mcg', 'inh', 'inj', 'tab', 'cap', 'sol', 'srt',
+            'albuterol', 'heparin', 'saline', 'dextrose', 'sodium chloride', 'potassium',
+            'fluticasone', 'prednisone', 'morphine', 'acetaminophen', 'ibuprofen',
+            'ondansetron', 'famotidine', 'pantoprazole', 'metoprolol', 'lisinopril',
+            'amoxicillin', 'azithromycin', 'ceftriaxone', 'vancomycin', 'insulin'];
+        enrichedItems.forEach(function(item) {
+          if (item.fair_rate === null && item.billed > 0 && !item.code && item.status !== 'DRG_COVERED') {
+            var desc = (item.description || '').toLowerCase();
+            var isDrug = false;
+            for (var dk = 0; dk < drugKeywords.length; dk++) {
+              if (desc.indexOf(drugKeywords[dk]) >= 0) { isDrug = true; break; }
+            }
+            if (isDrug) {
+              item.fair_rate = null;
+              item.total_fair = null;
+              item.markup_pct = '--';
+              item.note = 'Drug/supply charge -- packaged into DRG ' + drg.code + ' payment';
+              item.status = 'DRG_COVERED';
+              item.type = 'facility_drg';
+            }
+          }
+        });
       } else if (drg && drg.code === 'RANGE' && drg.drg_range) {
         // RANGE DRG: use high end as conservative estimate + CPT rates
         var rangeHigh = drg.drg_range.high || 0;
@@ -1470,17 +1488,13 @@ module.exports = async function handler(req, res) {
           }
         });
         if (rangeFacilityItems.length > 0 && rangeHigh > 0) {
-          rangeFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
-          rangeFacilityItems[0].fair_rate = rangeHigh;
-          rangeFacilityItems[0].total_fair = rangeHigh;
-          rangeFacilityItems[0].markup_pct = Math.round((rangeFacilityItems[0].billed / rangeHigh - 1) * 100) + '%';
-          rangeFacilityItems[0].note = 'Facility charge -- estimated DRG benchmark ($' + (drg.drg_range.low || 0).toLocaleString() + '-$' + rangeHigh.toLocaleString() + ')';
-          for (var ri = 1; ri < rangeFacilityItems.length; ri++) {
-            rangeFacilityItems[ri].fair_rate = 0;
-            rangeFacilityItems[ri].total_fair = 0;
-            rangeFacilityItems[ri].markup_pct = 'PACKAGED';
-            rangeFacilityItems[ri].note = 'Packaged into DRG facility payment -- should not be billed separately';
-            rangeFacilityItems[ri].status = 'FLAG';
+          var rangeDesc = 'DRG estimate ($' + (drg.drg_range.low || 0).toLocaleString() + '-$' + rangeHigh.toLocaleString() + ')';
+          for (var ri = 0; ri < rangeFacilityItems.length; ri++) {
+            rangeFacilityItems[ri].fair_rate = null;
+            rangeFacilityItems[ri].total_fair = null;
+            rangeFacilityItems[ri].markup_pct = '--';
+            rangeFacilityItems[ri].note = 'Packaged into ' + rangeDesc + ' -- not separately payable';
+            rangeFacilityItems[ri].status = 'DRG_COVERED';
           }
         }
       } else {
@@ -1536,17 +1550,13 @@ module.exports = async function handler(req, res) {
           }
         });
         if (unknownFacilityItems.length > 0) {
-          unknownFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
-          unknownFacilityItems[0].fair_rate = genericFacilityBenchmark;
-          unknownFacilityItems[0].total_fair = genericFacilityBenchmark;
-          unknownFacilityItems[0].markup_pct = genericFacilityBenchmark > 0 ? Math.round((unknownFacilityItems[0].billed / genericFacilityBenchmark - 1) * 100) + '%' : 'N/A';
-          unknownFacilityItems[0].note = 'Facility charge -- estimated DRG benchmark applied. Provide procedure details for exact comparison.';
-          for (var ui = 1; ui < unknownFacilityItems.length; ui++) {
-            unknownFacilityItems[ui].fair_rate = 0;
-            unknownFacilityItems[ui].total_fair = 0;
-            unknownFacilityItems[ui].markup_pct = 'PACKAGED';
-            unknownFacilityItems[ui].note = 'Packaged into DRG facility payment -- should not be billed separately';
-            unknownFacilityItems[ui].status = 'FLAG';
+          var estDesc = isSurgicalBill ? 'estimated surgical DRG' : 'estimated medical DRG';
+          for (var ui = 0; ui < unknownFacilityItems.length; ui++) {
+            unknownFacilityItems[ui].fair_rate = null;
+            unknownFacilityItems[ui].total_fair = null;
+            unknownFacilityItems[ui].markup_pct = '--';
+            unknownFacilityItems[ui].note = 'Packaged into ' + estDesc + ' benchmark ($' + genericFacilityBenchmark.toLocaleString() + ') -- not separately payable. Provide procedure details for exact DRG.';
+            unknownFacilityItems[ui].status = 'DRG_COVERED';
           }
         }
       }
