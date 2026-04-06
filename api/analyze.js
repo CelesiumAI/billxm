@@ -1831,75 +1831,70 @@ module.exports = async function handler(req, res) {
 
     recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
 
-    // ── DRG ENFORCEMENT: if we have a known DRG, fair value IS the DRG payment ──
-    // This is the safety net -- no matter what Sonnet writes or how the UI computes,
-    // the DRG benchmark is the final word on fair value for inpatient bills
-    if (drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE' && drgEstimate.drg_payment > 0) {
-      report.estimated_fair_value = drgEstimate.drg_payment;
-      report.potential_savings = Math.max(0, Math.round((report.total_billed - drgEstimate.drg_payment) * 100) / 100);
-      console.log('DRG ENFORCEMENT: fair_value=$' + drgEstimate.drg_payment.toFixed(2) + ', savings=$' + report.potential_savings.toFixed(2));
+    // ════════════════════════════════════════════════════════════
+    // ENFORCEMENT CHAIN (order matters -- each step feeds the next)
+    // ════════════════════════════════════════════════════════════
+
+    // ── STEP 1: total_billed MUST match the bill's stated total ──
+    // The customer holds the bill -- if our number differs, we lose all credibility
+    if (statedTotal && statedTotal > 0 && report.total_billed !== statedTotal) {
+      console.log('ENFORCE total_billed: $' + report.total_billed + ' -> $' + statedTotal);
+      report.total_billed = statedTotal;
     }
 
-    // ── GRADE ENFORCEMENT: grade must match the actual overcharge percentage ──
+    // ── STEP 2: DRG fair value -- if known DRG, fair value IS the DRG payment ──
+    if (drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE' && drgEstimate.drg_payment > 0) {
+      report.estimated_fair_value = drgEstimate.drg_payment;
+      console.log('ENFORCE DRG fair_value: $' + drgEstimate.drg_payment.toFixed(2));
+    }
+
+    // ── STEP 3: Recalculate savings from enforced total and fair value ──
+    report.potential_savings = Math.max(0, Math.round((report.total_billed - report.estimated_fair_value) * 100) / 100);
     var enforcedOverchargePct = report.total_billed > 0 ? Math.round((report.potential_savings / report.total_billed) * 100) : 0;
+    console.log('ENFORCE savings: $' + report.potential_savings.toFixed(2) + ' (' + enforcedOverchargePct + '%)');
+
+    // ── STEP 4: Grade must match actual overcharge percentage ──
     var correctGrade;
     if (enforcedOverchargePct < 10) correctGrade = 'A';
     else if (enforcedOverchargePct < 25) correctGrade = 'B';
     else if (enforcedOverchargePct < 50) correctGrade = 'C';
     else if (enforcedOverchargePct < 75) correctGrade = 'D';
     else correctGrade = 'F';
-    if (report.grade && report.grade !== correctGrade) {
-      console.log('GRADE ENFORCEMENT: ' + report.grade + ' -> ' + correctGrade + ' (' + enforcedOverchargePct + '%)');
+    if (report.grade !== correctGrade) {
+      console.log('ENFORCE grade: ' + report.grade + ' -> ' + correctGrade);
       report.grade = correctGrade;
     }
 
-    // ── NARRATIVE ENFORCEMENT: summary must match the enforced numbers ──
-    // Sonnet sometimes invents its own totals in the narrative text.
-    // Strip any sentence with wrong dollar amounts and append the correct closing.
+    // ── STEP 5: Narrative must match enforced numbers ──
     if (report.summary) {
-      var enforcedBilled = report.total_billed;
-      var enforcedFair = report.estimated_fair_value;
-      var enforcedSavings = report.potential_savings;
+      var eBilled = report.total_billed;
+      var eFair = report.estimated_fair_value;
+      var eSavings = report.potential_savings;
+      // Split into sentences and remove any with wrong totals
       var sentences = report.summary.split(/(?<=\.)\s+/);
       var cleaned = sentences.filter(function(s) {
         var lower = s.toLowerCase();
-        // Remove sentences that state wrong total savings or wrong bill totals
-        if ((lower.indexOf('total potential savings') >= 0 || lower.indexOf('total savings') >= 0 ||
-             lower.indexOf('overall savings') >= 0 || lower.indexOf('out of a $') >= 0) &&
-            s.indexOf('$' + enforcedSavings.toLocaleString()) < 0 && s.indexOf('$' + enforcedBilled.toLocaleString()) < 0) {
-          console.log('NARRATIVE STRIP: ' + s.substring(0, 80));
+        // Remove sentences about total savings/bill that have wrong numbers
+        if (lower.indexOf('total potential savings') >= 0 || lower.indexOf('total savings') >= 0 ||
+            lower.indexOf('overall savings') >= 0 || lower.indexOf('out of a $') >= 0 ||
+            lower.indexOf('your total bill') >= 0 || lower.indexOf('your bill of') >= 0) {
+          console.log('NARRATIVE STRIP: ' + s.substring(0, 60));
           return false;
-        }
-        // Remove sentences that claim a different total bill amount
-        var dollarMatches = s.match(/\$[\d,]+\.?\d*/g) || [];
-        for (var dm = 0; dm < dollarMatches.length; dm++) {
-          var val = parseFloat(dollarMatches[dm].replace(/[$,]/g, ''));
-          // If a sentence claims to be the total bill but uses a wrong number
-          if ((lower.indexOf('total bill') >= 0 || lower.indexOf('total charge') >= 0 || lower.indexOf('your bill of') >= 0) &&
-              val > 1000 && Math.abs(val - enforcedBilled) > 100 && Math.abs(val - enforcedSavings) > 100 && Math.abs(val - enforcedFair) > 100) {
-            console.log('NARRATIVE STRIP (wrong total): ' + s.substring(0, 80));
-            return false;
-          }
         }
         return true;
       });
-      // Append the correct closing sentence
+      // Append the correct closing with enforced numbers
       var drgNote = drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE' ?
-        ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + enforcedFair.toLocaleString() + '.' : '';
-      cleaned.push('Your total bill of $' + enforcedBilled.toLocaleString() + ' has $' + enforcedSavings.toLocaleString() + ' in potential savings.' + drgNote);
+        ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + eFair.toLocaleString() + '.' : '';
+      cleaned.push('Your total bill of $' + eBilled.toLocaleString() + ' has $' + eSavings.toLocaleString() + ' in potential savings (' + enforcedOverchargePct + '% overcharge).' + drgNote);
       report.summary = cleaned.join(' ');
-      console.log('NARRATIVE ENFORCED: ' + report.summary.substring(report.summary.length - 120));
     }
 
-    // ── FINAL ENFORCEMENT: total_billed MUST match the bill's stated total ──
-    // The customer holds the bill -- if our number differs, we lose all credibility
+    // ── STEP 6: Grade rationale must match ──
+    var gradeLabels = { 'A': 'Fair Bill', 'B': 'Mild Overcharge', 'C': 'Overcharged', 'D': 'Heavily Overcharged', 'F': 'Extreme Overcharge' };
+    report.grade_rationale = 'Bill contains ' + enforcedOverchargePct + '% overcharge, representing $' + report.potential_savings.toLocaleString() + ' in potential savings.';
+
     var finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
-    if (statedTotal && statedTotal > 0 && report.total_billed !== statedTotal) {
-      console.log('ENFORCING total_billed: report shows $' + report.total_billed + ' but bill states $' + statedTotal);
-      report.total_billed = statedTotal;
-      report.potential_savings = Math.max(0, Math.round((statedTotal - report.estimated_fair_value) * 100) / 100);
-      finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
-    }
 
     return res.status(200).json(finalResult);
 
