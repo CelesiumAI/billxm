@@ -1925,25 +1925,38 @@ module.exports = async function handler(req, res) {
     var gradeLabels = { 'A': 'Fair Bill', 'B': 'Mild Overcharge', 'C': 'Overcharged', 'D': 'Heavily Overcharged', 'F': 'Extreme Overcharge' };
     report.grade_rationale = 'Bill contains ' + enforcedOverchargePct + '% overcharge, representing $' + report.potential_savings.toLocaleString() + ' in potential savings.';
 
-    // ── STEP 7: Sanitize ALL text fields -- strip state-specific agency references ──
+    // ── STEP 7: Deep sanitize ALL strings in report -- strip state-specific agency references ──
     function sanitizeStateRefs(text) {
-      if (!text) return text;
-      // "[State] Department of Insurance/Health" -> BBB
+      if (!text || typeof text !== 'string') return text;
       text = text.replace(/the\s+[A-Z][a-z]+\s+Department\s+of\s+(Insurance|Health|Consumer Protection)/gi,
         'the Better Business Bureau (BBB)');
-      // "the [State] Attorney General" with optional "Consumer Protection Division"
       text = text.replace(/the\s+[A-Z][a-z]+\s+Attorney\s+General('s)?(\s+Consumer\s+Protection\s+Division)?/gi,
         "your state's Attorney General");
-      // "[State] Attorney General" without "the"
       text = text.replace(/[A-Z][a-z]+\s+Attorney\s+General('s)?(\s+Consumer\s+Protection\s+Division)?/gi,
         "your state's Attorney General");
       return text;
     }
-    if (report.phone_script) report.phone_script = sanitizeStateRefs(report.phone_script);
-    if (report.dispute_letter) report.dispute_letter = sanitizeStateRefs(report.dispute_letter);
-    if (report.summary) report.summary = sanitizeStateRefs(report.summary);
+    // Walk every value in the report and sanitize all strings
+    function deepSanitize(obj) {
+      if (!obj) return obj;
+      if (typeof obj === 'string') return sanitizeStateRefs(obj);
+      if (Array.isArray(obj)) return obj.map(function(item) { return deepSanitize(item); });
+      if (typeof obj === 'object') {
+        var keys = Object.keys(obj);
+        for (var k = 0; k < keys.length; k++) {
+          obj[keys[k]] = deepSanitize(obj[keys[k]]);
+        }
+      }
+      return obj;
+    }
+    report = deepSanitize(report);
 
-    var finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
+    // Last resort: sanitize the final JSON string itself
+    var reportJson = JSON.stringify(report);
+    reportJson = reportJson.replace(/the\s+[A-Z][a-z]+\s+Department\s+of\s+(Insurance|Health|Consumer Protection)/gi, 'the Better Business Bureau (BBB)');
+    reportJson = reportJson.replace(/the\s+[A-Z][a-z]+\s+Attorney\s+General('s)?(\s+Consumer\s+Protection\s+Division)?/gi, "your state's Attorney General");
+    reportJson = reportJson.replace(/[A-Z][a-z]+\s+Attorney\s+General('s)?(\s+Consumer\s+Protection\s+Division)?/gi, "your state's Attorney General");
+    var finalResult = { content: [{ type: 'text', text: reportJson }] };
 
     return res.status(200).json(finalResult);
 
