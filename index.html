@@ -2367,6 +2367,7 @@ function BillXM() {
   const [showSettings, setShowSettings] = useState(false);
   const [filterSev, setFilterSev] = useState("ALL");
   const [dragOver, setDragOver] = useState(false);
+  const [procedure, setProcedure] = useState("");
   const [copied, setCopied] = useState(false);
   const [tier, setTier] = useState("free");          // "free" | "report" | "full" | "demo"          // "free" | "report" | "full" | "demo"
   const [usingDemo, setUsingDemo] = useState(false);  // true only when SAMPLE_BILL is loaded
@@ -2912,7 +2913,7 @@ function BillXM() {
     if (!msgs) return setError("No bill data found.");
     setError(""); setScreen("analyzing"); setAnalysisProgress("");
 
-    var requestBody = { messages: msgs, tier: "report" };
+    var requestBody = { messages: msgs, tier: "report", procedure: procedure };
     if (usingDemo) requestBody.demo = true;
     console.log("BILLXM v5 — tier=" + requestBody.tier + ", demo=" + !!requestBody.demo);
     callBackend("/api/analyze", requestBody)
@@ -3670,6 +3671,12 @@ function BillXM() {
               style={{ width: "100%", height: 240, padding: 14, borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13, fontFamily: C.mono, outline: "none", resize: "vertical", color: C.text, background: "white" }}
             />
           )}
+
+          {/* OPTIONAL PROCEDURE FIELD */}
+          <div style={{ marginTop: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", display: "block", marginBottom: 6 }}>What were you treated for? <span style={{ fontWeight: 400, color: "#94a3b8" }}>(optional -- improves accuracy)</span></label>
+            <input value={procedure} onChange={e => setProcedure(e.target.value)} placeholder="e.g., pneumonia, C-section, hip replacement, appendix removal" style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: "none", background: "white", color: "#0f172a", boxSizing: "border-box" }} />
+          </div>
 
           {/* TERMS */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 20, padding: 16, background: "white", borderRadius: 10, border: `1px solid ${C.border}` }}>

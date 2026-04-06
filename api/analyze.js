@@ -97,6 +97,7 @@ function detectBillType(extracted) {
   var hasER = false;
   var hasMultiDayRoom = false;
   var hasERDept = false;
+  var hasObstetric = false;
   var roomCount = 0;
 
   (extracted.line_items || []).forEach(function(item) {
@@ -105,6 +106,12 @@ function detectBillType(extracted) {
     var desc = (item.description || '').toLowerCase();
     // Check for ER department-level charges
     if (desc.indexOf('emerg') >= 0 || desc.indexOf('emergency') >= 0 || desc.indexOf('ed care') >= 0 || desc.indexOf('ed visit') >= 0 || desc.indexOf('ed level') >= 0) hasERDept = true;
+    // Check for obstetric/maternity charges (always inpatient)
+    if (desc.indexOf('obstetric') >= 0 || desc.indexOf('maternity') >= 0 || desc.indexOf('labor and delivery') >= 0 ||
+        desc.indexOf('labor & delivery') >= 0 || desc.indexOf('l&d') >= 0 || desc.indexOf('delivery room') >= 0 ||
+        desc.indexOf('birthing') >= 0 || desc.indexOf('newborn') >= 0) hasObstetric = true;
+    // Revenue codes 012x = obstetric room
+    if (c && c.length === 4 && c.substring(0, 3) === '012') hasObstetric = true;
     // Check for room/board charges (each line = ~1 day)
     if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('bed') >= 0 ||
         desc.indexOf('r&b') >= 0 || desc.indexOf('r & b') >= 0 || desc.indexOf('nursing') >= 0) {
@@ -112,6 +119,9 @@ function detectBillType(extracted) {
       if (roomCount >= 2) hasMultiDayRoom = true;
     }
   });
+
+  // Obstetric charges = always inpatient
+  if (hasObstetric) return 'INPATIENT';
 
   // Multi-day date range = likely inpatient
   var dos = extracted.date_of_service || '';
@@ -248,6 +258,18 @@ function estimateDRG(extracted, patientProcedure) {
     // Kidney failure: dialysis present
     else if (hasDialysis) {
       candidates.push('684', '683', '682');
+    }
+    // OB/Delivery: obstetric room + OR/surgery = C-section
+    else if ((text.indexOf('obstetric') >= 0 || text.indexOf('maternity') >= 0 || text.indexOf('labor') >= 0 ||
+              text.indexOf('delivery') >= 0 || text.indexOf('birthing') >= 0 || text.indexOf('newborn') >= 0) &&
+             (text.indexOf('or services') >= 0 || text.indexOf('operating') >= 0 || text.indexOf('surgery') >= 0 ||
+              text.indexOf('anesthesia') >= 0 || text.indexOf('c-section') >= 0 || text.indexOf('cesarean') >= 0)) {
+      candidates.push('788', '787', '786');
+    }
+    // OB/Delivery: obstetric room without surgery = vaginal delivery
+    else if (text.indexOf('obstetric') >= 0 || text.indexOf('maternity') >= 0 || text.indexOf('labor and delivery') >= 0 ||
+             text.indexOf('labor & delivery') >= 0 || text.indexOf('l&d') >= 0 || text.indexOf('birthing') >= 0) {
+      candidates.push('775', '774', '788', '787');
     }
     // General respiratory: nebulizer + standard labs (CBC + metabolic panel) but no specific diagnosis
     else if (hasNebulizer && hasCBC && hasBMP) {
@@ -1445,7 +1467,7 @@ module.exports = async function handler(req, res) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
             if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care unit') >= 0 ||
-                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0 || desc.indexOf('obstetric') >= 0 || desc.indexOf('maternity') >= 0) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
               drgFacilityItems.push(item);
@@ -1516,7 +1538,7 @@ module.exports = async function handler(req, res) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
             if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care unit') >= 0 ||
-                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0 || desc.indexOf('obstetric') >= 0 || desc.indexOf('maternity') >= 0) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
               rangeFacilityItems.push(item);
@@ -1584,7 +1606,7 @@ module.exports = async function handler(req, res) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
             if (desc.indexOf('room') >= 0 || desc.indexOf('board') >= 0 || desc.indexOf('care') >= 0 ||
-                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
+                desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0 || desc.indexOf('obstetric') >= 0 || desc.indexOf('maternity') >= 0) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
               unknownFacilityItems.push(item);
