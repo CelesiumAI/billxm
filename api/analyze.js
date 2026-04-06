@@ -950,21 +950,22 @@ module.exports = async function handler(req, res) {
     // Preserve the bill's stated total -- this is the number the customer sees
     var statedTotal = extractedTotal;
 
-    // ── FIX: If Haiku reported total_before_adjustments < total_billed, use it ──
-    // This means Haiku saw discounts/adjustments but may have included them in line_items
+    // ── FIX: Use total_billed as the customer-facing number ──
+    // total_before_adjustments is the pre-discount amount, but the customer sees total_billed
+    // We use total_before_adjustments only as context for the discount filter
     if (extracted.total_before_adjustments > 0 && extracted.total_before_adjustments < extractedTotal) {
+      // total_before_adjustments is LESS than total_billed: unusual, use the lower as the real total
       console.log('Using total_before_adjustments: $' + extracted.total_before_adjustments.toFixed(2) + ' (was $' + extractedTotal.toFixed(2) + ')');
       extractedTotal = extracted.total_before_adjustments;
       extracted.total_billed = extracted.total_before_adjustments;
+      statedTotal = extractedTotal;
     }
 
-    // ── FIX: If Haiku reported adjustments, the real total is total + adjustments ──
-    // adjustments are negative, so total_billed + adjustments = net charges
-    if (!extracted.total_before_adjustments && extracted.adjustments && extracted.adjustments < 0) {
+    // If adjustments reported, store as reference for the line item filter
+    if (extracted.adjustments && extracted.adjustments < 0) {
       var adjustedTotal = extractedTotal + extracted.adjustments; // adjustments is negative
       if (adjustedTotal > 0 && adjustedTotal < extractedTotal) {
-        console.log('Adjusting total by reported adjustments: $' + extractedTotal.toFixed(2) + ' + $' + extracted.adjustments.toFixed(2) + ' = $' + adjustedTotal.toFixed(2));
-        // Don't auto-apply -- but use it as a reference for the line item filter
+        console.log('Reported adjustments: $' + extracted.adjustments.toFixed(2) + ' (net: $' + adjustedTotal.toFixed(2) + ')');
         extracted._expectedTotal = adjustedTotal;
       }
     }
@@ -973,14 +974,14 @@ module.exports = async function handler(req, res) {
     var lineItemSum = 0;
     (extracted.line_items || []).forEach(function(item) { lineItemSum += (item.billed || 0); });
 
-    // Use the HIGHER of total_billed and total_before_adjustments as reference
+    // Use total_before_adjustments as reference for VALIDATION ONLY (not for total_billed)
+    // This helps detect when the discount filter missed items
     var referenceTotal = extractedTotal;
     if (extracted.total_before_adjustments > referenceTotal) {
       referenceTotal = extracted.total_before_adjustments;
-      extractedTotal = referenceTotal;
-      extracted.total_billed = referenceTotal;
-      statedTotal = referenceTotal; // Update stated total to the higher value
-      console.log('Using total_before_adjustments as reference: $' + referenceTotal.toFixed(2));
+      // DO NOT override extractedTotal or statedTotal here
+      // The customer sees total_billed, not total_before_adjustments
+      console.log('Validation reference: $' + referenceTotal.toFixed(2) + ' (total_before_adjustments), bill total: $' + extractedTotal.toFixed(2));
     }
 
     // Log extraction quality (no retry needed with Sonnet)
@@ -1403,7 +1404,8 @@ module.exports = async function handler(req, res) {
           markup_multiplier: rangeMarkup + 'x'
         };
         console.log('DRG RANGE: $' + (drg.drg_range.low || 0) + '-$' + rangeHigh + ' (' + rangeMarkup + 'x)');
-        // Mark room/board as covered by facility benchmark
+        // Mark room/board as covered by facility benchmark AND set fair_rate
+        var rangeFacilityItems = [];
         enrichedItems.forEach(function(item) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
@@ -1411,10 +1413,24 @@ module.exports = async function handler(req, res) {
                 desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
-              item.note = 'Facility charge -- covered by estimated DRG benchmark';
+              rangeFacilityItems.push(item);
             }
           }
         });
+        if (rangeFacilityItems.length > 0 && rangeHigh > 0) {
+          rangeFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          rangeFacilityItems[0].fair_rate = rangeHigh;
+          rangeFacilityItems[0].total_fair = rangeHigh;
+          rangeFacilityItems[0].markup_pct = Math.round((rangeFacilityItems[0].billed / rangeHigh - 1) * 100) + '%';
+          rangeFacilityItems[0].note = 'Facility charge -- estimated DRG benchmark ($' + (drg.drg_range.low || 0).toLocaleString() + '-$' + rangeHigh.toLocaleString() + ')';
+          for (var ri = 1; ri < rangeFacilityItems.length; ri++) {
+            rangeFacilityItems[ri].fair_rate = 0;
+            rangeFacilityItems[ri].total_fair = 0;
+            rangeFacilityItems[ri].markup_pct = 'PACKAGED';
+            rangeFacilityItems[ri].note = 'Packaged into DRG facility payment -- should not be billed separately';
+            rangeFacilityItems[ri].status = 'FLAG';
+          }
+        }
       } else {
         // UNKNOWN DRG or no DRG match: add generic facility benchmark to CPT rates
         // Calculate total room/facility charges on the bill
@@ -1454,7 +1470,8 @@ module.exports = async function handler(req, res) {
         };
         console.log('GENERIC facility benchmark: $' + genericFacilityBenchmark + ' (' + (isSurgicalBill ? 'surgical' : 'medical') + ') + CPT $' + totalFairCPT.toFixed(2));
 
-        // Mark facility items
+        // Mark facility items AND set fair_rate to generic benchmark
+        var unknownFacilityItems = [];
         enrichedItems.forEach(function(item) {
           if (item.fair_rate === null && item.billed > 0) {
             var desc = (item.description || '').toLowerCase();
@@ -1462,10 +1479,24 @@ module.exports = async function handler(req, res) {
                 desc.indexOf('nursing') >= 0 || desc.indexOf('progressive') >= 0 || desc.indexOf('icu') >= 0) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
-              item.note = 'Facility charge -- estimated DRG benchmark applied. Provide procedure details for exact comparison.';
+              unknownFacilityItems.push(item);
             }
           }
         });
+        if (unknownFacilityItems.length > 0) {
+          unknownFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          unknownFacilityItems[0].fair_rate = genericFacilityBenchmark;
+          unknownFacilityItems[0].total_fair = genericFacilityBenchmark;
+          unknownFacilityItems[0].markup_pct = genericFacilityBenchmark > 0 ? Math.round((unknownFacilityItems[0].billed / genericFacilityBenchmark - 1) * 100) + '%' : 'N/A';
+          unknownFacilityItems[0].note = 'Facility charge -- estimated DRG benchmark applied. Provide procedure details for exact comparison.';
+          for (var ui = 1; ui < unknownFacilityItems.length; ui++) {
+            unknownFacilityItems[ui].fair_rate = 0;
+            unknownFacilityItems[ui].total_fair = 0;
+            unknownFacilityItems[ui].markup_pct = 'PACKAGED';
+            unknownFacilityItems[ui].note = 'Packaged into DRG facility payment -- should not be billed separately';
+            unknownFacilityItems[ui].status = 'FLAG';
+          }
+        }
       }
     } else {
       estimatedFairValue = totalFairCPT;
