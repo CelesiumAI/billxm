@@ -203,7 +203,59 @@ function estimateDRG(extracted, patientProcedure) {
     if (text.indexOf('eeg') >= 0 && text.indexOf('behavioral') >= 0) candidates.push('885', '886');
   }
 
-  // THIRD: Hospital name + bill pattern clues
+  // THIRD: Clinical service pattern matching (infer diagnosis from treatment combinations)
+  if (candidates.length === 0) {
+    var hasNebulizer = text.indexOf('neb') >= 0 || text.indexOf('inhalation') >= 0 || text.indexOf('inhaler') >= 0 ||
+        text.indexOf('albuterol') >= 0 || text.indexOf('breathing treatment') >= 0 || text.indexOf('respiratory') >= 0;
+    var hasABG = text.indexOf('abg') >= 0 || text.indexOf('arterial blood') >= 0 || text.indexOf('blood gas') >= 0 ||
+        text.indexOf('arterial puncture') >= 0 || text.indexOf('o2 sat') >= 0;
+    var hasChestImaging = (text.indexOf('chest') >= 0 && (text.indexOf('xr') >= 0 || text.indexOf('x-ray') >= 0 ||
+        text.indexOf('x ray') >= 0 || text.indexOf('radiograph') >= 0 || text.indexOf('view') >= 0)) ||
+        text.indexOf('ct chest') >= 0 || text.indexOf('cxr') >= 0;
+    var hasIVAntibiotic = text.indexOf('ceftriaxone') >= 0 || text.indexOf('azithromycin') >= 0 ||
+        text.indexOf('vancomycin') >= 0 || text.indexOf('levofloxacin') >= 0 || text.indexOf('piperacillin') >= 0 ||
+        text.indexOf('meropenem') >= 0 || text.indexOf('antibiotic') >= 0 || text.indexOf('doxycycline') >= 0;
+    var hasTroponin = text.indexOf('troponin') >= 0;
+    var hasBNP = text.indexOf('bnp') >= 0 || text.indexOf('natriuretic') >= 0;
+    var hasCardiacMonitor = text.indexOf('telemetry') >= 0 || text.indexOf('cardiac monitor') >= 0 || text.indexOf('heart monitor') >= 0;
+    var hasDialysis = text.indexOf('dialysis') >= 0 || text.indexOf('hemodialysis') >= 0;
+    var hasEKG = text.indexOf('ekg') >= 0 || text.indexOf('ecg') >= 0 || text.indexOf('electrocard') >= 0;
+    var hasCBC = text.indexOf('cbc') >= 0 || text.indexOf('blood count') >= 0 || text.indexOf('auto diff') >= 0;
+    var hasBMP = text.indexOf('metabolic panel') >= 0 || text.indexOf('bmp') >= 0 || text.indexOf('cmp') >= 0;
+    var hasLacticAcid = text.indexOf('lactic') >= 0 || text.indexOf('lactate') >= 0;
+    var hasBloodCulture = text.indexOf('blood culture') >= 0 || text.indexOf('culture') >= 0;
+
+    // Pneumonia pattern: nebulizer/respiratory treatment + (ABG or chest imaging)
+    if (hasNebulizer && (hasABG || hasChestImaging)) {
+      candidates.push('194', '193', '192');
+    }
+    // Pneumonia pattern: IV antibiotic + chest imaging
+    else if (hasIVAntibiotic && hasChestImaging) {
+      candidates.push('194', '193', '192');
+    }
+    // Sepsis pattern: blood culture + lactic acid + IV antibiotic
+    else if (hasBloodCulture && hasLacticAcid && hasIVAntibiotic) {
+      candidates.push('872', '871');
+    }
+    // Heart failure pattern: BNP + (cardiac monitor or EKG)
+    else if (hasBNP && (hasCardiacMonitor || hasEKG)) {
+      candidates.push('293', '292', '291');
+    }
+    // Chest pain / cardiac pattern: troponin + EKG
+    else if (hasTroponin && hasEKG) {
+      candidates.push('313');
+    }
+    // Kidney failure: dialysis present
+    else if (hasDialysis) {
+      candidates.push('684', '683', '682');
+    }
+    // General respiratory: nebulizer + standard labs (CBC + metabolic panel) but no specific diagnosis
+    else if (hasNebulizer && hasCBC && hasBMP) {
+      candidates.push('203', '202', '194');
+    }
+  }
+
+  // FOURTH: Hospital name + bill pattern clues
   if (candidates.length === 0) {
     var hasSurgical = text.indexOf('or services') >= 0 || text.indexOf('operating room') >= 0 ||
       text.indexOf('oper rm') >= 0 || text.indexOf('surgery') >= 0 ||
