@@ -663,7 +663,7 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '- Include EVERY line item on the bill, even $0.00 items\n' +
 '- Preserve the exact code shown on the bill (including leading zeros like 036600)\n' +
 '- Use the exact dollar amounts shown on the bill\n' +
-'- Your total_billed MUST equal the bill\'s stated total (look for "Total Amount", "Total Charges", "Total Patient Services"). Find this number FIRST, then make sure your line items add up to it.\n' +
+'- Your total_billed MUST equal the TOTAL HOSPITAL CHARGES -- the full amount the hospital billed BEFORE any insurance payments, discounts, or adjustments. Look for "Total Charges", "Billed to Insurance", "Total Hospital Charges", "Total Patient Services", or "Total Amount". Do NOT use "Patient Balance", "Remaining Responsibility", "Coinsurance", "Amount Due", "Your Balance", "You Owe", or any post-insurance amount as total_billed. If the bill shows both a large "Billed to Insurance" amount and a smaller "Your Balance", use the LARGER number as total_billed.\n' +
 '- Include subtotals for each category/department on the bill\n' +
 '- If a service appears multiple times on different dates, each is a separate line item\n' +
 '- Look for the words "INPATIENT" or "OUTPATIENT" printed on the bill for bill_type_text\n' +
@@ -1002,6 +1002,27 @@ module.exports = async function handler(req, res) {
 
     // Preserve the bill's stated total -- this is the number the customer sees
     var statedTotal = extractedTotal;
+
+    // ── SANITY CHECK: Did Sonnet grab patient balance instead of total charges? ──
+    // Sum all positive line item charges. If the sum is much larger than total_billed,
+    // Sonnet likely used the patient's balance/coinsurance instead of the full hospital charges.
+    var positiveItemSum = 0;
+    (extracted.line_items || []).forEach(function(item) {
+      if ((item.billed || 0) > 0) positiveItemSum += item.billed;
+    });
+    if (positiveItemSum > 0 && extractedTotal > 0 && positiveItemSum > extractedTotal * 2) {
+      console.log('TOTAL_BILLED OVERRIDE: Sonnet reported $' + extractedTotal.toFixed(2) + ' but line items sum to $' + positiveItemSum.toFixed(2) + ' -- using line item sum (Sonnet likely grabbed patient balance)');
+      extractedTotal = Math.round(positiveItemSum * 100) / 100;
+      extracted.total_billed = extractedTotal;
+      statedTotal = extractedTotal;
+    }
+    // Also check: if total_before_adjustments is much larger than total_billed, use it
+    if (extracted.total_before_adjustments > 0 && extracted.total_before_adjustments > extractedTotal * 1.5) {
+      console.log('TOTAL_BILLED OVERRIDE: total_before_adjustments $' + extracted.total_before_adjustments.toFixed(2) + ' >> total_billed $' + extractedTotal.toFixed(2) + ' -- using total_before_adjustments');
+      extractedTotal = extracted.total_before_adjustments;
+      extracted.total_billed = extractedTotal;
+      statedTotal = extractedTotal;
+    }
 
     // ── FIX: Use total_billed as the customer-facing number ──
     // total_before_adjustments is the pre-discount amount, but the customer sees total_billed
