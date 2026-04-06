@@ -1866,34 +1866,82 @@ module.exports = async function handler(req, res) {
       report.grade = correctGrade;
     }
 
-    // ── STEP 5: Narrative must match enforced numbers ──
+    // ── STEP 5: Narrative -- JS builds bookends, keep only Sonnet's overcharge examples ──
+    // Sonnet cannot be trusted with totals. We extract only its specific overcharge descriptions
+    // (e.g., "$372 for an arterial puncture") and wrap them in JS-generated opening and closing.
     if (report.summary) {
       var eBilled = report.total_billed;
       var eFair = report.estimated_fair_value;
       var eSavings = report.potential_savings;
-      // Split into sentences and remove any with wrong totals
+      var eHospital = report.hospital || extracted.hospital || 'the hospital';
+
+      // Extract only sentences about specific overcharges (safe = individual charges < $1000)
       var sentences = report.summary.split(/(?<=\.)\s+/);
-      var cleaned = sentences.filter(function(s) {
+      var overchargeExamples = sentences.filter(function(s) {
         var lower = s.toLowerCase();
-        // Remove sentences about total savings/bill that have wrong numbers
-        if (lower.indexOf('total potential savings') >= 0 || lower.indexOf('total savings') >= 0 ||
-            lower.indexOf('overall savings') >= 0 || lower.indexOf('out of a $') >= 0 ||
-            lower.indexOf('your total bill') >= 0 || lower.indexOf('your bill of') >= 0) {
-          console.log('NARRATIVE STRIP: ' + s.substring(0, 60));
-          return false;
+        // REJECT any sentence mentioning totals, savings, fair value, or bill amount
+        if (lower.indexOf('total') >= 0 || lower.indexOf('savings') >= 0 || lower.indexOf('overall') >= 0 ||
+            lower.indexOf('fair value') >= 0 || lower.indexOf('your bill') >= 0 || lower.indexOf('out of') >= 0 ||
+            lower.indexOf('potential') >= 0 || lower.indexOf('overcharge') >= 0) return false;
+        // REJECT any sentence with a dollar amount >= $1000 (these are totals Sonnet invents)
+        var dollars = s.match(/\$[\d,]+\.?\d*/g) || [];
+        for (var d = 0; d < dollars.length; d++) {
+          if (parseFloat(dollars[d].replace(/[$,]/g, '')) >= 1000) return false;
         }
-        return true;
+        // KEEP sentences about specific services/charges
+        return s.length > 20;
       });
-      // Append the correct closing with enforced numbers
-      var drgNote = drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE' ?
-        ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + eFair.toLocaleString() + '.' : '';
-      cleaned.push('Your total bill of $' + eBilled.toLocaleString() + ' has $' + eSavings.toLocaleString() + ' in potential savings (' + enforcedOverchargePct + '% overcharge).' + drgNote);
-      report.summary = cleaned.join(' ');
+
+      // Build the summary from enforced data
+      var billTypeDesc = billType === 'INPATIENT' ? 'inpatient' : 'outpatient';
+      var conditionDesc = drgEstimate && drgEstimate.drg_description ? drgEstimate.drg_description.toLowerCase() : '';
+      var conditionShort = conditionDesc.indexOf('pneumonia') >= 0 ? 'pneumonia' :
+          conditionDesc.indexOf('heart failure') >= 0 ? 'heart failure' :
+          conditionDesc.indexOf('sepsis') >= 0 ? 'sepsis' :
+          conditionDesc.indexOf('joint') >= 0 ? 'joint replacement' : 'medical';
+      var opening = 'This ' + billTypeDesc + ' ' + conditionShort + ' bill from ' + eHospital + ' shows overcharging on basic medical services.';
+      var facilityNote = '';
+      if (drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE') {
+        var facilityTotal = 0;
+        enrichedItems.forEach(function(item) { if (item.type === 'facility_drg') facilityTotal += item.billed; });
+        if (facilityTotal > 0) {
+          facilityNote = ' The facility charges of $' + Math.round(facilityTotal).toLocaleString() + ' are covered by the Medicare DRG payment system and should be bundled into one rate.';
+        }
+      }
+      var closing = 'Your total bill of $' + eBilled.toLocaleString() + ' has $' + eSavings.toLocaleString() + ' in potential savings (' + enforcedOverchargePct + '% overcharge).';
+      if (drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE') {
+        closing += ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + eFair.toLocaleString() + '.';
+      }
+
+      // Combine: JS opening + Sonnet's overcharge examples + facility note + JS closing
+      var parts = [opening];
+      if (overchargeExamples.length > 0) parts.push(overchargeExamples.join(' '));
+      if (facilityNote) parts.push(facilityNote);
+      parts.push(closing);
+      report.summary = parts.join(' ');
     }
 
     // ── STEP 6: Grade rationale must match ──
     var gradeLabels = { 'A': 'Fair Bill', 'B': 'Mild Overcharge', 'C': 'Overcharged', 'D': 'Heavily Overcharged', 'F': 'Extreme Overcharge' };
     report.grade_rationale = 'Bill contains ' + enforcedOverchargePct + '% overcharge, representing $' + report.potential_savings.toLocaleString() + ' in potential savings.';
+
+    // ── STEP 7: Sanitize ALL text fields -- strip state-specific agency references ──
+    function sanitizeStateRefs(text) {
+      if (!text) return text;
+      // "[State] Department of Insurance/Health" -> BBB
+      text = text.replace(/the\s+[A-Z][a-z]+\s+Department\s+of\s+(Insurance|Health|Consumer Protection)/gi,
+        'the Better Business Bureau (BBB)');
+      // "the [State] Attorney General" with optional "Consumer Protection Division"
+      text = text.replace(/the\s+[A-Z][a-z]+\s+Attorney\s+General('s)?(\s+Consumer\s+Protection\s+Division)?/gi,
+        "your state's Attorney General");
+      // "[State] Attorney General" without "the"
+      text = text.replace(/[A-Z][a-z]+\s+Attorney\s+General('s)?(\s+Consumer\s+Protection\s+Division)?/gi,
+        "your state's Attorney General");
+      return text;
+    }
+    if (report.phone_script) report.phone_script = sanitizeStateRefs(report.phone_script);
+    if (report.dispute_letter) report.dispute_letter = sanitizeStateRefs(report.dispute_letter);
+    if (report.summary) report.summary = sanitizeStateRefs(report.summary);
 
     var finalResult = { content: [{ type: 'text', text: JSON.stringify(report) }] };
 
