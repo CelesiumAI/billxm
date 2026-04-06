@@ -808,25 +808,25 @@ var CACHED_DEMO_REPORT = {
     { type: 'EXCESSIVE_MARKUP', severity: 'HIGH', confidence: 92, code: '80048', description: 'Basic metabolic panel (blood chemistry) billed at $286.15 when Medicare pays approximately $8.46.', billed: 286.15, fair_value: 8.46, savings: 277.69, cms_rule: 'CMS Clinical Lab Fee Schedule 2026, CPT 80048', dispute_basis: 'Charge exceeds Medicare clinical lab fee schedule rate by over 33x' }
   ],
   line_items: [
-    { code: '', description: 'Room and Care', billed: 1545.34, quantity: 1, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Facility charge, covered by DRG' },
-    { code: '36600', description: 'Arterial Puncture', billed: 372.28, quantity: 1, fair_rate: 13.26, total_fair: 13.26, markup_pct: '2709%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 3.44, markup_pct: '1906%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 3.44, markup_pct: '1906%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '82805', description: 'ABG with Meas O2 Sat', billed: 270.31, quantity: 1, fair_rate: 16.17, total_fair: 16.17, markup_pct: '1572%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '80053', description: 'Comp Metabolic Panel', billed: 434.60, quantity: 1, fair_rate: 10.56, total_fair: 10.56, markup_pct: '4015%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '80048', description: 'Basic Metabolic Panel', billed: 286.15, quantity: 1, fair_rate: 8.46, total_fair: 8.46, markup_pct: '3282%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 8.07, markup_pct: '2639%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 8.07, markup_pct: '2639%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '71045', description: 'XR Chest Sgl View', billed: 256.78, quantity: 1, fair_rate: 20.41, total_fair: 20.41, markup_pct: '1158%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '94640', description: 'Inhalation TX', billed: 132.78, quantity: 1, fair_rate: 11.54, total_fair: 11.54, markup_pct: '1051%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '94640', description: 'Hand Held Neb SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 11.54, markup_pct: '910%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '94668', description: 'Chest Physio SubsQ', billed: 49.68, quantity: 5, fair_rate: 7.65, total_fair: 38.25, markup_pct: '549%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '94640', description: 'MDI SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 11.54, markup_pct: '910%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '94640', description: 'Hand Held Neb SubQ', billed: 233.10, quantity: 2, fair_rate: 11.54, total_fair: 23.08, markup_pct: '910%', status: 'FLAG', note: 'Exceeds Medicare rate' },
-    { code: '', description: 'Albuterol 8.5GM INH', billed: 119.86, quantity: 1, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Drug charge' },
-    { code: '', description: 'Pot Cl 20MEQ SRT', billed: 6.73, quantity: 2, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Drug charge' },
-    { code: '', description: 'Fluticasone/Vilant 200/25', billed: 779.93, quantity: 1, fair_rate: null, total_fair: null, markup_pct: 'N/A', status: 'NO_CPT', note: 'Drug charge' },
-    { code: '93005', description: 'EKG', billed: 287.68, quantity: 1, fair_rate: 6.38, total_fair: 6.38, markup_pct: '4408%', status: 'FLAG', note: 'Exceeds Medicare rate' }
+    { code: '', description: 'Room and Care', billed: 1545.34, quantity: 1, fair_rate: null, total_fair: 5441.93, markup_pct: '--', status: 'DRG_COVERED', note: 'Packaged into DRG 194 (SIMPLE PNEUMONIA AND PLEURISY WITH CC) -- not separately payable' },
+    { code: '36600', description: 'Arterial Puncture', billed: 372.28, quantity: 1, fair_rate: 13.26, total_fair: 0, markup_pct: '2709%', status: 'FLAG', note: 'Overcharged 2709% above Medicare rate -- DISPUTE' },
+    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 0, markup_pct: '1906%', status: 'FLAG', note: 'Overcharged 1906% above Medicare rate -- DISPUTE' },
+    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 0, markup_pct: '1906%', status: 'FLAG', note: 'Overcharged 1906% above Medicare rate -- DISPUTE' },
+    { code: '82805', description: 'ABG with Meas O2 Sat', billed: 270.31, quantity: 1, fair_rate: 16.17, total_fair: 0, markup_pct: '1572%', status: 'FLAG', note: 'Overcharged 1572% above Medicare rate -- DISPUTE' },
+    { code: '80053', description: 'Comp Metabolic Panel', billed: 434.60, quantity: 1, fair_rate: 10.56, total_fair: 0, markup_pct: '4015%', status: 'FLAG', note: 'Overcharged 4015% above Medicare rate -- DISPUTE' },
+    { code: '80048', description: 'Basic Metabolic Panel', billed: 286.15, quantity: 1, fair_rate: 8.46, total_fair: 0, markup_pct: '3282%', status: 'FLAG', note: 'Overcharged 3282% above Medicare rate -- DISPUTE' },
+    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 0, markup_pct: '2639%', status: 'FLAG', note: 'Overcharged 2639% above Medicare rate -- DISPUTE' },
+    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 0, markup_pct: '2639%', status: 'FLAG', note: 'Overcharged 2639% above Medicare rate -- DISPUTE' },
+    { code: '71045', description: 'XR Chest Sgl View', billed: 256.78, quantity: 1, fair_rate: 20.41, total_fair: 0, markup_pct: '1158%', status: 'FLAG', note: 'Overcharged 1158% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'Inhalation TX', billed: 132.78, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '1051%', status: 'FLAG', note: 'Overcharged 1051% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'Hand Held Neb SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
+    { code: '94668', description: 'Chest Physio SubsQ', billed: 49.68, quantity: 5, fair_rate: 7.65, total_fair: 0, markup_pct: '549%', status: 'FLAG', note: 'Overcharged 549% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'MDI SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'Hand Held Neb SubQ', billed: 233.10, quantity: 2, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
+    { code: '', description: 'Albuterol 8.5GM INH', billed: 119.86, quantity: 1, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
+    { code: '', description: 'Pot Cl 20MEQ SRT', billed: 6.73, quantity: 2, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
+    { code: '', description: 'Fluticasone/Vilant 200/25', billed: 779.93, quantity: 1, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
+    { code: '93005', description: 'EKG', billed: 287.68, quantity: 1, fair_rate: 6.38, total_fair: 0, markup_pct: '4408%', status: 'FLAG', note: 'Overcharged 4408% above Medicare rate -- DISPUTE' }
   ],
   phone_script: 'Hello, I\'m calling about my account for services received on October 11-12, 2022 at Jackson Purchase Medical Center. I\'ve had my bill independently reviewed against U.S. government Medicare rates, and I\'ve found several charges that significantly exceed fair market value. For example, the arterial puncture was billed at $372 when the Medicare rate is only $13, and my basic blood count was charged at $221 when Medicare pays about $8. Overall, my bill of $10,151 is nearly double the Medicare benchmark of $5,442 for this type of pneumonia hospitalization. I\'d like to speak with a billing supervisor about adjusting these charges to a more reasonable level. If we can\'t resolve this, I\'ll need to file a formal written dispute and may contact the Tennessee Department of Health regarding these pricing practices.',
   dispute_letter: 'Dear Billing Department,\n\nRe: Account for services dated October 11-12, 2022\nJackson Purchase Medical Center\n\nI am writing to formally dispute the charges on my hospital bill totaling $10,150.87. An independent analysis comparing each charge against the U.S. government\'s published Medicare rates (CMS Physician Fee Schedule and Clinical Lab Fee Schedule, 2026) has identified significant overcharges totaling approximately $4,709.\n\nSpecific overcharges include:\n- Arterial Puncture (CPT 36600): Billed $372.28 vs Medicare rate $13.26 (2,709% markup)\n- CBC Auto Diff (CPT 85025): Billed $220.95 each vs Medicare rate $8.07 (2,639% markup)\n- EKG (CPT 93005): Billed $287.68 vs Medicare rate $6.38 (4,408% markup)\n- Basic Metabolic Panel (CPT 80048): Billed $286.15 vs Medicare rate $8.46 (3,282% markup)\n\nThe Medicare DRG benchmark for this type of pneumonia hospitalization (DRG 194) is $5,441.93. My total bill of $10,150.87 represents 1.9x the Medicare payment rate.\n\nI request that you review and adjust these charges to reflect fair market rates. Please respond within 30 days. I reserve the right to file complaints with the Tennessee Department of Health and the Centers for Medicare & Medicaid Services if this matter is not resolved.\n\nSincerely,\n[Patient Name]',
@@ -1431,11 +1431,18 @@ module.exports = async function handler(req, res) {
           }
         });
         if (drgFacilityItems.length > 0) {
-          for (var di = 0; di < drgFacilityItems.length; di++) {
+          drgFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          // First facility item carries the DRG benchmark for fair value calculation
+          drgFacilityItems[0].fair_rate = null;
+          drgFacilityItems[0].total_fair = drg.payment;
+          drgFacilityItems[0].markup_pct = '--';
+          drgFacilityItems[0].note = 'Packaged into DRG ' + drg.code + ' (' + (drg.desc || '').split(' ').slice(0, 6).join(' ') + ') -- not separately payable';
+          drgFacilityItems[0].status = 'DRG_COVERED';
+          for (var di = 1; di < drgFacilityItems.length; di++) {
             drgFacilityItems[di].fair_rate = null;
             drgFacilityItems[di].total_fair = null;
             drgFacilityItems[di].markup_pct = '--';
-            drgFacilityItems[di].note = 'Packaged into DRG ' + drg.code + ' (' + (drg.desc || '').split(' ').slice(0, 6).join(' ') + ') -- not separately payable';
+            drgFacilityItems[di].note = 'Packaged into DRG ' + drg.code + ' -- not separately payable';
             drgFacilityItems[di].status = 'DRG_COVERED';
           }
         }
@@ -1460,6 +1467,13 @@ module.exports = async function handler(req, res) {
               item.status = 'DRG_COVERED';
               item.type = 'facility_drg';
             }
+          }
+        });
+        // Zero out total_fair on CPT items -- DRG covers everything, individual rates are dispute evidence only
+        enrichedItems.forEach(function(item) {
+          if (item.status !== 'DRG_COVERED' && item.total_fair !== null && item.total_fair > 0) {
+            item._display_fair = item.total_fair; // preserve for display
+            item.total_fair = 0;
           }
         });
       } else if (drg && drg.code === 'RANGE' && drg.drg_range) {
@@ -1489,7 +1503,13 @@ module.exports = async function handler(req, res) {
         });
         if (rangeFacilityItems.length > 0 && rangeHigh > 0) {
           var rangeDesc = 'DRG estimate ($' + (drg.drg_range.low || 0).toLocaleString() + '-$' + rangeHigh.toLocaleString() + ')';
-          for (var ri = 0; ri < rangeFacilityItems.length; ri++) {
+          rangeFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          rangeFacilityItems[0].fair_rate = null;
+          rangeFacilityItems[0].total_fair = rangeHigh;
+          rangeFacilityItems[0].markup_pct = '--';
+          rangeFacilityItems[0].note = 'Packaged into ' + rangeDesc + ' -- not separately payable';
+          rangeFacilityItems[0].status = 'DRG_COVERED';
+          for (var ri = 1; ri < rangeFacilityItems.length; ri++) {
             rangeFacilityItems[ri].fair_rate = null;
             rangeFacilityItems[ri].total_fair = null;
             rangeFacilityItems[ri].markup_pct = '--';
@@ -1551,11 +1571,17 @@ module.exports = async function handler(req, res) {
         });
         if (unknownFacilityItems.length > 0) {
           var estDesc = isSurgicalBill ? 'estimated surgical DRG' : 'estimated medical DRG';
-          for (var ui = 0; ui < unknownFacilityItems.length; ui++) {
+          unknownFacilityItems.sort(function(a, b) { return b.billed - a.billed; });
+          unknownFacilityItems[0].fair_rate = null;
+          unknownFacilityItems[0].total_fair = genericFacilityBenchmark;
+          unknownFacilityItems[0].markup_pct = '--';
+          unknownFacilityItems[0].note = 'Packaged into ' + estDesc + ' benchmark ($' + genericFacilityBenchmark.toLocaleString() + ') -- not separately payable. Provide procedure details for exact DRG.';
+          unknownFacilityItems[0].status = 'DRG_COVERED';
+          for (var ui = 1; ui < unknownFacilityItems.length; ui++) {
             unknownFacilityItems[ui].fair_rate = null;
             unknownFacilityItems[ui].total_fair = null;
             unknownFacilityItems[ui].markup_pct = '--';
-            unknownFacilityItems[ui].note = 'Packaged into ' + estDesc + ' benchmark ($' + genericFacilityBenchmark.toLocaleString() + ') -- not separately payable. Provide procedure details for exact DRG.';
+            unknownFacilityItems[ui].note = 'Packaged into ' + estDesc + ' -- not separately payable';
             unknownFacilityItems[ui].status = 'DRG_COVERED';
           }
         }
@@ -1804,6 +1830,15 @@ module.exports = async function handler(req, res) {
     });
 
     recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
+
+    // ── DRG ENFORCEMENT: if we have a known DRG, fair value IS the DRG payment ──
+    // This is the safety net -- no matter what Sonnet writes or how the UI computes,
+    // the DRG benchmark is the final word on fair value for inpatient bills
+    if (drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE' && drgEstimate.drg_payment > 0) {
+      report.estimated_fair_value = drgEstimate.drg_payment;
+      report.potential_savings = Math.max(0, Math.round((report.total_billed - drgEstimate.drg_payment) * 100) / 100);
+      console.log('DRG ENFORCEMENT: fair_value=$' + drgEstimate.drg_payment.toFixed(2) + ', savings=$' + report.potential_savings.toFixed(2));
+    }
 
     // ── FINAL ENFORCEMENT: total_billed MUST match the bill's stated total ──
     // The customer holds the bill -- if our number differs, we lose all credibility
