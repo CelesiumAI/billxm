@@ -2890,7 +2890,7 @@ function BillXM() {
     if (!agreed) return setError("Please agree to the Terms of Service.");
 
     // Block paid users who have exhausted their 5-bill session allotment
-    if (isPaid && billsRemaining <= 0) { setPaywallTarget("additional_bill"); setShowPaywall(true); return; }
+    if (isPaid && !isDemo && billsRemaining <= 0) { setPaywallTarget("additional_bill"); setShowPaywall(true); return; }
 
     // Demo bills bypass the gate entirely
     if (usingDemo || DEMO_CODES.indexOf(unlockCode.toUpperCase()) >= 0) {
@@ -2953,7 +2953,7 @@ function BillXM() {
 
         return processNextChunk();
       }).then(function(report) {
-        setReport(report); if (isPaid) setBillsRemaining(prev => Math.max(0, prev - 1)); setShowSaveWarning(true); setAnalysisProgress(""); try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
+        setReport(report); if (isPaid && !isDemo) setBillsRemaining(prev => Math.max(0, prev - 1)); setShowSaveWarning(true); setAnalysisProgress(""); try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
         setAnalyzeDone(true);
         setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
       }).catch(function(err) {
@@ -2995,7 +2995,7 @@ function BillXM() {
     })
       .then(function(report) {
         setReport(report);
-        if (isPaid) setBillsRemaining(prev => Math.max(0, prev - 1));
+        if (isPaid && !isDemo) setBillsRemaining(prev => Math.max(0, prev - 1));
         setShowSaveWarning(true);
         try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
         recordGradeUsed(); // Track free grade usage
