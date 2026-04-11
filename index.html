@@ -3915,11 +3915,11 @@ function BillXM() {
     const isSummaryBill = report.report_type === "SUMMARY_BILL" || report.grade === "PENDING";
     const TABS = [
       { id: "overview",  label: "📊 Overview",               locked: false },
+      { id: "chat",      label: "💬 Ask BillXM",              locked: false, highlight: true },
       { id: "issues",    label: `🚨 Issues (${issues.length})`, locked: isSummaryBill ? false : !isPaid },
       { id: "lineitems", label: "📋 Line Items",              locked: isSummaryBill ? false : !isPaid },
       { id: "scripts",   label: "📞 Phone Scripts",           locked: isSummaryBill ? false : !hasFull },
       { id: "letter",    label: "✉️ Dispute Letter",          locked: isSummaryBill ? false : !hasFull },
-      { id: "chat",      label: "💬 Ask BillXM",              locked: !hasFull },
       { id: "negotiate", label: "🤝 We Negotiate",            locked: false },
     ];
 
@@ -3980,7 +3980,6 @@ function BillXM() {
         setPaywallTarget(tab.id); setShowPaywall(true); return;
       }
       if (["issues","lineitems"].includes(tab.id) && !isPaid) { setPaywallTarget(tab.id); setShowPaywall(true); return; }
-      if (tab.id === "chat" && !hasFull) { setPaywallTarget(tab.id); setShowPaywall(true); return; }
       setActiveTab(tab.id);
     }
 
@@ -4065,8 +4064,25 @@ function BillXM() {
         <div style={{ background: "white", borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 20 }}>
           <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", overflowX: "auto", padding: "0 24px" }}>
             {TABS.map(t => (
-              <button key={t.id} onClick={() => handleTabClick(t)} style={{ padding: "14px 16px", border: "none", background: "none", borderBottom: `3px solid ${activeTab === t.id ? C.blue : "transparent"}`, color: activeTab === t.id ? C.blue : t.locked ? "#cbd5e1" : C.muted, fontSize: 13, fontWeight: activeTab === t.id ? 700 : 500, cursor: "pointer", whiteSpace: "nowrap", fontFamily: C.font, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 4 }}>
+              <button key={t.id} onClick={() => handleTabClick(t)} style={{
+                padding: "14px 16px",
+                border: "none",
+                background: t.highlight && activeTab !== t.id ? "linear-gradient(135deg, #eff6ff, #f0f9ff)" : "none",
+                borderBottom: `3px solid ${activeTab === t.id ? C.blue : t.highlight && activeTab !== t.id ? "#3b82f6" : "transparent"}`,
+                color: activeTab === t.id ? C.blue : t.locked ? "#cbd5e1" : t.highlight ? "#2563eb" : C.muted,
+                fontSize: 13,
+                fontWeight: activeTab === t.id ? 700 : t.highlight ? 600 : 500,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontFamily: C.font,
+                transition: "all 0.15s",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                borderRadius: t.highlight && activeTab !== t.id ? "8px 8px 0 0" : 0,
+              }}>
                 {t.label}
+                {t.highlight && activeTab !== t.id && <span style={{ fontSize: 9, background: "#3b82f6", color: "white", padding: "1px 5px", borderRadius: 6, fontWeight: 700 }}>FREE</span>}
                 {t.locked && <span style={{ fontSize: 10 }}>🔒</span>}
               </button>
             ))}
@@ -4446,14 +4462,14 @@ function BillXM() {
           {/* ── WE NEGOTIATE ── */}
           {/* ── CHAT TAB ── */}
           {activeTab === "chat" && (
-            !hasFull ? (
-              <PaywallCard title="Ask BillXM AI — Billing Questions Answered" tier="full" />
-            ) : (
+            true ? (
               <div>
                 <div style={{ marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 4 }}>Ask BillXM AI</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 4 }}>💬 Ask BillXM AI</h2>
                   <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
-                    Ask anything about your bill or medical billing in general. Our AI billing advisor knows your full report and can answer questions in plain English.
+                    {isPaid
+                      ? "Ask anything about your bill or medical billing. Our AI advisor knows your full report and can explain any charge in plain English."
+                      : "Ask any medical billing question — free for everyone. Upgrade to $4.99 for answers about your specific bill."}
                   </p>
                 </div>
 
@@ -4462,14 +4478,21 @@ function BillXM() {
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, fontWeight: 600 }}>Try asking:</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {[
+                      {(isPaid ? [
                         "Which charge should I dispute first?",
-                        "What is an EOB and do I need it?",
+                        "Why was I charged so much for an EKG?",
                         "Can I negotiate this bill down?",
                         "What is the No Surprises Act?",
-                        "Why was I charged so much for an EKG?",
                         "How do I apply for financial assistance?",
-                      ].map(function(q) {
+                        "What does CPT code 99285 mean?",
+                      ] : [
+                        "Can I negotiate a hospital bill?",
+                        "What is an EOB?",
+                        "What is the No Surprises Act?",
+                        "What does contractual adjustment mean?",
+                        "How do I request an itemized bill?",
+                        "What is charity care?",
+                      ]).map(function(q) {
                         return (
                           <button key={q} onClick={function() { setChatInput(q); }} style={{ padding: "6px 12px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 20, fontSize: 12, color: "#0369a1", cursor: "pointer", fontFamily: C.font }}>
                             {q}
