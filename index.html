@@ -4696,7 +4696,12 @@ function BillXM() {
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
                 {/* Savings by type */}
                 <Card style={{ flex: 2, minWidth: 280, padding: 20 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.navy, marginBottom: 16 }}>💰 Savings by Issue Type</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.navy, marginBottom: 16 }}>{report.bill_state === "FULLY_RESOLVED" ? "Charges Above Medicare Benchmarks" : "💰 Savings by Issue Type"}</div>
+                  {report.bill_state === "FULLY_RESOLVED" && (
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, lineHeight: 1.5 }}>
+                      Your bill is paid in full. This shows how individual charges compared to government rates — for your records only.
+                    </div>
+                  )}
                   {Object.entries(
                     issues.reduce((acc, i) => { acc[i.type] = (acc[i.type] || 0) + (i.savings || 0); return acc; }, {})
                   ).sort(([, a], [, b]) => b - a).slice(0, 7).map(([type, sav]) => {
@@ -4716,6 +4721,11 @@ function BillXM() {
                 {/* Severity + visual bar */}
                 <Card style={{ flex: 1, minWidth: 200, padding: 20 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.navy, marginBottom: 16 }}>⚡ Issue Breakdown</div>
+                  {report.bill_state === "FULLY_RESOLVED" && (
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, lineHeight: 1.5 }}>
+                      Shown for reference — no dispute action needed.
+                    </div>
+                  )}
                   {[[C.red, "HIGH", highCount], [C.amber, "MEDIUM", medCount], [C.green, "LOW", lowCount]].map(([clr, sev, cnt]) => (
                     <div key={sev} style={{ marginBottom: 14 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
