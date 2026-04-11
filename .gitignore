@@ -23,3 +23,6 @@ BillXM_v2_Changes_for_CC_v2.md
 billxm_code_report.md
 CC_v2_implementation_report.md
 _test_*.js
+
+# Local dev tooling — JSX parse check wrapper (devDep is committed, script is local)
+check-jsx.js
