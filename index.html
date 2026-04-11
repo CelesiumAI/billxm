@@ -2359,6 +2359,36 @@ function BillXM() {
   const [chatInput, setChatInput] = React.useState('');
   const [chatLoading, setChatLoading] = React.useState(false);
   const [chatEscalated, setChatEscalated] = React.useState(false);
+  const [freeWidgetOpen, setFreeWidgetOpen] = React.useState(false);
+  const [freeWidgetMessages, setFreeWidgetMessages] = React.useState([]);
+  const [freeWidgetInput, setFreeWidgetInput] = React.useState('');
+  const [freeWidgetLoading, setFreeWidgetLoading] = React.useState(false);
+  const [freeWidgetShown, setFreeWidgetShown] = React.useState(false);
+
+  async function sendFreeMessage() {
+    if (!freeWidgetInput.trim() || freeWidgetLoading) return;
+    var userMessage = { role: 'user', content: freeWidgetInput.trim() };
+    var newMessages = [...freeWidgetMessages, userMessage];
+    setFreeWidgetMessages(newMessages);
+    setFreeWidgetInput('');
+    setFreeWidgetLoading(true);
+    try {
+      var res = await fetch('/api/chat-free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+      var data = await res.json();
+      if (data.error) {
+        setFreeWidgetMessages([...newMessages, { role: 'assistant', content: '⚠️ ' + data.error }]);
+      } else {
+        setFreeWidgetMessages([...newMessages, { role: 'assistant', content: data.content }]);
+      }
+    } catch (err) {
+      setFreeWidgetMessages([...newMessages, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+    }
+    setFreeWidgetLoading(false);
+  }
   const [letter, setLetter] = useState("");
   const [letterLoading, setLetterLoading] = useState(false);
   const [error, setError] = useState("");
@@ -3740,6 +3770,245 @@ function BillXM() {
             <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 10 }}>No account required · No data stored · For informational purposes only</p>
           </div>
         </div>
+
+        {/* ── FLOATING BILLING ADVISOR WIDGET ── */}
+        {/* Prominent chat button — always visible on landing page */}
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 1000 }}>
+
+          {/* Open chat button — highly visible, animated */}
+          {!freeWidgetOpen && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+              {/* Attention banner — shows before first open */}
+              {!freeWidgetShown && (
+                <div style={{
+                  background: "white",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: "10px 14px",
+                  maxWidth: 220,
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                  fontSize: 13,
+                  color: "#1e293b",
+                  lineHeight: 1.5,
+                  position: "relative",
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 3, color: C.navy }}>💬 Got a billing question?</div>
+                  <div style={{ color: "#64748b", fontSize: 12 }}>Ask our AI billing advisor anything — free, no signup needed.</div>
+                  {/* Pointer arrow */}
+                  <div style={{ position: "absolute", bottom: -8, right: 28, width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderTop: "8px solid white" }} />
+                </div>
+              )}
+              {/* Main button */}
+              <button
+                onClick={function() { setFreeWidgetOpen(true); setFreeWidgetShown(true); }}
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #0f2444, #2563eb)",
+                  border: "3px solid white",
+                  boxShadow: "0 4px 20px rgba(37,99,235,0.5)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 26,
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  animation: "pulse-chat 2s infinite",
+                }}
+                onMouseEnter={function(e) { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(37,99,235,0.7)"; }}
+                onMouseLeave={function(e) { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(37,99,235,0.5)"; }}
+              >
+                💬
+              </button>
+            </div>
+          )}
+
+          {/* Chat panel — expands when open */}
+          {freeWidgetOpen && (
+            <div style={{
+              width: 360,
+              maxHeight: 520,
+              background: "white",
+              borderRadius: 16,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "1px solid #e2e8f0",
+            }}>
+              {/* Header */}
+              <div style={{
+                background: "linear-gradient(135deg, #0f2444, #1e3a5f)",
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}>
+                <div>
+                  <div style={{ color: "white", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", gap: 8 }}>
+                    💬 BillXM Billing Advisor
+                    <span style={{ fontSize: 10, background: "#4ade80", color: "#14532d", padding: "2px 7px", borderRadius: 10, fontWeight: 700 }}>FREE</span>
+                  </div>
+                  <div style={{ color: "#93c5fd", fontSize: 11, marginTop: 2 }}>Ask any medical billing question</div>
+                </div>
+                <button
+                  onClick={function() { setFreeWidgetOpen(false); }}
+                  style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "white", width: 28, height: 28, borderRadius: "50%", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Messages area */}
+              <div style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: 14,
+                background: "#f8fafc",
+                minHeight: 200,
+                maxHeight: 320,
+              }}>
+                {/* Welcome message — always shown */}
+                <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12 }}>
+                  <div style={{
+                    maxWidth: "90%",
+                    padding: "10px 14px",
+                    borderRadius: "18px 18px 18px 4px",
+                    background: "white",
+                    border: "1px solid #e2e8f0",
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: "#1e293b",
+                  }}>
+                    👋 Hi! I'm BillXM's billing advisor. I can answer any question about medical bills — how to negotiate, what your rights are, what billing codes mean, anything. What's on your mind?
+                  </div>
+                </div>
+
+                {/* Starter question chips */}
+                {freeWidgetMessages.length === 0 && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6, fontWeight: 500 }}>Common questions:</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {[
+                        "Can I negotiate my hospital bill?",
+                        "What is an EOB?",
+                        "What is the No Surprises Act?",
+                        "My bill seems too high — what do I do?",
+                        "How do I request an itemized bill?",
+                        "What is charity care?",
+                      ].map(function(q) {
+                        return (
+                          <button
+                            key={q}
+                            onClick={function() { setFreeWidgetInput(q); }}
+                            style={{
+                              padding: "5px 10px",
+                              background: "#eff6ff",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: 16,
+                              fontSize: 11,
+                              color: "#1d4ed8",
+                              cursor: "pointer",
+                              fontFamily: C.font,
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {q}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Conversation messages */}
+                {freeWidgetMessages.map(function(msg, i) {
+                  var isUser = msg.role === "user";
+                  return (
+                    <div key={i} style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", marginBottom: 10 }}>
+                      <div style={{
+                        maxWidth: "85%",
+                        padding: "9px 13px",
+                        borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                        background: isUser ? "#0f2444" : "white",
+                        color: isUser ? "white" : "#1e293b",
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        border: isUser ? "none" : "1px solid #e2e8f0",
+                        whiteSpace: "pre-wrap",
+                      }}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {freeWidgetLoading && (
+                  <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 10 }}>
+                    <div style={{ padding: "9px 13px", borderRadius: "18px 18px 18px 4px", background: "white", border: "1px solid #e2e8f0", fontSize: 13, color: "#94a3b8" }}>
+                      Thinking...
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input area */}
+              <div style={{ padding: "10px 12px", borderTop: "1px solid #e2e8f0", background: "white" }}>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={freeWidgetInput}
+                    onChange={function(e) { setFreeWidgetInput(e.target.value); }}
+                    onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendFreeMessage(); } }}
+                    placeholder="Ask any billing question..."
+                    style={{
+                      flex: 1,
+                      padding: "9px 12px",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 20,
+                      fontSize: 13,
+                      fontFamily: C.font,
+                      outline: "none",
+                      background: "#f8fafc",
+                    }}
+                  />
+                  <button
+                    onClick={sendFreeMessage}
+                    disabled={freeWidgetLoading || !freeWidgetInput.trim()}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background: freeWidgetLoading || !freeWidgetInput.trim() ? "#e2e8f0" : "#0f2444",
+                      border: "none",
+                      color: "white",
+                      cursor: freeWidgetLoading || !freeWidgetInput.trim() ? "default" : "pointer",
+                      fontSize: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    ➤
+                  </button>
+                </div>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 5, textAlign: "center" }}>
+                  Free · No signup · Not legal advice
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Pulse animation for chat button */}
+        <style>{`
+          @keyframes pulse-chat {
+            0% { box-shadow: 0 4px 20px rgba(37,99,235,0.5); }
+            50% { box-shadow: 0 4px 28px rgba(37,99,235,0.8), 0 0 0 8px rgba(37,99,235,0.1); }
+            100% { box-shadow: 0 4px 20px rgba(37,99,235,0.5); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -3854,6 +4123,236 @@ function BillXM() {
               Enterprise access →
             </button>
           </div>
+        </div>
+
+        {/* ── FLOATING BILLING ADVISOR WIDGET ── */}
+        {/* Prominent chat button — always visible on upload page */}
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 1000 }}>
+
+          {/* Open chat button — highly visible, animated */}
+          {!freeWidgetOpen && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+              {/* Attention banner — shows before first open */}
+              {!freeWidgetShown && (
+                <div style={{
+                  background: "white",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: "10px 14px",
+                  maxWidth: 220,
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                  fontSize: 13,
+                  color: "#1e293b",
+                  lineHeight: 1.5,
+                  position: "relative",
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 3, color: C.navy }}>💬 Got a billing question?</div>
+                  <div style={{ color: "#64748b", fontSize: 12 }}>Ask our AI billing advisor anything — free, no signup needed.</div>
+                  {/* Pointer arrow */}
+                  <div style={{ position: "absolute", bottom: -8, right: 28, width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderTop: "8px solid white" }} />
+                </div>
+              )}
+              {/* Main button */}
+              <button
+                onClick={function() { setFreeWidgetOpen(true); setFreeWidgetShown(true); }}
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #0f2444, #2563eb)",
+                  border: "3px solid white",
+                  boxShadow: "0 4px 20px rgba(37,99,235,0.5)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 26,
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  animation: "pulse-chat 2s infinite",
+                }}
+                onMouseEnter={function(e) { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(37,99,235,0.7)"; }}
+                onMouseLeave={function(e) { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(37,99,235,0.5)"; }}
+              >
+                💬
+              </button>
+            </div>
+          )}
+
+          {/* Chat panel — expands when open */}
+          {freeWidgetOpen && (
+            <div style={{
+              width: 360,
+              maxHeight: 520,
+              background: "white",
+              borderRadius: 16,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "1px solid #e2e8f0",
+            }}>
+              {/* Header */}
+              <div style={{
+                background: "linear-gradient(135deg, #0f2444, #1e3a5f)",
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}>
+                <div>
+                  <div style={{ color: "white", fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", gap: 8 }}>
+                    💬 BillXM Billing Advisor
+                    <span style={{ fontSize: 10, background: "#4ade80", color: "#14532d", padding: "2px 7px", borderRadius: 10, fontWeight: 700 }}>FREE</span>
+                  </div>
+                  <div style={{ color: "#93c5fd", fontSize: 11, marginTop: 2 }}>Ask any medical billing question</div>
+                </div>
+                <button
+                  onClick={function() { setFreeWidgetOpen(false); }}
+                  style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "white", width: 28, height: 28, borderRadius: "50%", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Messages area */}
+              <div style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: 14,
+                background: "#f8fafc",
+                minHeight: 200,
+                maxHeight: 320,
+              }}>
+                {/* Welcome message — always shown */}
+                <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12 }}>
+                  <div style={{
+                    maxWidth: "90%",
+                    padding: "10px 14px",
+                    borderRadius: "18px 18px 18px 4px",
+                    background: "white",
+                    border: "1px solid #e2e8f0",
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: "#1e293b",
+                  }}>
+                    👋 Hi! I'm BillXM's billing advisor. I can answer any question about medical bills — how to negotiate, what your rights are, what billing codes mean, anything. What's on your mind?
+                  </div>
+                </div>
+
+                {/* Starter question chips */}
+                {freeWidgetMessages.length === 0 && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6, fontWeight: 500 }}>Common questions:</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {[
+                        "Can I negotiate my hospital bill?",
+                        "What is an EOB?",
+                        "What is the No Surprises Act?",
+                        "My bill seems too high — what do I do?",
+                        "How do I request an itemized bill?",
+                        "What is charity care?",
+                      ].map(function(q) {
+                        return (
+                          <button
+                            key={q}
+                            onClick={function() { setFreeWidgetInput(q); }}
+                            style={{
+                              padding: "5px 10px",
+                              background: "#eff6ff",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: 16,
+                              fontSize: 11,
+                              color: "#1d4ed8",
+                              cursor: "pointer",
+                              fontFamily: C.font,
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {q}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Conversation messages */}
+                {freeWidgetMessages.map(function(msg, i) {
+                  var isUser = msg.role === "user";
+                  return (
+                    <div key={i} style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", marginBottom: 10 }}>
+                      <div style={{
+                        maxWidth: "85%",
+                        padding: "9px 13px",
+                        borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                        background: isUser ? "#0f2444" : "white",
+                        color: isUser ? "white" : "#1e293b",
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        border: isUser ? "none" : "1px solid #e2e8f0",
+                        whiteSpace: "pre-wrap",
+                      }}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {freeWidgetLoading && (
+                  <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 10 }}>
+                    <div style={{ padding: "9px 13px", borderRadius: "18px 18px 18px 4px", background: "white", border: "1px solid #e2e8f0", fontSize: 13, color: "#94a3b8" }}>
+                      Thinking...
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input area */}
+              <div style={{ padding: "10px 12px", borderTop: "1px solid #e2e8f0", background: "white" }}>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={freeWidgetInput}
+                    onChange={function(e) { setFreeWidgetInput(e.target.value); }}
+                    onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendFreeMessage(); } }}
+                    placeholder="Ask any billing question..."
+                    style={{
+                      flex: 1,
+                      padding: "9px 12px",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 20,
+                      fontSize: 13,
+                      fontFamily: C.font,
+                      outline: "none",
+                      background: "#f8fafc",
+                    }}
+                  />
+                  <button
+                    onClick={sendFreeMessage}
+                    disabled={freeWidgetLoading || !freeWidgetInput.trim()}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background: freeWidgetLoading || !freeWidgetInput.trim() ? "#e2e8f0" : "#0f2444",
+                      border: "none",
+                      color: "white",
+                      cursor: freeWidgetLoading || !freeWidgetInput.trim() ? "default" : "pointer",
+                      fontSize: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    ➤
+                  </button>
+                </div>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 5, textAlign: "center" }}>
+                  Free · No signup · Not legal advice
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
