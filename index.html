@@ -1635,6 +1635,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
         <li><span class="ck">✓</span> Every overcharge with dollar amounts</li>
         <li><span class="ck">✓</span> PDF with government rate citations</li>
         <li><span class="ck">✓</span> Full breakdown per charge</li>
+        <li><span class="ck">✓</span> Analyze up to 5 bills per session</li>
       </ul>
       <a href="#" class="btn btn-outline" onclick="launchBillXM();return false;">Get Full Report</a>
     </div>
@@ -1654,6 +1655,7 @@ Source: 89 FR 97710 (Dec 9, 2024) · CMS MPFS CY2025 Q1 Release · CMS CLFS CY20
         <li><span class="ck">✓</span> AI-written dispute letter</li>
         <li><span class="ck">✓</span> Word-for-word phone scripts</li>
         <li><span class="ck">✓</span> Ready to send in 60 seconds</li>
+        <li><span class="ck">✓</span> Analyze up to 5 bills per session</li>
       </ul>
       <a href="#" class="btn btn-mint" onclick="launchBillXM();return false;">Get Dispute Kit</a>
     </div>
@@ -2386,6 +2388,9 @@ function BillXM() {
   const [chatInput, setChatInput] = React.useState('');
   const [chatLoading, setChatLoading] = React.useState(false);
   const [chatEscalated, setChatEscalated] = React.useState(false);
+  const [billsRemaining, setBillsRemaining] = React.useState(5);
+  const [showSaveWarning, setShowSaveWarning] = React.useState(false);
+  const [showNewBillConfirm, setShowNewBillConfirm] = React.useState(false);
   const [freeWidgetOpen, setFreeWidgetOpen] = React.useState(false);
   const [freeWidgetMessages, setFreeWidgetMessages] = React.useState([]);
   const [freeWidgetInput, setFreeWidgetInput] = React.useState('');
@@ -2496,8 +2501,8 @@ function BillXM() {
   function tryUnlock(targetTier) {
     const code = unlockCode.trim().toUpperCase();
     if (DEMO_CODES.includes(code)) { setTier("demo"); setShowPaywall(false); setUnlockCode(""); setUnlockError(""); return; }
-    if (code === FULL_CODE) { setTier("full"); setShowPaywall(false); setUnlockCode(""); setUnlockError(""); return; }
-    if (code === REPORT_CODE) { setTier("report"); setShowPaywall(false); setUnlockCode(""); setUnlockError(""); return; }
+    if (code === FULL_CODE) { setTier("full"); setBillsRemaining(5); setShowPaywall(false); setUnlockCode(""); setUnlockError(""); return; }
+    if (code === REPORT_CODE) { setTier("report"); setBillsRemaining(5); setShowPaywall(false); setUnlockCode(""); setUnlockError(""); return; }
     setUnlockError("Invalid code. Check your email or enter a valid access code.");
   }
 
@@ -2551,7 +2556,9 @@ function BillXM() {
         try {
           var rpt = JSON.parse(saved);
           setReport(rpt);
-          setTier(localStorage.getItem('billxm_checkout_tier') || "report");
+          const newTier = localStorage.getItem('billxm_checkout_tier') || "report";
+          setTier(newTier);
+          if (newTier === 'report' || newTier === 'full') setBillsRemaining(5);
           setScreen("report");
           setActiveTab("overview");
           setShowPaywall(false);
@@ -2882,6 +2889,9 @@ function BillXM() {
     if (inputMode === "text" && !billText.trim()) return setError("Please paste your bill text.");
     if (!agreed) return setError("Please agree to the Terms of Service.");
 
+    // Block paid users who have exhausted their 5-bill session allotment
+    if (isPaid && billsRemaining <= 0) { setPaywallTarget("additional_bill"); setShowPaywall(true); return; }
+
     // Demo bills bypass the gate entirely
     if (usingDemo || DEMO_CODES.indexOf(unlockCode.toUpperCase()) >= 0) {
       doAnalyze();
@@ -2943,7 +2953,7 @@ function BillXM() {
 
         return processNextChunk();
       }).then(function(report) {
-        setReport(report); setAnalysisProgress(""); try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
+        setReport(report); if (isPaid) setBillsRemaining(prev => Math.max(0, prev - 1)); setShowSaveWarning(true); setAnalysisProgress(""); try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
         setAnalyzeDone(true);
         setTimeout(function() { setAnalyzeDone(false); setScreen("report"); setActiveTab("overview"); }, 600);
       }).catch(function(err) {
@@ -2985,6 +2995,8 @@ function BillXM() {
     })
       .then(function(report) {
         setReport(report);
+        if (isPaid) setBillsRemaining(prev => Math.max(0, prev - 1));
+        setShowSaveWarning(true);
         try { localStorage.setItem('billxm_last_report', JSON.stringify(report)); } catch(e) {}
         recordGradeUsed(); // Track free grade usage
         setAnalyzeDone(true);
@@ -3293,7 +3305,7 @@ function BillXM() {
                 {tier === "report" ? "Upgrade to Dispute Kit" : "Unlock Your Full Report"}
               </div>
               <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
-                {tier === "report" ? "You have the Full Report. Add phone scripts and dispute letter." : "Your bill grade and savings estimate are free. Unlock the details to dispute it."}
+                {tier === "report" ? "You have the Full Report. Add phone scripts and dispute letter." : "Your bill grade and savings estimate are free. Unlock the details to dispute it. Covers 5 bill analyses per session. Additional bills $1 each."}
               </div>
             </div>
             <button onClick={() => setShowPaywall(false)} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: C.muted, lineHeight: 1, padding: "0 4px" }}>×</button>
@@ -4522,14 +4534,56 @@ function BillXM() {
       <div style={{ fontFamily: C.font, background: C.bg, minHeight: "100vh", paddingBottom: 48 }}>
         {SettingsModal}{GateModal}{PaymentModal}{ContactModal}
         {PaywallModal}
+        {/* New Bill confirmation dialog */}
+        {showNewBillConfirm && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <div style={{ background: "white", borderRadius: 16, padding: 28, maxWidth: 400, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+              <div style={{ fontSize: 20, marginBottom: 8 }}>⚠️ Have you saved your report?</div>
+              <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
+                Your report will not be available after you start a new analysis. Click <strong>Print Report</strong> to save it as a PDF first.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={function() { setShowNewBillConfirm(false); downloadReport(); }}
+                  style={{ flex: 1, padding: "10px 16px", background: C.navy, color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: C.font }}
+                >
+                  🖨️ Save Report First
+                </button>
+                <button
+                  onClick={function() { setShowNewBillConfirm(false); reset(); }}
+                  style={{ flex: 1, padding: "10px 16px", background: "#f1f5f9", color: "#64748b", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: C.font }}
+                >
+                  Continue Without Saving
+                </button>
+              </div>
+              <button
+                onClick={function() { setShowNewBillConfirm(false); }}
+                style={{ display: "block", width: "100%", marginTop: 10, padding: "8px", background: "none", border: "none", color: "#94a3b8", fontSize: 12, cursor: "pointer", fontFamily: C.font }}
+              >
+                Cancel — go back to my report
+              </button>
+            </div>
+          </div>
+        )}
         <NavBar right={
           <>
             {isDemo && <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "#fef3c7", color: "#92400e", fontWeight: 700, border: "1px solid #fde68a" }}>🎯 DEMO MODE</span>}
-            {isPaid && !isDemo && <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "#f0fdf4", color: C.green, fontWeight: 700, border: "1px solid #bbf7d0" }}>✓ {tier === "full" ? "Full Access" : "Report Unlocked"}</span>}
+            {isPaid && !isDemo && <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "#f0fdf4", color: C.green, fontWeight: 700, border: "1px solid #bbf7d0" }}>✓ {tier === "full" ? "Full Access" : "Report Unlocked"} · {billsRemaining} bill{billsRemaining !== 1 ? "s" : ""} remaining</span>}
             <button onClick={downloadReport} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", padding: "6px 14px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: C.font }}>🖨️ Print Report</button>
-            <button onClick={reset} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", padding: "6px 14px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: C.font }}>← New Bill</button>
+            <button onClick={function() { if (report) { setShowNewBillConfirm(true); } else { reset(); } }} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", padding: "6px 14px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: C.font }}>← New Bill</button>
           </>
         } />
+
+        {/* Save warning banner */}
+        {showSaveWarning && (
+          <div style={{ background: "#fefce8", border: "1px solid #fde68a", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ fontSize: 13, color: "#78350f", display: "flex", alignItems: "center", gap: 8 }}>
+              <span>⚠️</span>
+              <span><strong>Save your report now.</strong> This report will not be available after you close this browser. Click <strong>Print Report</strong> to save as PDF.</span>
+            </div>
+            <button onClick={function() { setShowSaveWarning(false); }} style={{ background: "none", border: "none", color: "#78350f", cursor: "pointer", fontSize: 18, padding: "0 4px", fontWeight: 700 }}>✕</button>
+          </div>
+        )}
 
         {/* HERO HEADER */}
         <div style={{ background: `linear-gradient(135deg, ${C.navy}, #1e3a5f)`, padding: "28px 24px 0" }}>
