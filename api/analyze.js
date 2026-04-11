@@ -2160,17 +2160,19 @@ module.exports = async function handler(req, res) {
       report.summary = parts.join(' ');
     }
 
-    // ── STEP 6: Grade rationale — plain English, state-aware ──
+    // ── STEP 6: Grade rationale — short, non-duplicating, state-aware ──
     if (billState === 'FULLY_RESOLVED') {
-      report.grade_rationale = 'Your balance is $0. Charges on this bill were ' + commercialOverchargePct + '% above what commercial insurance typically pays.';
+      report.grade_rationale = 'Paid in full — balance $0. Charges were ' + commercialOverchargePct + '% above commercial norms.';
     } else if (billState === 'PRE_PAYMENT_INSURED') {
-      report.grade_rationale = 'Insurance not yet processed. These charges are ' + commercialOverchargePct + '% above typical commercial rates — your final bill will be lower.';
+      report.grade_rationale = 'Insurance pending. List price is ' + commercialOverchargePct + '% above commercial norms.';
     } else if (billState === 'BALANCE_BILL') {
-      report.grade_rationale = 'You may be protected by federal law. Charges are ' + commercialOverchargePct + '% above typical commercial rates.';
+      report.grade_rationale = 'Possible balance bill. Charges are ' + commercialOverchargePct + '% above commercial norms.';
     } else if (billState === 'COST_SHARE_DISPUTE') {
-      report.grade_rationale = 'Charges are ' + commercialOverchargePct + '% above typical commercial rates — disputing these could reduce your balance.';
+      report.grade_rationale = 'Cost-share dispute. Charges are ' + commercialOverchargePct + '% above commercial norms.';
     } else {
-      report.grade_rationale = 'Charges are ' + commercialOverchargePct + '% above typical commercial rates — ' + fmt_dollars(commercialSavings) + ' in potential savings.';
+      report.grade_rationale = commercialSavings > 0
+        ? fmt_dollars(commercialSavings) + ' in potential savings vs commercial rates.'
+        : 'Charges are within typical commercial insurance rates.';
     }
 
     // ── Helper for grade_rationale dollar format (server-side, no fmt() available) ──
