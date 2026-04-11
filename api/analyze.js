@@ -2140,13 +2140,20 @@ module.exports = async function handler(req, res) {
           facilityNote = ' The facility charges of $' + Math.round(facilityTotal).toLocaleString() + ' are covered by the Medicare DRG payment system and should be bundled into one rate.';
         }
       }
-      var closing = 'Your total bill of $' + eBilled.toLocaleString() + ' has $' + eSavings.toLocaleString() + ' in potential savings (' + enforcedOverchargePct + '% overcharge).';
+      var closing;
+      if (billState === 'FULLY_RESOLVED') {
+        closing = 'Your total bill of $' + eBilled.toLocaleString() + ' was paid in full by your insurance. The charges on this bill were ' + commercialOverchargePct + '% above what commercial insurance typically pays for these services.';
+      } else if (billState === 'COST_SHARE_DISPUTE') {
+        closing = 'Your total bill of $' + eBilled.toLocaleString() + ' shows charges ' + commercialOverchargePct + '% above typical commercial rates — disputing these may reduce your remaining balance.';
+      } else {
+        closing = 'Your total bill of $' + eBilled.toLocaleString() + ' has $' + commercialSavings.toLocaleString() + ' in potential savings (' + commercialOverchargePct + '% above commercial rates).';
+      }
       if (drgEstimate && drgEstimate.drg_code && drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED' && drgEstimate.drg_code !== 'RANGE') {
         closing += ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + eFair.toLocaleString() + '.';
       }
 
       // Combine: context banner + JS opening + Sonnet's overcharge examples + facility note + JS closing
-      var parts = [billStateContext, opening];
+      var parts = [opening];
       if (overchargeExamples.length > 0) parts.push(overchargeExamples.join(' '));
       if (facilityNote) parts.push(facilityNote);
       parts.push(closing);
