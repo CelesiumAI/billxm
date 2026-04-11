@@ -2633,7 +2633,8 @@ function BillXM() {
     setReport(null); setBillText(""); setFiles([]); setError(""); setLetter("");
     setLetterLoading(false); setScreen("upload"); setActiveTab("overview");
     setProcessing(false); setFilterSev("ALL"); setAnalyzeDone(false);
-    setTier("free"); setUsingDemo(false);
+    if (!isPaid) setTier("free");
+    setUsingDemo(false);
   }
   function backToWebsite() {
     if (report && !window.confirm("Leave BillXM? Your current analysis will be lost.")) return;
