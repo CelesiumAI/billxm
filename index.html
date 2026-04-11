@@ -2355,6 +2355,10 @@ function BillXM() {
   const [billText, setBillText] = useState("");
   const [files, setFiles] = useState([]);
   const [report, setReport] = useState(null);
+  const [chatMessages, setChatMessages] = React.useState([]);
+  const [chatInput, setChatInput] = React.useState('');
+  const [chatLoading, setChatLoading] = React.useState(false);
+  const [chatEscalated, setChatEscalated] = React.useState(false);
   const [letter, setLetter] = useState("");
   const [letterLoading, setLetterLoading] = useState(false);
   const [error, setError] = useState("");
@@ -2982,70 +2986,209 @@ function BillXM() {
     const issues = r.issues || [], lines = r.line_items || [], steps = r.next_steps || [];
     const dateStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
     const n = issues.length;
+    const billState = r.bill_state || 'SELF_PAY';
+    const isResolved = billState === 'FULLY_RESOLVED';
+    const isPrePayment = billState === 'PRE_PAYMENT_INSURED';
+
     const intro = `Hi, my name is [YOUR NAME] and I'm calling regarding account [ACCOUNT NUMBER]. I have reviewed my itemized bill totaling ${fmt(r.total_billed)} and identified ${n} billing issues totaling approximately ${fmt(r.potential_savings)} in potential overcharges. Could you please pull up my account?`;
     const closing = `Before we end this call I need the following: your full name, a reference number for this call, and your direct line. If this matter is not resolved in writing within 30 days I will escalate to the Better Business Bureau (BBB), the CMS complaint portal at medicare.gov, and my state's Attorney General.`;
 
-    let h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>BillXM — Bill Examination Report</title>`;
-    h += `<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;max-width:860px;margin:0 auto;padding:32px 24px;color:#1e293b;font-size:13px;line-height:1.5}h1{color:#0f2444;font-size:22px;margin-bottom:4px}h2{color:#0f2444;font-size:17px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin:28px 0 14px}h3{font-size:14px;margin:14px 0 8px;color:#0f2444}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#0f2444;color:white;padding:8px 6px;text-align:left;font-size:11px}td{padding:6px;border-bottom:1px solid #e2e8f0}.hero{background:linear-gradient(135deg,#0f2444,#1e3a5f);color:white;padding:24px;border-radius:12px;margin:16px 0}.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}.high{border-left:4px solid #dc2626;background:#fef2f2}.med{border-left:4px solid #d97706;background:#fffbeb}.low{border-left:4px solid #059669;background:#f0fdf4}.issue{padding:12px;border-radius:8px;margin:6px 0}.script{background:#eff6ff;border-left:3px solid #2563eb;padding:12px;border-radius:6px;margin:10px 0;font-style:italic;font-size:13px;color:#1e40af;line-height:1.7}.letter{background:#f8fafc;padding:24px;border:1px solid #e2e8f0;border-radius:8px;white-space:pre-wrap;font-family:Georgia,serif;font-size:13px;line-height:1.9;color:#1e293b}.footer{margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:11px;text-align:center}@media print{.page-break{page-break-before:always}}</style></head><body>`;
-    h += `<h1>BillXM &mdash; Bill Examination Report</h1><p style="color:#94a3b8;margin-bottom:8px">Generated ${dateStr}</p>`;
-    h += `<div class="hero"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px"><div><div style="font-size:14px;opacity:.8">Bill Grade</div><div style="font-size:40px;font-weight:800">${r.grade}</div><div style="font-size:12px;opacity:.7;margin-top:2px">${r.grade_rationale || ""}</div></div><div style="text-align:right"><div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.06em">Potential Savings</div><div style="font-size:34px;font-weight:800;color:#4ade80">${fmt(r.potential_savings)}</div></div></div><div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">`;
-    [["Total Billed", fmt(r.total_billed)], ["Fair Value", fmt(r.estimated_fair_value)], ["Issues Found", n + " issues"]].forEach(([l, v]) => {
-      h += `<div style="flex:1;min-width:100px;background:rgba(255,255,255,.1);padding:10px;border-radius:8px;text-align:center"><div style="font-size:10px;opacity:.7;text-transform:uppercase">${l}</div><div style="font-size:18px;font-weight:800;margin-top:2px">${v}</div></div>`;
+    function fmtRange(low, high) {
+      if (!low || !high) return '—';
+      return fmt(low) + '–' + fmt(high);
+    }
+
+    let h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>BillXM — Bill Analysis Report</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Arial,Helvetica,sans-serif;max-width:880px;margin:0 auto;padding:32px 24px;color:#1e293b;font-size:13px;line-height:1.6}
+      h1{color:#0f2444;font-size:22px;margin-bottom:4px}
+      h2{color:#0f2444;font-size:17px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin:28px 0 14px}
+      h3{font-size:14px;margin:14px 0 8px;color:#0f2444}
+      table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+      th{background:#0f2444;color:white;padding:8px 6px;text-align:left;font-size:11px}
+      td{padding:7px 6px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+      .hero{background:linear-gradient(135deg,#0f2444,#1e3a5f);color:white;padding:24px;border-radius:12px;margin:16px 0}
+      .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+      .high{border-left:4px solid #dc2626;background:#fef2f2}
+      .med{border-left:4px solid #d97706;background:#fffbeb}
+      .low{border-left:4px solid #059669;background:#f0fdf4}
+      .issue{padding:12px;border-radius:8px;margin:6px 0}
+      .script{background:#eff6ff;border-left:3px solid #2563eb;padding:12px;border-radius:6px;margin:10px 0;font-style:italic;font-size:13px;color:#1e40af;line-height:1.7}
+      .letter{background:#f8fafc;padding:24px;border:1px solid #e2e8f0;border-radius:8px;white-space:pre-wrap;font-family:Georgia,serif;font-size:13px;line-height:1.9;color:#1e293b}
+      .footer{margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:11px;text-align:center}
+      .context-banner{padding:13px 16px;border-radius:8px;margin:10px 0;font-size:13px;line-height:1.6}
+      .bmarks{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap}
+      .bmark{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+      .bm-gov{background:#dbeafe;color:#1e40af}
+      .bm-com{background:#fef3c7;color:#92400e}
+      .bm-lst{background:#fce7f3;color:#9d174d}
+      @media print{.page-break{page-break-before:always}}
+    </style></head><body>`;
+
+    h += `<h1>BillXM &mdash; Bill Analysis Report</h1>
+          <p style="color:#94a3b8;margin-bottom:8px">Generated ${dateStr}</p>`;
+
+    // ── Context banner (plain English, one or two sentences) ──
+    if (r.bill_state_context) {
+      const bannerColor = isResolved ? '#dcfce7' : isPrePayment ? '#eff6ff' : '#fefce8';
+      const bannerBorder = isResolved ? '#86efac' : isPrePayment ? '#bfdbfe' : '#fde68a';
+      const bannerText = isResolved ? '#14532d' : isPrePayment ? '#1e3a5f' : '#78350f';
+      h += `<div class="context-banner" style="background:${bannerColor};border:1px solid ${bannerBorder};color:${bannerText}">
+        ${r.bill_state_context}
+      </div>`;
+    }
+
+    // ── Hero ──
+    h += `<div class="hero">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-size:14px;opacity:.8">Bill Grade</div>
+          <div style="font-size:40px;font-weight:800">${r.grade}</div>
+          <div style="font-size:12px;opacity:.7;margin-top:2px">${r.grade_rationale || ''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.06em">${isResolved ? 'Balance Due' : 'Potential Savings'}</div>
+          <div style="font-size:34px;font-weight:800;color:#4ade80">${isResolved ? '$0.00' : fmt(r.potential_savings)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">`;
+
+    [
+      ["List Price", fmt(r.total_billed)],
+      ["Gov't Rate", fmt(r.estimated_fair_value)],
+      [isResolved ? "You Owe" : "Issues Found", isResolved ? "$0.00" : n + " issues"]
+    ].forEach(([l, v]) => {
+      h += `<div style="flex:1;min-width:100px;background:rgba(255,255,255,.1);padding:10px;border-radius:8px;text-align:center">
+        <div style="font-size:10px;opacity:.7;text-transform:uppercase">${l}</div>
+        <div style="font-size:18px;font-weight:800;margin-top:2px">${v}</div>
+      </div>`;
     });
     h += `</div></div>`;
-    h += `<div style="background:#f0fdf4;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:13px;line-height:1.6">${r.summary || ""}</div>`;
-    if (r.insurance_notes) h += `<div style="background:#eff6ff;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:13px">&#128196; <b>Insurance Note:</b> ${r.insurance_notes}</div>`;
-    if (r.nsa_eligible) h += `<div style="background:#fffbeb;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:13px">&#9878;&#65039; <b>No Surprises Act:</b> This bill may qualify for federal dispute protection under 42 U.S.C. &sect;300gg-111.</div>`;
+
+    // ── Benchmark key ──
+    h += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin:8px 0;font-size:12px">
+      <strong style="color:#0f2444">How to read this report: </strong>
+      <span class="bmark bm-lst">List Price</span> = what the hospital charged &nbsp;
+      <span class="bmark bm-gov">Gov't Rate</span> = what the U.S. government says this should cost &nbsp;
+      <span class="bmark bm-com">Commercial Typical</span> = what most insurance companies actually pay
+    </div>`;
+
+    h += `<div style="background:#f0fdf4;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:13px;line-height:1.7">${r.summary || ''}</div>`;
+
+    if (r.insurance_notes) {
+      h += `<div style="background:#eff6ff;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:13px">&#128196; <b>Insurance Note:</b> ${r.insurance_notes}</div>`;
+    }
+    if (r.nsa_eligible || billState === 'BALANCE_BILL') {
+      h += `<div style="background:#fffbeb;padding:12px 16px;border-radius:8px;margin:8px 0;font-size:13px">&#9878;&#65039; <b>Federal Protection:</b> This bill may qualify for protection under the No Surprises Act (federal law). You may owe $0 on any balance above your normal in-network cost-share. See next steps below.</div>`;
+    }
+
+    // ── Section 1: Issues ──
     h += `<div class="page-break"></div><h2>Section 1: Billing Issues (${n})</h2>`;
+    if (isResolved) {
+      h += `<p style="color:#64748b;margin-bottom:12px;font-size:13px">Your bill is fully paid — no action needed. These findings are shown so you understand what was charged and how it compares to government rates.</p>`;
+    }
+
     issues.forEach(iss => {
       const cls = iss.severity === "HIGH" ? "high" : iss.severity === "MEDIUM" ? "med" : "low";
-      h += `<div class="issue ${cls}"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><span class="badge" style="background:${iss.severity === "HIGH" ? "#fef2f2" : iss.severity === "MEDIUM" ? "#fffbeb" : "#f0fdf4"};color:${iss.severity === "HIGH" ? "#dc2626" : iss.severity === "MEDIUM" ? "#d97706" : "#059669"}">${iss.severity} &middot; ${iss.type}</span><span style="font-weight:800;color:#059669">Save ${fmt(iss.savings)}</span></div>`;
-      h += `<div style="margin-top:6px;font-size:13px;font-weight:600">${iss.code ? `<span style="font-family:monospace;color:#2563eb;margin-right:6px">${iss.code}</span>` : ""}${iss.description}</div>`;
-      h += `<div style="font-size:12px;color:#64748b;margin-top:4px">Billed: <b style="color:#dc2626">${fmt(iss.billed)}</b> &middot; Fair: <b style="color:#059669">${fmt(iss.fair_value)}</b>${iss.confidence != null ? ` &middot; Confidence: ${iss.confidence}%` : ""}</div>`;
-      if (iss.cms_rule) h += `<div style="font-size:11px;color:#94a3b8;margin-top:3px;font-family:monospace">Rule: ${iss.cms_rule}</div>`;
-      if (iss.dispute_basis) h += `<div style="font-size:11px;color:#64748b;margin-top:2px">Legal basis: ${iss.dispute_basis}</div>`;
-      h += `<div class="script"><b style="font-size:10px;color:#2563eb;font-style:normal">WHAT TO SAY:</b><br>"${scriptFor(iss)}"</div></div>`;
+      const sevColor = iss.severity === "HIGH" ? "#dc2626" : iss.severity === "MEDIUM" ? "#d97706" : "#059669";
+      const li_match = lines.find(li => li.code === iss.code && li.commercial_low);
+
+      h += `<div class="issue ${cls}">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <span class="badge" style="background:${cls==='high'?'#fef2f2':cls==='med'?'#fffbeb':'#f0fdf4'};color:${sevColor}">${iss.severity} &middot; ${iss.type}</span>
+          ${!isResolved ? `<span style="font-weight:800;color:#059669">Save ${fmt(iss.savings)}</span>` : ''}
+        </div>
+        <div style="margin-top:6px;font-size:13px;font-weight:600">
+          ${iss.code ? `<span style="font-family:monospace;color:#2563eb;margin-right:6px">${iss.code}</span>` : ''}
+          ${iss.description}
+        </div>
+        <div class="bmarks">
+          <span class="bmark bm-lst">List Price: ${fmt(iss.billed)}</span>
+          <span class="bmark bm-gov">Gov't Rate: ${fmt(iss.fair_value)}</span>
+          ${li_match ? `<span class="bmark bm-com">Commercial Typical: ${fmtRange(li_match.commercial_low, li_match.commercial_high)}</span>` : ''}
+        </div>`;
+
+      if (iss.cms_rule) h += `<div style="font-size:11px;color:#94a3b8;margin-top:4px;font-family:monospace">Rule: ${iss.cms_rule}</div>`;
+      if (iss.dispute_basis) h += `<div style="font-size:11px;color:#64748b;margin-top:2px">Basis for dispute: ${iss.dispute_basis}</div>`;
+
+      if (!isResolved) {
+        h += `<div class="script"><b style="font-size:10px;color:#2563eb;font-style:normal">WHAT TO SAY ON THE PHONE:</b><br>"${scriptFor(iss)}"</div>`;
+      }
+      h += `</div>`;
     });
-    h += `<div class="page-break"></div><h2>Section 2: Full Line Item Review</h2>`;
-    h += `<table><thead><tr><th></th><th>Code</th><th>Description</th><th>Billed</th><th>Gov't Rate</th><th>Markup</th><th>Notes</th></tr></thead><tbody>`;
+
+    // ── Section 2: All Charges ──
+    h += `<div class="page-break"></div><h2>Section 2: Every Charge on Your Bill</h2>`;
+    h += `<table><thead><tr>
+      <th></th><th>Code</th><th>Service</th>
+      <th>List Price</th><th>Gov't Rate</th><th>Commercial Typical</th>
+      <th>Markup</th><th>Notes</th>
+    </tr></thead><tbody>`;
+
     lines.forEach(li => {
-      const ic = li.status === "ERROR" ? "#dc2626" : li.status === "FLAG" ? "#d97706" : "#059669";
-      h += `<tr style="background:${li.status === "ERROR" ? "#fff5f5" : li.status === "FLAG" ? "#fffef0" : "#fff"}"><td style="color:${ic};font-weight:700">${li.status === "ERROR" ? "&#10007;" : li.status === "FLAG" ? "&#9888;" : "&#10003;"}</td><td style="font-family:monospace;color:#2563eb;font-weight:600">${li.code || ""}</td><td>${li.description || ""}</td><td style="font-weight:700">${fmt(li.billed)}</td><td style="color:#64748b">${li.medicare_rate || ""}</td><td style="color:${ic};font-weight:700">${li.markup_pct || ""}</td><td style="font-size:11px;color:#64748b">${li.note || ""}</td></tr>`;
+      const ic = li.status === "FLAG" ? "#d97706" : li.status === "ERROR" ? "#dc2626" : "#059669";
+      const rowBg = li.status === "FLAG" ? "#fffef0" : li.status === "ERROR" ? "#fff5f5" : "#fff";
+      const icon = li.status === "FLAG" ? "&#9888;" : li.status === "ERROR" ? "&#10007;" : "&#10003;";
+      h += `<tr style="background:${rowBg}">
+        <td style="color:${ic};font-weight:700">${icon}</td>
+        <td style="font-family:monospace;color:#2563eb;font-weight:600">${li.code || ''}</td>
+        <td>${li.description || ''}</td>
+        <td style="font-weight:700">${fmt(li.billed)}</td>
+        <td style="color:#1e40af">${li.fair_rate != null ? fmt(li.fair_rate) : '—'}</td>
+        <td style="color:#92400e">${li.commercial_low && li.commercial_high ? fmtRange(li.commercial_low, li.commercial_high) : '—'}</td>
+        <td style="color:${ic};font-weight:700">${li.markup_pct || '—'}</td>
+        <td style="font-size:11px;color:#64748b">${li.note || ''}</td>
+      </tr>`;
     });
     h += `</tbody></table>`;
-    if (steps.length > 0) {
-      h += `<h2>Section 3: Action Plan</h2>`;
+
+    // ── Section 3: Action Plan ──
+    if (!isResolved && steps.length > 0) {
+      h += `<h2>Section 3: What To Do Next</h2>`;
       steps.forEach((s, i) => {
-        h += `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin:6px 0"><div style="width:24px;height:24px;border-radius:50%;background:#0f2444;color:white;text-align:center;line-height:24px;font-weight:700;font-size:12px;flex-shrink:0">${i + 1}</div><div>${s}</div></div>`;
+        h += `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin:6px 0">
+          <div style="width:24px;height:24px;border-radius:50%;background:#0f2444;color:white;text-align:center;line-height:24px;font-weight:700;font-size:12px;flex-shrink:0">${i + 1}</div>
+          <div>${s}</div>
+        </div>`;
       });
     }
-    h += `<div class="page-break"></div><h2>Section 4: Phone Dispute Scripts</h2>`;
-    h += `<h3>Opening Call</h3><div class="script">"${intro}"</div>`;
-    issues.forEach((iss, i) => {
-      h += `<h3>Issue ${i + 1}: ${iss.code || iss.type}</h3><div class="script">"${scriptFor(iss)}"</div>`;
-    });
-    h += `<h3>If They Refuse</h3><div class="script" style="background:#fffbeb;border-left-color:#d97706;color:#92400e">"${closing}"</div>`;
-    if (letter) {
-      h += `<div class="page-break"></div><h2>Section 5: Formal Dispute Letter</h2><div class="letter">${letter.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
+
+    // ── Section 4: Phone Scripts ──
+    if (!isResolved) {
+      h += `<div class="page-break"></div><h2>Section 4: What To Say When You Call</h2>`;
+      h += `<h3>How to Start the Call</h3><div class="script">"${intro}"</div>`;
+      issues.forEach((iss, i) => {
+        h += `<h3>Issue ${i + 1} — ${iss.code || iss.type}</h3><div class="script">"${scriptFor(iss)}"</div>`;
+      });
+      h += `<h3>If They Refuse or Stall</h3>
+        <div class="script" style="background:#fffbeb;border-left-color:#d97706;color:#92400e">"${closing}"</div>`;
     }
-    h += `<div class="footer">BillXM &mdash; AI-assisted bill examination &mdash; Not legal or financial advice &mdash; For informational purposes only</div></body></html>`;
+
+    // ── Section 5: Dispute Letter ──
+    if (!isResolved && letter) {
+      h += `<div class="page-break"></div><h2>Section 5: Formal Dispute Letter</h2>
+        <div class="letter">${letter.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>`;
+    }
+
+    h += `<div class="footer">
+      BillXM &mdash; AI bill analysis &mdash;
+      Gov't Rate = CMS Medicare rate published for 2025. Commercial Typical = estimated range based on documented commercial-to-Medicare ratios by service type.
+      The hospital's list price is what they charge before any insurance discount or negotiation.
+      Not legal or medical advice. For informational purposes only.
+    </div></body></html>`;
+
     const blob = new Blob([h], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    // Open in new tab — user can Print (Ctrl+P) to save as PDF
     const w = window.open(url, "_blank");
     if (!w) {
-      // Popup blocked fallback: download directly
       const a = document.createElement("a");
       a.href = url; a.download = "BillXM_Report.html";
       document.body.appendChild(a); a.click();
       document.body.removeChild(a);
     }
-    // Auto-trigger print after content loads
     if (w) {
-      w.addEventListener("load", () => {
-        setTimeout(() => { w.print(); }, 200);
-      });
+      w.addEventListener("load", () => { setTimeout(() => { w.print(); }, 200); });
     }
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
@@ -3776,8 +3919,56 @@ function BillXM() {
       { id: "lineitems", label: "📋 Line Items",              locked: isSummaryBill ? false : !isPaid },
       { id: "scripts",   label: "📞 Phone Scripts",           locked: isSummaryBill ? false : !hasFull },
       { id: "letter",    label: "✉️ Dispute Letter",          locked: isSummaryBill ? false : !hasFull },
+      { id: "chat",      label: "💬 Ask BillXM",              locked: !hasFull },
       { id: "negotiate", label: "🤝 We Negotiate",            locked: false },
     ];
+
+    async function sendChatMessage() {
+      if (!chatInput.trim() || chatLoading) return;
+      var userMessage = { role: 'user', content: chatInput.trim() };
+      var newMessages = [...chatMessages, userMessage];
+      setChatMessages(newMessages);
+      setChatInput('');
+      setChatLoading(true);
+      try {
+        var res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: newMessages,
+            report: report,
+            email: gateEmail || '',
+            tier: tier,
+          }),
+        });
+        var data = await res.json();
+        if (data.error) {
+          setChatMessages([...newMessages, { role: 'assistant', content: '⚠️ ' + data.error }]);
+        } else {
+          setChatMessages([...newMessages, { role: 'assistant', content: data.content }]);
+          if (data.escalate) {
+            setChatEscalated(true);
+            // Send escalation notification
+            fetch('/api/gate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'contact_request',
+                email: gateEmail || 'unknown',
+                first_name: 'Chat',
+                last_name: 'Escalation',
+                request_type: 'chat_escalation',
+                topic: 'Chat agent escalation',
+                description: data.escalate_reason + '\n\nFull chat:\n' + newMessages.map(function(m) { return m.role + ': ' + m.content; }).join('\n'),
+              }),
+            });
+          }
+        }
+      } catch (err) {
+        setChatMessages([...newMessages, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      }
+      setChatLoading(false);
+    }
 
     function handleTabClick(tab) {
       if (tab.id === "negotiate") { setActiveTab(tab.id); return; }
@@ -3789,6 +3980,7 @@ function BillXM() {
         setPaywallTarget(tab.id); setShowPaywall(true); return;
       }
       if (["issues","lineitems"].includes(tab.id) && !isPaid) { setPaywallTarget(tab.id); setShowPaywall(true); return; }
+      if (tab.id === "chat" && !hasFull) { setPaywallTarget(tab.id); setShowPaywall(true); return; }
       setActiveTab(tab.id);
     }
 
@@ -3819,18 +4011,43 @@ function BillXM() {
                 {report.grade_rationale && <p style={{ color: "rgba(147,197,253,0.7)", fontSize: 12, marginTop: 4 }}>{report.grade_rationale}</p>}
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 10, color: "#93c5fd", textTransform: "uppercase", letterSpacing: "0.08em" }}>{isSummaryBill ? "DRG Benchmark" : "Potential Savings"}</div>
-                <div style={{ fontSize: 38, fontWeight: 900, color: isSummaryBill ? "#60a5fa" : "#4ade80", lineHeight: 1.05, letterSpacing: "-0.02em" }}>{report.potential_savings != null ? fmt(report.potential_savings) : (report.drg_estimate ? fmt(report.drg_estimate.drg_payment) : "TBD")}</div>
+                <div style={{ fontSize: 10, color: "#93c5fd", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {isSummaryBill ? "DRG Benchmark" : report.bill_state === "FULLY_RESOLVED" ? "Balance Due" : "Potential Savings"}
+                </div>
+                <div style={{ fontSize: 38, fontWeight: 900, color: isSummaryBill ? "#60a5fa" : report.bill_state === "FULLY_RESOLVED" ? "#4ade80" : "#4ade80", lineHeight: 1.05, letterSpacing: "-0.02em" }}>
+                  {report.bill_state === "FULLY_RESOLVED"
+                    ? "$0.00"
+                    : isSummaryBill
+                    ? (report.drg_estimate ? fmt(report.drg_estimate.drg_payment) : "TBD")
+                    : fmt(report.commercial_savings != null ? report.commercial_savings : report.potential_savings)}
+                </div>
+                {report.commercial_savings != null && !isSummaryBill && report.bill_state !== "FULLY_RESOLVED" && (
+                  <div style={{ fontSize: 10, color: "rgba(147,197,253,0.7)", marginTop: 2 }}>vs. commercial typical rates</div>
+                )}
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingBottom: 18 }}>
-              {[["Billed", fmt(report.total_billed), ""], ["Fair Value", report.estimated_fair_value != null ? fmt(report.estimated_fair_value) : (report.drg_estimate ? fmt(report.drg_estimate.drg_payment) + " (DRG)" : "N/A"), "#60a5fa"], ["Overcharged", report.potential_savings != null ? fmt(report.potential_savings) : (isSummaryBill ? "Requires Itemized Bill" : ""), "#4ade80"], ["Issues", isSummaryBill && issues.length === 0 ? "Requires Itemized Bill" : `${issues.length} found`, "#facc15"]].map(([l, v, c]) => (
+              {[
+                ["List Price", fmt(report.total_billed), ""],
+                ["Gov't Rate", report.estimated_fair_value != null ? fmt(report.estimated_fair_value) : "N/A", "#60a5fa"],
+                report.bill_state === "FULLY_RESOLVED"
+                  ? ["Status", "Paid in Full", "#4ade80"]
+                  : ["Overcharged", report.commercial_savings != null && report.commercial_savings > 0
+                      ? fmt(report.commercial_savings)
+                      : isSummaryBill ? "Requires Itemized Bill" : fmt(report.potential_savings || 0), "#4ade80"],
+                ["Issues", isSummaryBill && issues.length === 0 ? "Requires Itemized Bill" : `${issues.length} found`, "#facc15"]
+              ].map(([l, v, c]) => (
                 <div key={l} style={{ flex: 1, minWidth: 100, padding: "10px 12px", background: "rgba(255,255,255,0.07)", borderRadius: 10, textAlign: "center" }}>
                   <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{l}</div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: c || "white", marginTop: 3 }}>{v}</div>
                 </div>
               ))}
             </div>
+            {report.bill_state_context && (
+              <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.08)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", fontSize: 12, color: "#93c5fd", lineHeight: 1.6, marginBottom: 12 }}>
+                {report.bill_state_context}
+              </div>
+            )}
             {report.drg_benchmark && report.drg_benchmark.medicare_payment > 0 && (
               <div style={{ padding: "8px 14px", background: "rgba(96,165,250,0.1)", borderRadius: 8, border: "1px solid rgba(96,165,250,0.2)", fontSize: 11, color: "#93c5fd", lineHeight: 1.5 }}>
                 Fair value includes Medicare DRG estimate of {fmt(report.drg_benchmark.medicare_payment)} for inpatient facility charges. See DRG Benchmark in Overview.
@@ -3862,6 +4079,10 @@ function BillXM() {
           {/* ── OVERVIEW ── */}
           {activeTab === "overview" && (
             <div>
+              {/* Benchmark explanation card */}
+              <div style={{ padding: "12px 16px", background: "#f0f9ff", borderRadius: 10, border: "1px solid #bae6fd", marginBottom: 16, fontSize: 12, color: "#0369a1", lineHeight: 1.6 }}>
+                <strong>How we calculate savings:</strong> Gov't Rate = what Medicare pays (federal benchmark). Commercial Typical = what most insurance companies actually pay (2–5× Medicare depending on service). Overcharge = gap between the hospital's list price and commercial typical rates — this is your realistic negotiating target.
+              </div>
               {/* DRG Benchmark Card */}
               {report.drg_benchmark && report.drg_benchmark.medicare_payment > 0 && (
                 <Card style={{ padding: 20, marginBottom: 16, border: "2px solid #3b82f6", background: "linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)" }}>
@@ -4223,6 +4444,107 @@ function BillXM() {
           )}
 
           {/* ── WE NEGOTIATE ── */}
+          {/* ── CHAT TAB ── */}
+          {activeTab === "chat" && (
+            !hasFull ? (
+              <PaywallCard title="Ask BillXM AI — Billing Questions Answered" tier="full" />
+            ) : (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 4 }}>Ask BillXM AI</h2>
+                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                    Ask anything about your bill or medical billing in general. Our AI billing advisor knows your full report and can answer questions in plain English.
+                  </p>
+                </div>
+
+                {/* Starter questions */}
+                {chatMessages.length === 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, fontWeight: 600 }}>Try asking:</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {[
+                        "Which charge should I dispute first?",
+                        "What is an EOB and do I need it?",
+                        "Can I negotiate this bill down?",
+                        "What is the No Surprises Act?",
+                        "Why was I charged so much for an EKG?",
+                        "How do I apply for financial assistance?",
+                      ].map(function(q) {
+                        return (
+                          <button key={q} onClick={function() { setChatInput(q); }} style={{ padding: "6px 12px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 20, fontSize: 12, color: "#0369a1", cursor: "pointer", fontFamily: C.font }}>
+                            {q}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Message history */}
+                <div style={{ background: "#f8fafc", borderRadius: 12, border: "1px solid " + C.border, padding: 16, minHeight: 200, maxHeight: 400, overflowY: "auto", marginBottom: 12 }}>
+                  {chatMessages.length === 0 && (
+                    <div style={{ textAlign: "center", color: C.muted, fontSize: 13, paddingTop: 40 }}>
+                      Your conversation will appear here.
+                    </div>
+                  )}
+                  {chatMessages.map(function(msg, i) {
+                    var isUser = msg.role === "user";
+                    return (
+                      <div key={i} style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", marginBottom: 12 }}>
+                        <div style={{
+                          maxWidth: "80%",
+                          padding: "10px 14px",
+                          borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                          background: isUser ? C.navy : "white",
+                          color: isUser ? "white" : C.text,
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                          border: isUser ? "none" : "1px solid " + C.border,
+                          whiteSpace: "pre-wrap",
+                        }}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {chatLoading && (
+                    <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12 }}>
+                      <div style={{ padding: "10px 14px", borderRadius: "18px 18px 18px 4px", background: "white", border: "1px solid " + C.border, fontSize: 13, color: C.muted }}>
+                        Thinking...
+                      </div>
+                    </div>
+                  )}
+                  {chatEscalated && (
+                    <div style={{ padding: "10px 14px", background: "#fefce8", border: "1px solid #fde68a", borderRadius: 10, fontSize: 12, color: "#78350f", marginTop: 8 }}>
+                      ✉️ This question has been sent to our billing team. We will follow up with you by email within 24 hours.
+                    </div>
+                  )}
+                </div>
+
+                {/* Input row */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={chatInput}
+                    onChange={function(e) { setChatInput(e.target.value); }}
+                    onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }}
+                    placeholder="Ask a question about your bill..."
+                    style={{ flex: 1, padding: "10px 14px", border: "1px solid " + C.border, borderRadius: 8, fontSize: 13, fontFamily: C.font, outline: "none" }}
+                  />
+                  <button
+                    onClick={sendChatMessage}
+                    disabled={chatLoading || !chatInput.trim()}
+                    style={{ padding: "10px 20px", background: chatLoading || !chatInput.trim() ? "#e2e8f0" : C.navy, color: chatLoading || !chatInput.trim() ? C.muted : "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: chatLoading || !chatInput.trim() ? "default" : "pointer", fontFamily: C.font }}
+                  >
+                    Send
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                  Not legal or financial advice. For complex situations, consult a professional.
+                </div>
+              </div>
+            )
+          )}
+
           {activeTab === "negotiate" && (
             <Card style={{ padding: "40px 24px", textAlign: "center", maxWidth: 600, margin: "0 auto" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🤝</div>

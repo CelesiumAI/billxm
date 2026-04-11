@@ -256,6 +256,40 @@ module.exports = async function handler(req, res) {
     };
     console.log('=== CONTACT REQUEST ===', JSON.stringify(contactData));
     await kvSet('contact:' + Date.now() + ':' + email, contactData, 90 * 24 * 60 * 60);
+
+    // ── Email notification ────────────────────────────────────
+    // Sends an alert so the team knows immediately without checking admin dashboard
+    if (process.env.RESEND_API_KEY && process.env.NOTIFICATION_EMAIL) {
+      try {
+        var isUrgent = contactData.type === 'negotiate' || contactData.type === 'chat_escalation';
+        var subject = isUrgent
+          ? '🚨 URGENT: New ' + contactData.type + ' request from ' + contactData.email
+          : '📬 New contact request from ' + contactData.email;
+        var emailBody = 'Type: ' + contactData.type + '\n' +
+          'From: ' + contactData.first_name + ' ' + contactData.last_name + ' <' + contactData.email + '>\n' +
+          'Phone: ' + (contactData.phone || 'not provided') + '\n' +
+          'Topic: ' + (contactData.topic || 'not provided') + '\n' +
+          'Time: ' + contactData.timestamp + '\n\n' +
+          'Message:\n' + (contactData.description || 'none') + '\n\n' +
+          'View in admin: https://billxm.com/admin.html';
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'BillXM Notifications <notifications@billxm.com>',
+            to: [process.env.NOTIFICATION_EMAIL],
+            subject: subject,
+            text: emailBody,
+          }),
+        });
+        console.log('Notification email sent for:', contactData.type);
+      } catch (emailErr) {
+        console.log('Email notification failed (non-fatal):', emailErr.message);
+      }
+    }
     var messages = {
       'negotiate': 'Thank you! Our billing team will review your case and contact you within 24 hours. You will NOT be charged until we accept your case. Money-back guarantee.',
       'failed_analysis': 'Thank you! Our team will review your bill and get back to you within 24 hours.',

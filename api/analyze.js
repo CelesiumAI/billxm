@@ -58,6 +58,46 @@ function getGPCI(state, city) {
   return { work: first.work, pe: first.pe, mp: first.mp };
 }
 
+// ── Commercial multiplier by service type ────────────────────
+// Returns {low, high} multipliers vs Medicare rate.
+// Based on documented commercial-to-Medicare ratios by care setting.
+function getCommercialMultiplier(type, code) {
+  // Clinical lab (CLFS): PAMA caps keep commercial rates close to Medicare
+  if (type === 'lab') return { low: 1.0, high: 1.5 };
+
+  // Drugs (ASP+6%): commercial contracts stay close to Medicare ASP
+  if (type === 'drug') return { low: 1.2, high: 1.8 };
+
+  // Physician / MPFS — varies by procedure category
+  if (type === 'physician') {
+    var c = code || '';
+    // ER visit codes
+    if (['99281','99282','99283','99284','99285'].indexOf(c) >= 0) {
+      return { low: 3.0, high: 5.0 };
+    }
+    // Imaging at hospital (CT, MRI, X-ray, echo, nuclear)
+    var prefix2 = c.slice(0, 2);
+    if (['70','71','72','73','74','75','76','77','78'].indexOf(prefix2) >= 0) {
+      return { low: 2.5, high: 4.5 };
+    }
+    // Cardiac (echo, stress test, EKG)
+    if (['93','92'].indexOf(prefix2) >= 0) {
+      return { low: 2.0, high: 3.5 };
+    }
+    // General physician procedures
+    return { low: 1.5, high: 2.5 };
+  }
+
+  // Hospital outpatient facility (APC)
+  if (type === 'facility_apc') return { low: 2.5, high: 4.5 };
+
+  // Hospital inpatient facility (DRG)
+  if (type === 'facility_drg') return { low: 2.5, high: 4.0 };
+
+  // Default
+  return { low: 2.0, high: 3.5 };
+}
+
 // ── Look up fair rate for a normalized code ──────────────────
 function getFairRate(code, state, city) {
   if (!CMS_RVUS || !code) return null;
@@ -83,6 +123,99 @@ function getFairRate(code, state, city) {
     return { rate: rate, desc: rvu.d, type: 'physician' };
   }
   return null;
+}
+
+// ── Detect bill payment state ────────────────────────────────
+// Returns a simple context label used only to add one plain-English
+// sentence at the top of the report. The full analysis always runs
+// regardless of bill state.
+//
+// SELF_PAY:            No insurance on the bill
+// PRE_PAYMENT_INSURED: Insurance listed but claim not yet processed
+// COST_SHARE_DISPUTE:  Insurance processed, patient disputes cost-share
+// BALANCE_BILL:        Patient billed more than their cost-share after insurance paid
+// FULLY_RESOLVED:      Balance = $0, nothing owed
+function detectBillState(extracted) {
+  var payStatus = (extracted.payment_status || '').toLowerCase();
+  var totalBilled = extracted.total_billed || 0;
+
+  // ── Check for zero balance ──
+  var zeroSignals = [
+    'balance: $0', 'balance due: $0', 'balance: 0.00', 'total due: $0',
+    'amount due: $0', 'amount due: 0.00', 'paid in full', 'zero balance',
+    'balance due: 0', 'your balance: $0', 'balance: 0'
+  ];
+  for (var z = 0; z < zeroSignals.length; z++) {
+    if (payStatus.indexOf(zeroSignals[z]) >= 0) return 'FULLY_RESOLVED';
+  }
+
+  // ── Check for insurer presence ──
+  var insurerKeywords = [
+    'insurance', 'plan paid', 'plan payment', 'payer', 'bcbs', 'blue cross',
+    'united healthcare', 'unitedhealthcare', 'uhc', 'aetna', 'cigna', 'humana',
+    'tricare', 'medicaid', 'medicare payment', 'kaiser', 'molina', 'anthem',
+    'centene', 'superior healthplan', 'ambetter'
+  ];
+  var hasInsurer = false;
+  for (var k = 0; k < insurerKeywords.length; k++) {
+    if (payStatus.indexOf(insurerKeywords[k]) >= 0) { hasInsurer = true; break; }
+  }
+
+  // Large contractual adjustment implies commercial insurance processed
+  var adjustmentRatio = 0;
+  if (totalBilled > 0 && extracted.adjustments && extracted.adjustments < 0) {
+    adjustmentRatio = Math.abs(extracted.adjustments) / totalBilled;
+  }
+  if (totalBilled > 0 && extracted.total_before_adjustments > totalBilled * 1.3) {
+    var impliedRatio = 1 - (totalBilled / extracted.total_before_adjustments);
+    if (impliedRatio > adjustmentRatio) adjustmentRatio = impliedRatio;
+  }
+  if (adjustmentRatio > 0.3) hasInsurer = true;
+
+  // Very large adjustment + insurer = fully resolved
+  if (adjustmentRatio > 0.85 && hasInsurer) return 'FULLY_RESOLVED';
+
+  // ── Balance bill signals ──
+  var balanceBillSignals = ['balance bill', 'amount owed after insurance', 'remaining after insurance'];
+  for (var bb = 0; bb < balanceBillSignals.length; bb++) {
+    if (payStatus.indexOf(balanceBillSignals[bb]) >= 0 && hasInsurer) return 'BALANCE_BILL';
+  }
+
+  // ── EOB / post-adjudication signals ──
+  var eobSignals = [
+    'eob', 'explanation of benefit', 'your share', 'your cost share',
+    'coinsurance', 'deductible applied', 'copay', 'member responsibility',
+    'your portion', 'patient responsibility'
+  ];
+  for (var e = 0; e < eobSignals.length; e++) {
+    if (payStatus.indexOf(eobSignals[e]) >= 0 && hasInsurer) return 'COST_SHARE_DISPUTE';
+  }
+
+  // Insurance present, claim not yet processed
+  if (hasInsurer) return 'PRE_PAYMENT_INSURED';
+
+  // No insurance context found
+  return 'SELF_PAY';
+}
+
+// ── Plain-English context banner text by bill state ──────────
+// One or two simple sentences added to the top of every report.
+// The full analysis always runs regardless of state.
+function getBillStateContext(billState, hospital) {
+  var h = hospital || 'the hospital';
+  switch (billState) {
+    case 'FULLY_RESOLVED':
+      return 'Good news — this bill is fully paid and your balance is $0. We still analyzed every charge so you can see exactly what ' + h + ' billed and how it compares to what the government says these services should cost.';
+    case 'BALANCE_BILL':
+      return 'It looks like your insurance already paid their portion, but ' + h + ' is billing you an additional amount. Federal law may protect you from owing this — see the No Surprises Act note below.';
+    case 'COST_SHARE_DISPUTE':
+      return 'Your insurance has processed this claim. The amount you owe is your share after insurance paid. We analyzed the underlying charges to help you understand whether the bill looks correct.';
+    case 'PRE_PAYMENT_INSURED':
+      return 'Your insurance has not processed this claim yet, so the total shown is the hospital\'s list price — not what you\'ll actually owe. We analyzed every charge anyway so you know what\'s on the bill before insurance adjusts it. Your final amount due will be much lower.';
+    case 'SELF_PAY':
+    default:
+      return 'We compared every charge on this bill to the U.S. government\'s published rates. The hospital\'s list price is what they charge before any discounts or negotiations — the amounts below show what each service actually costs according to federal data.';
+  }
 }
 
 // ── Detect bill type from extraction ─────────────────────────
@@ -704,7 +837,8 @@ var EXTRACT_PROMPT = 'You are a medical bill data extractor. Extract every charg
 '  "subtotals": {"LABORATORY": 510.34, "RESPIRATORY SVC": 847.60},\n' +
 '  "adjustments": 0,\n' +
 '  "total_before_adjustments": 0,\n' +
-'  "total_billed": 0\n' +
+'  "total_billed": 0,\n' +
+'  "payment_status": "copy the exact text of any payment summary, insurance payment, balance due, or amount owed section on the bill — e.g. Insurance Paid: $19687.20 | Adjustment: $20827.36 | Patient Paid: $200.00 | Balance Due: $0.00. If no payment section exists, leave empty string."\n' +
 '}';
 
 // ── Sonnet report prompt ─────────────────────────────────────
@@ -757,6 +891,7 @@ var REPORT_PROMPT = 'You are BillXM AI, a medical billing analyst.\n\n' +
 '  "appeal_recommended": false\n' +
 '}\n\n' +
 'CRITICAL: Use the total_billed, estimated_fair_value, and potential_savings exactly as provided. Do not recalculate them.\n' +
+'LANGUAGE RULES: (1) Never use the word "chargemaster" — always say "list price" instead. (2) Write at a 7th grade reading level. Short sentences. Plain English. No medical billing jargon. (3) Each line_item now includes commercial_low and commercial_high — the typical range commercial insurers pay. When writing issue descriptions, you may reference the commercial range where it strengthens the case. Example: "billed at $1,039 when Medicare pays $6.30 and commercial insurers typically pay only $9–19." Do not overstate the commercial gap for lab and drug charges where the range is close to Medicare. (4) bill_state_context is a plain-English sentence already written for the patient — do not rewrite it, it will be prepended to your summary automatically.\n' +
 'If coverage_note is provided, include it in your summary.\n' +
 'If partial_bill_note is provided, include it prominently.\n' +
 'Write all descriptions in plain English.\n' +
@@ -812,8 +947,13 @@ var CPT_MAP_PROMPT = 'You are a medical coding expert. Map each service descript
 // ── Cached demo report ───────────────────────────────────────
 var CACHED_DEMO_REPORT = {
   bill_type: 'INPATIENT',
+  bill_state: 'SELF_PAY',
+  bill_state_context: 'We compared every charge on this bill to the U.S. government\'s published rates. The hospital\'s list price is what they charge before any discounts or negotiations — the amounts below show what each service actually costs according to federal data.',
+  commercial_fair_value: 10150.87,
+  commercial_savings: 0,
+  commercial_overcharge_pct: 0,
   grade: 'C',
-  grade_rationale: 'The bill is approximately 46% above Medicare fair value, with multiple services priced well above government rates.',
+  grade_rationale: 'This bill is within typical commercial insurance rates, though individual charges exceed Medicare benchmarks significantly.',
   summary: 'This 2-day pneumonia hospitalization bill from Jackson Purchase Medical Center is overcharging you by $4,709 (46% of the total). The most egregious overcharges include an arterial puncture billed at $372 when the fair rate is $13, lab tests marked up by over 2,500% (like a basic blood count billed at $221 versus a fair rate of $8), and an EKG charged at $288 when it should cost $6. Your DRG-based fair payment for this pneumonia treatment should be $5,442, not the $10,151 being charged.',
   hospital: 'JACKSON PURCHASE MED CTR',
   state: 'TN',
@@ -831,25 +971,25 @@ var CACHED_DEMO_REPORT = {
     { type: 'EXCESSIVE_MARKUP', severity: 'HIGH', confidence: 92, code: '80048', description: 'Basic metabolic panel (blood chemistry) billed at $286.15 when Medicare pays approximately $8.46.', billed: 286.15, fair_value: 8.46, savings: 277.69, cms_rule: 'CMS Clinical Lab Fee Schedule 2026, CPT 80048', dispute_basis: 'Charge exceeds Medicare clinical lab fee schedule rate by over 33x' }
   ],
   line_items: [
-    { code: '', description: 'Room and Care', billed: 1545.34, quantity: 1, fair_rate: null, total_fair: 5441.93, markup_pct: '--', status: 'DRG_COVERED', note: 'Packaged into DRG 194 (SIMPLE PNEUMONIA AND PLEURISY WITH CC) -- not separately payable' },
-    { code: '36600', description: 'Arterial Puncture', billed: 372.28, quantity: 1, fair_rate: 13.26, total_fair: 0, markup_pct: '2709%', status: 'FLAG', note: 'Overcharged 2709% above Medicare rate -- DISPUTE' },
-    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 0, markup_pct: '1906%', status: 'FLAG', note: 'Overcharged 1906% above Medicare rate -- DISPUTE' },
-    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 0, markup_pct: '1906%', status: 'FLAG', note: 'Overcharged 1906% above Medicare rate -- DISPUTE' },
-    { code: '82805', description: 'ABG with Meas O2 Sat', billed: 270.31, quantity: 1, fair_rate: 16.17, total_fair: 0, markup_pct: '1572%', status: 'FLAG', note: 'Overcharged 1572% above Medicare rate -- DISPUTE' },
-    { code: '80053', description: 'Comp Metabolic Panel', billed: 434.60, quantity: 1, fair_rate: 10.56, total_fair: 0, markup_pct: '4015%', status: 'FLAG', note: 'Overcharged 4015% above Medicare rate -- DISPUTE' },
-    { code: '80048', description: 'Basic Metabolic Panel', billed: 286.15, quantity: 1, fair_rate: 8.46, total_fair: 0, markup_pct: '3282%', status: 'FLAG', note: 'Overcharged 3282% above Medicare rate -- DISPUTE' },
-    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 0, markup_pct: '2639%', status: 'FLAG', note: 'Overcharged 2639% above Medicare rate -- DISPUTE' },
-    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 0, markup_pct: '2639%', status: 'FLAG', note: 'Overcharged 2639% above Medicare rate -- DISPUTE' },
-    { code: '71045', description: 'XR Chest Sgl View', billed: 256.78, quantity: 1, fair_rate: 20.41, total_fair: 0, markup_pct: '1158%', status: 'FLAG', note: 'Overcharged 1158% above Medicare rate -- DISPUTE' },
-    { code: '94640', description: 'Inhalation TX', billed: 132.78, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '1051%', status: 'FLAG', note: 'Overcharged 1051% above Medicare rate -- DISPUTE' },
-    { code: '94640', description: 'Hand Held Neb SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
-    { code: '94668', description: 'Chest Physio SubsQ', billed: 49.68, quantity: 5, fair_rate: 7.65, total_fair: 0, markup_pct: '549%', status: 'FLAG', note: 'Overcharged 549% above Medicare rate -- DISPUTE' },
-    { code: '94640', description: 'MDI SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
-    { code: '94640', description: 'Hand Held Neb SubQ', billed: 233.10, quantity: 2, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
-    { code: '', description: 'Albuterol 8.5GM INH', billed: 119.86, quantity: 1, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
-    { code: '', description: 'Pot Cl 20MEQ SRT', billed: 6.73, quantity: 2, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
-    { code: '', description: 'Fluticasone/Vilant 200/25', billed: 779.93, quantity: 1, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
-    { code: '93005', description: 'EKG', billed: 287.68, quantity: 1, fair_rate: 6.38, total_fair: 0, markup_pct: '4408%', status: 'FLAG', note: 'Overcharged 4408% above Medicare rate -- DISPUTE' }
+    { code: '', description: 'Room and Care', billed: 1545.34, quantity: 1, fair_rate: null, total_fair: 5441.93, markup_pct: '--', status: 'DRG_COVERED', commercial_low: null, commercial_high: null, markup_vs_commercial: 'N/A', note: 'Packaged into DRG 194 (SIMPLE PNEUMONIA AND PLEURISY WITH CC) -- not separately payable' },
+    { code: '36600', description: 'Arterial Puncture', billed: 372.28, quantity: 1, fair_rate: 13.26, total_fair: 0, markup_pct: '2709%', status: 'FLAG', commercial_low: 19.89, commercial_high: 33.15, markup_vs_commercial: '1304%', note: 'Overcharged 2709% above Medicare rate -- DISPUTE' },
+    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 0, markup_pct: '1906%', status: 'FLAG', commercial_low: 5.16, commercial_high: 8.60, markup_vs_commercial: '903%', note: 'Overcharged 1906% above Medicare rate -- DISPUTE' },
+    { code: '36415', description: 'Venipuncture', billed: 69.03, quantity: 1, fair_rate: 3.44, total_fair: 0, markup_pct: '1906%', status: 'FLAG', commercial_low: 5.16, commercial_high: 8.60, markup_vs_commercial: '903%', note: 'Overcharged 1906% above Medicare rate -- DISPUTE' },
+    { code: '82805', description: 'ABG with Meas O2 Sat', billed: 270.31, quantity: 1, fair_rate: 16.17, total_fair: 0, markup_pct: '1572%', status: 'FLAG', commercial_low: 16.17, commercial_high: 24.26, markup_vs_commercial: '1237%', note: 'Overcharged 1572% above Medicare rate -- DISPUTE' },
+    { code: '80053', description: 'Comp Metabolic Panel', billed: 434.60, quantity: 1, fair_rate: 10.56, total_fair: 0, markup_pct: '4015%', status: 'FLAG', commercial_low: 10.56, commercial_high: 15.84, markup_vs_commercial: '3192%', note: 'Overcharged 4015% above Medicare rate -- DISPUTE' },
+    { code: '80048', description: 'Basic Metabolic Panel', billed: 286.15, quantity: 1, fair_rate: 8.46, total_fair: 0, markup_pct: '3282%', status: 'FLAG', commercial_low: 8.46, commercial_high: 12.69, markup_vs_commercial: '2606%', note: 'Overcharged 3282% above Medicare rate -- DISPUTE' },
+    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 0, markup_pct: '2639%', status: 'FLAG', commercial_low: 8.07, commercial_high: 12.11, markup_vs_commercial: '2090%', note: 'Overcharged 2639% above Medicare rate -- DISPUTE' },
+    { code: '85025', description: 'CBC Auto Diff', billed: 220.95, quantity: 1, fair_rate: 8.07, total_fair: 0, markup_pct: '2639%', status: 'FLAG', commercial_low: 8.07, commercial_high: 12.11, markup_vs_commercial: '2090%', note: 'Overcharged 2639% above Medicare rate -- DISPUTE' },
+    { code: '71045', description: 'XR Chest Sgl View', billed: 256.78, quantity: 1, fair_rate: 20.41, total_fair: 0, markup_pct: '1158%', status: 'FLAG', commercial_low: 30.62, commercial_high: 51.03, markup_vs_commercial: '529%', note: 'Overcharged 1158% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'Inhalation TX', billed: 132.78, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '1051%', status: 'FLAG', commercial_low: 17.31, commercial_high: 28.85, markup_vs_commercial: '475%', note: 'Overcharged 1051% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'Hand Held Neb SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', commercial_low: 17.31, commercial_high: 28.85, markup_vs_commercial: '405%', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
+    { code: '94668', description: 'Chest Physio SubsQ', billed: 49.68, quantity: 5, fair_rate: 7.65, total_fair: 0, markup_pct: '549%', status: 'FLAG', commercial_low: 11.48, commercial_high: 19.13, markup_vs_commercial: '225%', note: 'Overcharged 549% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'MDI SubQ', billed: 116.55, quantity: 1, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', commercial_low: 17.31, commercial_high: 28.85, markup_vs_commercial: '405%', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
+    { code: '94640', description: 'Hand Held Neb SubQ', billed: 233.10, quantity: 2, fair_rate: 11.54, total_fair: 0, markup_pct: '910%', status: 'FLAG', commercial_low: 17.31, commercial_high: 28.85, markup_vs_commercial: '910%', note: 'Overcharged 910% above Medicare rate -- DISPUTE' },
+    { code: '', description: 'Albuterol 8.5GM INH', billed: 119.86, quantity: 1, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', commercial_low: null, commercial_high: null, markup_vs_commercial: 'N/A', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
+    { code: '', description: 'Pot Cl 20MEQ SRT', billed: 6.73, quantity: 2, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', commercial_low: null, commercial_high: null, markup_vs_commercial: 'N/A', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
+    { code: '', description: 'Fluticasone/Vilant 200/25', billed: 779.93, quantity: 1, fair_rate: null, total_fair: null, markup_pct: '--', status: 'DRG_COVERED', commercial_low: null, commercial_high: null, markup_vs_commercial: 'N/A', note: 'Drug/supply charge -- packaged into DRG 194 payment' },
+    { code: '93005', description: 'EKG', billed: 287.68, quantity: 1, fair_rate: 6.38, total_fair: 0, markup_pct: '4408%', status: 'FLAG', commercial_low: 9.57, commercial_high: 15.95, markup_vs_commercial: '2155%', note: 'Overcharged 4408% above Medicare rate -- DISPUTE' }
   ],
   phone_script: 'Hello, I\'m calling about my account for services received on October 11-12, 2022 at Jackson Purchase Medical Center. I\'ve had my bill independently reviewed against U.S. government Medicare rates, and I\'ve found several charges that significantly exceed fair market value. For example, the arterial puncture was billed at $372 when the Medicare rate is only $13, and my basic blood count was charged at $221 when Medicare pays about $8. Overall, my bill of $10,151 is nearly double the Medicare benchmark of $5,442 for this type of pneumonia hospitalization. I\'d like to speak with a billing supervisor about adjusting these charges to a more reasonable level. If we can\'t resolve this, I\'ll need to file a formal written dispute and may contact the Better Business Bureau, the Centers for Medicare & Medicaid Services, and my state\'s Attorney General.',
   dispute_letter: 'Dear Billing Department,\n\nRe: Account for services dated October 11-12, 2022\nJackson Purchase Medical Center\n\nI am writing to formally dispute the charges on my hospital bill totaling $10,150.87. An independent analysis comparing each charge against the U.S. government\'s published Medicare rates (CMS Physician Fee Schedule and Clinical Lab Fee Schedule, 2026) has identified significant overcharges totaling approximately $4,709.\n\nSpecific overcharges include:\n- Arterial Puncture (CPT 36600): Billed $372.28 vs Medicare rate $13.26 (2,709% markup)\n- CBC Auto Diff (CPT 85025): Billed $220.95 each vs Medicare rate $8.07 (2,639% markup)\n- EKG (CPT 93005): Billed $287.68 vs Medicare rate $6.38 (4,408% markup)\n- Basic Metabolic Panel (CPT 80048): Billed $286.15 vs Medicare rate $8.46 (3,282% markup)\n\nThe Medicare DRG benchmark for this type of pneumonia hospitalization (DRG 194) is $5,441.93. My total bill of $10,150.87 represents 1.9x the Medicare payment rate.\n\nI request that you review and adjust these charges to reflect fair market rates. Please respond within 30 days. I reserve the right to file complaints with the Better Business Bureau, the Centers for Medicare & Medicaid Services (CMS), and my state\'s Attorney General if this matter is not resolved.\n\nSincerely,\n[Patient Name]',
@@ -1341,11 +1481,19 @@ module.exports = async function handler(req, res) {
         else if (markupPct > 150) { status = 'FLAG'; medCount++; }
         else if (markupPct > 100) { status = 'FLAG'; lowCount++; }
       }
+      var itemType = lookup ? lookup.type : (code ? 'unknown' : 'no_code');
+      var commercialMult = fairRate ? getCommercialMultiplier(itemType, code) : null;
+      var commercialLow = (fairRate && commercialMult) ? Math.round(fairRate * commercialMult.low * qty * 100) / 100 : null;
+      var commercialHigh = (fairRate && commercialMult) ? Math.round(fairRate * commercialMult.high * qty * 100) / 100 : null;
+      var commercialMid = (commercialLow && commercialHigh) ? (commercialLow + commercialHigh) / 2 : null;
+      var markupVsCommercial = (commercialMid && commercialMid > 0) ? Math.round((billed / commercialMid - 1) * 100) : null;
       return {
         code: code, original_code: item.code || '', description: item.description || '',
         billed: billed, quantity: qty, fair_rate: fairRate, total_fair: totalFairItem,
         markup_pct: markupPct !== null ? markupPct + '%' : 'N/A', savings: savings,
-        status: status, type: lookup ? lookup.type : (code ? 'unknown' : 'no_code'),
+        status: status, type: itemType,
+        commercial_low: commercialLow, commercial_high: commercialHigh,
+        markup_vs_commercial: markupVsCommercial !== null ? markupVsCommercial + '%' : 'N/A',
         date: item.date || '', category: item.category || ''
       };
     });
@@ -1738,6 +1886,40 @@ module.exports = async function handler(req, res) {
     var issueCount = highCount + medCount + lowCount;
     console.log('Summary: Billed $' + totalBilled.toFixed(2) + ', Fair $' + estimatedFairValue.toFixed(2) + ', Savings $' + potentialSavings.toFixed(2) + ' (' + overchargePct + '%)');
 
+    // ── Commercial fair value calculation ────────────────────
+    // This is the realistic negotiating target — what commercial insurers
+    // actually pay, not the Medicare floor. Used for the headline savings number.
+    var commercialFairValue = 0;
+    if (billType === 'INPATIENT' && drgEstimate && drgEstimate.drg_payment > 0 &&
+        drgEstimate.drg_code !== 'UNKNOWN' && drgEstimate.drg_code !== 'ESTIMATED') {
+      // Inpatient: DRG payment × commercial multiplier midpoint (3.25x)
+      // Commercial hospitals typically receive 2.5–4.0x Medicare DRG for inpatient
+      commercialFairValue = Math.round(drgEstimate.drg_payment * 3.25 * 100) / 100;
+    } else {
+      // Outpatient / unknown: sum of individual item commercial midpoints
+      enrichedItems.forEach(function(item) {
+        var qty = item.quantity || 1;
+        if (item.commercial_low && item.commercial_high) {
+          var mid = (item.commercial_low + item.commercial_high) / 2;
+          commercialFairValue += mid;
+        } else if (item.fair_rate && item.fair_rate > 0) {
+          // Fall back to Medicare × 2.5 for items without commercial range
+          commercialFairValue += item.fair_rate * qty * 2.5;
+        }
+      });
+      commercialFairValue = Math.round(commercialFairValue * 100) / 100;
+    }
+    // Commercial fair value must not exceed total billed (no negative savings)
+    commercialFairValue = Math.min(commercialFairValue, totalBilled);
+    var commercialSavings = Math.max(0, Math.round((totalBilled - commercialFairValue) * 100) / 100);
+    var commercialOverchargePct = totalBilled > 0 ? Math.round((commercialSavings / totalBilled) * 100) : 0;
+    console.log('Commercial: Fair $' + commercialFairValue.toFixed(2) + ', Savings $' + commercialSavings.toFixed(2) + ' (' + commercialOverchargePct + '%)');
+
+    // ── Detect bill state (context banner only — does not affect analysis) ──
+    var billState = detectBillState(extracted);
+    var billStateContext = getBillStateContext(billState, extracted.hospital || '');
+    console.log('Bill state: ' + billState);
+
     // ════════════════════════════════════════════════════════════
     // STEP 3a: Free grade (Haiku)
     // ════════════════════════════════════════════════════════════
@@ -1869,10 +2051,17 @@ module.exports = async function handler(req, res) {
         code: item.code, description: item.description, billed: item.billed,
         quantity: item.quantity, fair_rate: item.fair_rate, total_fair: item.total_fair,
         markup_pct: item.markup_pct, status: item.status,
+        commercial_low: item.commercial_low, commercial_high: item.commercial_high,
+        markup_vs_commercial: item.markup_vs_commercial,
         note: item.note || defaultNote
       };
     });
 
+    report.bill_state = billState;
+    report.bill_state_context = billStateContext;
+    report.commercial_fair_value = commercialFairValue;
+    report.commercial_savings = commercialSavings;
+    report.commercial_overcharge_pct = commercialOverchargePct;
     recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
 
     // ════════════════════════════════════════════════════════════
@@ -1956,17 +2145,32 @@ module.exports = async function handler(req, res) {
         closing += ' Under Medicare DRG ' + drgEstimate.drg_code + ', the fair value for this entire admission is $' + eFair.toLocaleString() + '.';
       }
 
-      // Combine: JS opening + Sonnet's overcharge examples + facility note + JS closing
-      var parts = [opening];
+      // Combine: context banner + JS opening + Sonnet's overcharge examples + facility note + JS closing
+      var parts = [billStateContext, opening];
       if (overchargeExamples.length > 0) parts.push(overchargeExamples.join(' '));
       if (facilityNote) parts.push(facilityNote);
       parts.push(closing);
       report.summary = parts.join(' ');
     }
 
-    // ── STEP 6: Grade rationale must match ──
-    var gradeLabels = { 'A': 'Fair Bill', 'B': 'Mild Overcharge', 'C': 'Overcharged', 'D': 'Heavily Overcharged', 'F': 'Extreme Overcharge' };
-    report.grade_rationale = 'Bill contains ' + enforcedOverchargePct + '% overcharge, representing $' + report.potential_savings.toLocaleString() + ' in potential savings.';
+    // ── STEP 6: Grade rationale — plain English, state-aware ──
+    if (billState === 'FULLY_RESOLVED') {
+      report.grade_rationale = 'Your balance is $0. Charges on this bill were ' + commercialOverchargePct + '% above what commercial insurance typically pays.';
+    } else if (billState === 'PRE_PAYMENT_INSURED') {
+      report.grade_rationale = 'Insurance not yet processed. These charges are ' + commercialOverchargePct + '% above typical commercial rates — your final bill will be lower.';
+    } else if (billState === 'BALANCE_BILL') {
+      report.grade_rationale = 'You may be protected by federal law. Charges are ' + commercialOverchargePct + '% above typical commercial rates.';
+    } else if (billState === 'COST_SHARE_DISPUTE') {
+      report.grade_rationale = 'Charges are ' + commercialOverchargePct + '% above typical commercial rates — disputing these could reduce your balance.';
+    } else {
+      report.grade_rationale = 'Charges are ' + commercialOverchargePct + '% above typical commercial rates — ' + fmt_dollars(commercialSavings) + ' in potential savings.';
+    }
+
+    // ── Helper for grade_rationale dollar format (server-side, no fmt() available) ──
+    function fmt_dollars(n) {
+      if (!n) return '$0';
+      return '$' + Math.round(n).toLocaleString('en-US');
+    }
 
     // ── STEP 7: Deep sanitize ALL strings in report -- strip state-specific agency references ──
     function sanitizeStateRefs(text) {

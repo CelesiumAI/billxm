@@ -8,9 +8,11 @@ REQUIREMENTS:
 - Opening paragraph: state purpose, total billed, total disputed
 - For EACH issue: cite the CPT code, amount billed, government fair value, rule violated, savings requested
 - Closing demand: request written correction within 30 days
-- Escalation: state failure to respond will result in complaints to Texas Department of Insurance and Texas Attorney General
+- Escalation: state failure to respond will result in complaints to my state's Department of Insurance and my state's Attorney General
 - Professional, firm, non-adversarial tone
-- Plain text only. No markdown. No asterisks. Numbered lists as "1." "2." etc.`;
+- Plain text only. No markdown. No asterisks. Numbered lists as "1." "2." etc.
+
+IMPORTANT: Never reference specific state agencies by name (e.g. Texas Department of Insurance, Tennessee Department of Health). Always use generic phrasing: "my state's Attorney General", "my state's Insurance Commissioner", "my state's Department of Health". The patient may be in any state.`;
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {

@@ -8,3 +8,18 @@ data/*.xlsx
 data/*.csv
 data/*.zip
 data/*.txt
+
+# Patient bills and sensitive documents
+Business/
+samplebills/
+samplebills.zip
+Bills/
+
+# Admin credentials — NEVER commit
+Admin website and stripe keys.docx
+
+# Internal session files
+BillXM_v2_Changes_for_CC_v2.md
+billxm_code_report.md
+CC_v2_implementation_report.md
+_test_*.js

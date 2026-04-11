@@ -1,0 +1,23 @@
+# Patient bills and internal documents — never deploy to public CDN
+Business/
+samplebills/
+samplebills.zip
+Bills/
+_archive/
+
+# Internal spec and report files from this session
+BillXM_v2_Changes_for_CC_v2.md
+billxm_code_report.md
+CC_v2_implementation_report.md
+
+# Credentials and admin docs
+Admin website and stripe keys.docx
+
+# Markdown files (internal docs)
+*.md
+
+# Word documents (not needed at runtime)
+*.docx
+
+# Test and scratch files
+_test_*.js
