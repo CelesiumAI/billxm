@@ -33,6 +33,46 @@ async function kvGetInt(key) {
   return parseInt(memoryStore[key] || '0');
 }
 
+// ── bills_remaining helpers (TTL-based session counter) ───────
+// Key: bills_remaining:{email}  Value: integer 0-5  TTL: 86400s (24 hours)
+
+async function getBillsRemaining(email) {
+  var key = 'bills_remaining:' + email;
+  var r = getRedis();
+  if (r) {
+    try {
+      var val = await r.get(key);
+      if (val === null || val === undefined) return null; // no active session
+      return Math.max(0, parseInt(val));
+    } catch(e) {}
+  }
+  var mem = memoryStore[key];
+  if (mem === undefined) return null;
+  return Math.max(0, parseInt(mem || '0'));
+}
+
+async function setBillsRemaining(email, count) {
+  var key = 'bills_remaining:' + email;
+  var r = getRedis();
+  if (r) { try { await r.set(key, count, { ex: 86400 }); return; } catch(e) {} }
+  memoryStore[key] = String(count);
+}
+
+async function decrBillsRemaining(email) {
+  var key = 'bills_remaining:' + email;
+  var r = getRedis();
+  if (r) {
+    try {
+      var result = await r.decr(key);
+      return Math.max(0, result);
+    } catch(e) {}
+  }
+  var cur = parseInt(memoryStore[key] || '0');
+  var next = Math.max(0, cur - 1);
+  memoryStore[key] = String(next);
+  return next;
+}
+
 // ── Rate limiting (20 per hour per IP) ────────────────────────
 var ipTracker = {};
 function checkRateLimit(ip) {
@@ -68,15 +108,17 @@ function getPricing() {
   };
 }
 
+// ── Counter seeding ───────────────────────────────────────────
+// Seeds KV counters if missing or below the known real floor (200 bills as of Apr 11 2026)
 async function seedCountersIfNeeded() {
   var r = getRedis();
   if (!r) return;
   try {
     var existing = await r.get('counter:bills_analyzed');
-    if (!existing || parseInt(existing) < 100) {
-      await r.set('counter:bills_analyzed', '100');
-      await r.set('counter:charges_reviewed', '2000000');
-      await r.set('counter:savings_found', '500000');
+    if (!existing || parseInt(existing) < 200) {
+      await r.set('counter:bills_analyzed', '200');
+      await r.set('counter:charges_reviewed', '4500000');
+      await r.set('counter:savings_found', '2600000');
     }
   } catch(e) {}
 }
@@ -114,11 +156,13 @@ module.exports = async function handler(req, res) {
     var existing = await kvGet(userKey);
     if (existing) {
       var user = typeof existing === 'string' ? JSON.parse(existing) : existing;
+      var remaining = await getBillsRemaining(email);
       return res.status(200).json({
         status: 'existing', email: email, tier: user.tier,
         free_report_used: user.free_report_used || false,
         has_full: user.has_full || false,
         reports_purchased: user.reports_purchased || 0,
+        bills_remaining: remaining,
         pricing: getPricing(),
       });
     }
@@ -130,7 +174,9 @@ module.exports = async function handler(req, res) {
     await kvSet(userKey, newUser, 365 * 24 * 60 * 60);
     return res.status(200).json({
       status: 'registered', email: email, tier: 'free',
-      free_report_used: false, has_full: false, reports_purchased: 0, pricing: getPricing(),
+      free_report_used: false, has_full: false, reports_purchased: 0,
+      bills_remaining: null,
+      pricing: getPricing(),
     });
   }
 
@@ -149,15 +195,25 @@ module.exports = async function handler(req, res) {
 
     if (requestedTier === 'report') {
       if (user.tier === 'subscriber') return res.status(200).json({ allowed: true, tier: 'subscriber' });
+      // Free report: one free analysis before any payment required
       if (!user.free_report_used) return res.status(200).json({ allowed: true, tier: 'free_report' });
-      if ((user.reports_purchased || 0) > 0) return res.status(200).json({ allowed: true, tier: 'purchased' });
-      return res.status(200).json({ allowed: false, gate: 'payment_required', pricing: getPricing() });
+      // Paid: check TTL-based session counter (24-hour window)
+      var remaining = await getBillsRemaining(email);
+      if (remaining === null || remaining <= 0) {
+        return res.status(200).json({ allowed: false, gate: 'payment_required', bills_remaining: 0, pricing: getPricing() });
+      }
+      return res.status(200).json({ allowed: true, tier: 'purchased', bills_remaining: remaining });
     }
 
     if (requestedTier === 'full') {
       if (user.tier === 'subscriber') return res.status(200).json({ allowed: true, tier: 'subscriber' });
-      if (user.has_full) return res.status(200).json({ allowed: true, tier: 'has_full' });
-      // If they already paid for report, offer upgrade
+      if (user.has_full) {
+        var remaining = await getBillsRemaining(email);
+        if (remaining === null || remaining <= 0) {
+          return res.status(200).json({ allowed: false, gate: 'session_expired', bills_remaining: 0, pricing: getPricing() });
+        }
+        return res.status(200).json({ allowed: true, tier: 'has_full', bills_remaining: remaining });
+      }
       if (user.free_report_used || (user.reports_purchased || 0) >= 0) {
         return res.status(200).json({ allowed: false, gate: 'upgrade_available', pricing: getPricing() });
       }
@@ -165,6 +221,50 @@ module.exports = async function handler(req, res) {
     }
 
     return res.status(400).json({ error: 'Invalid tier' });
+  }
+
+  // ── get_bills_remaining (new) ──
+  // Called by frontend on mount to sync server-side counter into React state
+  if (action === 'get_bills_remaining') {
+    var email = (body.email || '').toLowerCase().trim();
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    var remaining = await getBillsRemaining(email);
+    return res.status(200).json({ bills_remaining: remaining === null ? 0 : remaining });
+  }
+
+  // ── use_bill (new) ──
+  // Called by frontend after a successful analysis.
+  // Atomically decrements the TTL-based session counter and increments live stats.
+  // Never decrements for subscribers or demo users.
+  if (action === 'use_bill') {
+    var email = (body.email || '').toLowerCase().trim();
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    var userKey = 'user:' + email;
+    var user = await kvGet(userKey);
+    if (!user) return res.status(400).json({ error: 'User not found' });
+    user = typeof user === 'string' ? JSON.parse(user) : user;
+
+    var newCount = null;
+    // Only decrement for non-subscribers, non-demo
+    if (user.tier !== 'subscriber') {
+      newCount = await decrBillsRemaining(email);
+    }
+
+    // Increment live stats counters (fire-and-forget, non-blocking)
+    try {
+      var r = getRedis();
+      if (r) {
+        await r.incr('counter:bills_analyzed');
+        if (body.charges_cents && parseInt(body.charges_cents) > 0) {
+          await r.incrby('counter:charges_reviewed', parseInt(body.charges_cents));
+        }
+        if (body.savings_cents && parseInt(body.savings_cents) > 0) {
+          await r.incrby('counter:savings_found', parseInt(body.savings_cents));
+        }
+      }
+    } catch(e) { console.log('Stats increment failed (non-fatal):', e.message); }
+
+    return res.status(200).json({ success: true, bills_remaining: newCount });
   }
 
   // ── use_grade ──
@@ -193,16 +293,17 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ free_report_used: true });
   }
 
-  // ── use_report ──
+  // ── use_report (kept for backward compatibility) ──
   if (action === 'use_report') {
     var email = (body.email || '').toLowerCase().trim();
     var userKey = 'user:' + email;
     var user = await kvGet(userKey);
     if (!user) return res.status(400).json({ error: 'User not found' });
     user = typeof user === 'string' ? JSON.parse(user) : user;
-    if (user.tier !== 'subscriber' && (user.reports_purchased || 0) <= 0)
-      return res.status(400).json({ error: 'No report credits', gate: 'payment_required' });
-    if (user.tier !== 'subscriber') user.reports_purchased = (user.reports_purchased || 0) - 1;
+    var remaining = await getBillsRemaining(email);
+    if (user.tier !== 'subscriber' && (remaining === null || remaining <= 0)) {
+      return res.status(400).json({ error: 'No bill credits remaining', gate: 'payment_required' });
+    }
     user.last_used = new Date().toISOString();
     await kvSet(userKey, user, 365 * 24 * 60 * 60);
     return res.status(200).json({ success: true });
@@ -221,11 +322,18 @@ module.exports = async function handler(req, res) {
 
     if (creditType === 'single_report') {
       user.reports_purchased = (user.reports_purchased || 0) + 1;
+      // Grant 5-bill session with 24-hour TTL
+      await setBillsRemaining(email, 5);
     } else if (creditType === 'full_report') {
       user.reports_purchased = (user.reports_purchased || 0) + 1;
       user.has_full = true;
+      // Grant 5-bill session with 24-hour TTL
+      await setBillsRemaining(email, 5);
     } else if (creditType === 'upgrade_to_full') {
       user.has_full = true;
+      // Give 5 bills if session is empty (upgrade mid-session)
+      var cur = await getBillsRemaining(email);
+      if (cur === null || cur <= 0) await setBillsRemaining(email, 5);
     } else if (creditType === 'subscription') {
       user.tier = 'subscriber';
       user.has_full = true;
@@ -257,8 +365,6 @@ module.exports = async function handler(req, res) {
     console.log('=== CONTACT REQUEST ===', JSON.stringify(contactData));
     await kvSet('contact:' + Date.now() + ':' + email, contactData, 90 * 24 * 60 * 60);
 
-    // ── Email notification ────────────────────────────────────
-    // Sends an alert so the team knows immediately without checking admin dashboard
     if (process.env.RESEND_API_KEY && process.env.NOTIFICATION_EMAIL) {
       try {
         var isUrgent = contactData.type === 'negotiate' || contactData.type === 'chat_escalation';
