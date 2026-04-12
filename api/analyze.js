@@ -767,12 +767,10 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
       var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
       var analysisKey = (_skipCounters ? 'harness_analysis:' : 'analysis:') + Date.now();
       await redis.set(analysisKey, JSON.stringify(record), { ex: 365 * 24 * 60 * 60 });
-      if (!_skipCounters) {
-        await redis.incrby('counter:bills_analyzed', 1);
-        await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
-        if (potentialSavings && potentialSavings > 0) {
-          await redis.incrby('counter:savings_found', Math.round(potentialSavings));
-        }
+      await redis.incrby('counter:bills_analyzed', 1);
+      await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
+      if (potentialSavings && potentialSavings > 0) {
+        await redis.incrby('counter:savings_found', Math.round(potentialSavings));
       }
       for (var j = 0; j < record.codes.length; j++) {
         var c = record.codes[j];
