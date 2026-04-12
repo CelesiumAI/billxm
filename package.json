@@ -14,9 +14,13 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",
     "@upstash/redis": "^1.37.0",
+    "chokidar": "^5.0.0",
+    "node-cron": "^4.2.1",
     "pdf-parse": "^1.1.1",
     "raw-body": "^3.0.2",
+    "sharp": "^0.34.5",
     "stripe": "^21.0.1",
+    "tesseract.js": "^7.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

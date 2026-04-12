@@ -19,5 +19,8 @@ Admin website and stripe keys.docx
 # Word documents (not needed at runtime)
 *.docx
 
+# Harness — local-only pipeline, never deploy
+harness/
+
 # Test and scratch files
 _test_*.js

@@ -742,7 +742,8 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
 }
 
 // ── Record anonymized analytics ──────────────────────────────
-async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade, issueCount, drgEstimate) {
+// _skipCounters is set true for harness/QA runs so they don't inflate public counters
+async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade, issueCount, drgEstimate, _skipCounters) {
   try {
     var hospital = (extracted.hospital || '').trim();
     var state = (extracted.state || '').trim();
@@ -764,12 +765,14 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
     if (process.env.KV_REST_API_URL) {
       var Redis = require('@upstash/redis').Redis;
       var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
-      var analysisKey = 'analysis:' + Date.now();
+      var analysisKey = (_skipCounters ? 'harness_analysis:' : 'analysis:') + Date.now();
       await redis.set(analysisKey, JSON.stringify(record), { ex: 365 * 24 * 60 * 60 });
-      await redis.incrby('counter:bills_analyzed', 1);
-      await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
-      if (potentialSavings && potentialSavings > 0) {
-        await redis.incrby('counter:savings_found', Math.round(potentialSavings));
+      if (!_skipCounters) {
+        await redis.incrby('counter:bills_analyzed', 1);
+        await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
+        if (potentialSavings && potentialSavings > 0) {
+          await redis.incrby('counter:savings_found', Math.round(potentialSavings));
+        }
       }
       for (var j = 0; j < record.codes.length; j++) {
         var c = record.codes[j];
@@ -1029,8 +1032,10 @@ module.exports = async function handler(req, res) {
     }
   } catch (e) { /* ignore */ }
 
+  var isHarness = !!body.isHarness;
+
   console.log('=== ANALYZE REQUEST ===');
-  console.log('Tier:', tier, 'Demo:', !!body.demo, 'Procedure:', patientProcedure || 'not provided', 'Image:', isImageUpload);
+  console.log('Tier:', tier, 'Demo:', !!body.demo, 'Harness:', isHarness, 'Procedure:', patientProcedure || 'not provided', 'Image:', isImageUpload);
 
   if (!messages || !tier) return res.status(400).json({ error: 'Missing messages or tier' });
 
@@ -1575,7 +1580,7 @@ module.exports = async function handler(req, res) {
       var analyticsCharges = (hasDRGMatch || hasRange) ? totalBilled : 0;
       var analyticsFairValue = hasDRGMatch ? summaryDRG.payment : (hasRange ? summaryDRG.drg_range.high : 0);
       var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : (hasRange ? Math.max(0, totalBilled - summaryDRG.drg_range.high) : 0);
-      recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG);
+      recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG, isHarness);
 
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
@@ -1951,7 +1956,7 @@ module.exports = async function handler(req, res) {
       grade.total_billed = totalBilled;
       grade.estimated_fair_value = estimatedFairValue;
       grade.potential_savings = potentialSavings;
-      recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade.grade, issueCount, drgEstimate);
+      recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade.grade, issueCount, drgEstimate, isHarness);
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(grade) }] });
     }
 
@@ -2062,7 +2067,7 @@ module.exports = async function handler(req, res) {
     report.commercial_fair_value = commercialFairValue;
     report.commercial_savings = commercialSavings;
     report.commercial_overcharge_pct = commercialOverchargePct;
-    recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate);
+    recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate, isHarness);
 
     // ════════════════════════════════════════════════════════════
     // ENFORCEMENT CHAIN (order matters -- each step feeds the next)

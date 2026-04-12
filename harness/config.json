@@ -1,0 +1,85 @@
+{
+  "crawl_schedule": "daily",
+  "crawl_time": "06:00",
+  "sources": {
+    "reddit": {
+      "enabled": true,
+      "subreddits": [
+        "MedicalBill",
+        "medical_bills",
+        "HealthInsurance",
+        "personalfinance",
+        "legaladvice",
+        "pics",
+        "mildlyinfuriating",
+        "antiwork"
+      ],
+      "search_queries": [
+        "hospital bill",
+        "medical bill",
+        "itemized bill",
+        "ER bill",
+        "surgery bill",
+        "insurance bill",
+        "charged me"
+      ],
+      "max_posts_per_subreddit": 50,
+      "min_upvotes": 5
+    },
+    "gofundme": {
+      "enabled": true,
+      "search_queries": [
+        "hospital bill",
+        "medical bill",
+        "surgery cost",
+        "medical debt"
+      ],
+      "max_campaigns": 20
+    },
+    "twitter": {
+      "enabled": false,
+      "note": "Enable when X API key is available"
+    },
+    "news": {
+      "enabled": true,
+      "frequency": "weekly",
+      "search_queries": [
+        "outrageous hospital bill",
+        "medical bill viral",
+        "itemized hospital charges"
+      ]
+    },
+    "google_images": {
+      "enabled": true,
+      "search_queries": [
+        "itemized hospital bill",
+        "medical bill charges CPT"
+      ],
+      "skip_domains": [
+        "istockphoto.com",
+        "gettyimages.com",
+        "shutterstock.com",
+        "dreamstime.com",
+        "alamy.com",
+        "stock.adobe.com",
+        "depositphotos.com"
+      ]
+    }
+  },
+  "ocr": {
+    "engine": "tesseract",
+    "min_confidence": 40,
+    "preprocess": true
+  },
+  "analysis": {
+    "api_url": "https://www.billxm.com/api/analyze",
+    "tier": "full",
+    "timeout_seconds": 120
+  },
+  "review": {
+    "flag_if_zero_issues_above": 10000,
+    "flag_if_zero_line_items": true,
+    "flag_if_savings_zero_with_cpt": true,
+    "generate_daily_summary": true
+  }
+}
