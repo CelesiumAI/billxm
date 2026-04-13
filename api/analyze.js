@@ -742,13 +742,29 @@ function buildSummaryBillResponse(extracted, enrichedItems, billType, totalBille
 }
 
 // ── Record anonymized analytics ──────────────────────────────
-// _skipCounters is set true for harness/QA runs so they don't inflate public counters
+// Global counters always increment. Hospital-specific pricing data requires a hospital name.
 async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade, issueCount, drgEstimate, _skipCounters) {
   try {
+    if (!process.env.KV_REST_API_URL) return;
+
+    var Redis = require('@upstash/redis').Redis;
+    var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
+
+    // Global counters — increment for every successful analysis
+    await redis.incrby('counter:bills_analyzed', 1);
+    await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
+    if (potentialSavings && potentialSavings > 0) {
+      await redis.incrby('counter:savings_found', Math.round(potentialSavings));
+    }
+
+    // Hospital-specific analytics — requires a hospital name
     var hospital = (extracted.hospital || '').trim();
     var state = (extracted.state || '').trim();
     var city = (extracted.city || '').trim();
-    if (!hospital) return;
+    if (!hospital) {
+      console.log('Counters incremented (no hospital name for detailed analytics), $' + totalBilled.toFixed(2));
+      return;
+    }
 
     var record = {
       hospital: hospital, state: state, city: city, bill_type: billType,
@@ -762,42 +778,33 @@ async function recordAnalytics(extracted, enrichedItems, billType, totalBilled, 
         .map(function(i) { return { code: i.code, billed: i.billed, fair: i.total_fair, type: i.type }; })
     };
 
-    if (process.env.KV_REST_API_URL) {
-      var Redis = require('@upstash/redis').Redis;
-      var redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
-      var analysisKey = (_skipCounters ? 'harness_analysis:' : 'analysis:') + Date.now();
-      await redis.set(analysisKey, JSON.stringify(record), { ex: 365 * 24 * 60 * 60 });
-      await redis.incrby('counter:bills_analyzed', 1);
-      await redis.incrby('counter:charges_reviewed', Math.round(totalBilled));
-      if (potentialSavings && potentialSavings > 0) {
-        await redis.incrby('counter:savings_found', Math.round(potentialSavings));
+    var analysisKey = (_skipCounters ? 'harness_analysis:' : 'analysis:') + Date.now();
+    await redis.set(analysisKey, JSON.stringify(record), { ex: 365 * 24 * 60 * 60 });
+    for (var j = 0; j < record.codes.length; j++) {
+      var c = record.codes[j];
+      if (!c.code || !c.billed) continue;
+      var hKey = 'hospital_pricing:' + hospital.replace(/[^a-zA-Z0-9]/g, '_') + ':' + c.code;
+      var existing = await redis.get(hKey);
+      var pricing;
+      if (existing) {
+        pricing = typeof existing === 'string' ? JSON.parse(existing) : existing;
+        pricing.count += 1;
+        pricing.total_billed += c.billed;
+        pricing.avg_billed = Math.round(pricing.total_billed / pricing.count * 100) / 100;
+        if (c.billed < pricing.min_billed) pricing.min_billed = c.billed;
+        if (c.billed > pricing.max_billed) pricing.max_billed = c.billed;
+        if (c.fair) pricing.medicare_rate = c.fair;
+      } else {
+        pricing = {
+          hospital: hospital, state: state, city: city, code: c.code,
+          count: 1, total_billed: c.billed, avg_billed: c.billed,
+          min_billed: c.billed, max_billed: c.billed,
+          medicare_rate: c.fair || null, type: c.type
+        };
       }
-      for (var j = 0; j < record.codes.length; j++) {
-        var c = record.codes[j];
-        if (!c.code || !c.billed) continue;
-        var hKey = 'hospital_pricing:' + hospital.replace(/[^a-zA-Z0-9]/g, '_') + ':' + c.code;
-        var existing = await redis.get(hKey);
-        var pricing;
-        if (existing) {
-          pricing = typeof existing === 'string' ? JSON.parse(existing) : existing;
-          pricing.count += 1;
-          pricing.total_billed += c.billed;
-          pricing.avg_billed = Math.round(pricing.total_billed / pricing.count * 100) / 100;
-          if (c.billed < pricing.min_billed) pricing.min_billed = c.billed;
-          if (c.billed > pricing.max_billed) pricing.max_billed = c.billed;
-          if (c.fair) pricing.medicare_rate = c.fair;
-        } else {
-          pricing = {
-            hospital: hospital, state: state, city: city, code: c.code,
-            count: 1, total_billed: c.billed, avg_billed: c.billed,
-            min_billed: c.billed, max_billed: c.billed,
-            medicare_rate: c.fair || null, type: c.type
-          };
-        }
-        await redis.set(hKey, JSON.stringify(pricing), { ex: 365 * 24 * 60 * 60 });
-      }
-      console.log('Analytics recorded: ' + hospital + ', $' + totalBilled.toFixed(2));
+      await redis.set(hKey, JSON.stringify(pricing), { ex: 365 * 24 * 60 * 60 });
     }
+    console.log('Analytics recorded: ' + hospital + ', $' + totalBilled.toFixed(2));
   } catch (err) {
     console.log('Analytics recording failed (non-fatal):', err.message);
   }
