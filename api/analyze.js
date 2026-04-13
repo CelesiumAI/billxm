@@ -1578,7 +1578,7 @@ module.exports = async function handler(req, res) {
       var analyticsCharges = (hasDRGMatch || hasRange) ? totalBilled : 0;
       var analyticsFairValue = hasDRGMatch ? summaryDRG.payment : (hasRange ? summaryDRG.drg_range.high : 0);
       var analyticsSavings = hasDRGMatch ? Math.max(0, totalBilled - summaryDRG.payment) : (hasRange ? Math.max(0, totalBilled - summaryDRG.drg_range.high) : 0);
-      recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG, isHarness);
+      await recordAnalytics(extracted, enrichedItems, billType, analyticsCharges, analyticsFairValue, analyticsSavings, 'PENDING', 0, summaryDRG, isHarness);
 
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(summaryResult) }] });
     }
@@ -1954,7 +1954,7 @@ module.exports = async function handler(req, res) {
       grade.total_billed = totalBilled;
       grade.estimated_fair_value = estimatedFairValue;
       grade.potential_savings = potentialSavings;
-      recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade.grade, issueCount, drgEstimate, isHarness);
+      await recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, grade.grade, issueCount, drgEstimate, isHarness);
       return res.status(200).json({ content: [{ type: 'text', text: JSON.stringify(grade) }] });
     }
 
@@ -2065,7 +2065,7 @@ module.exports = async function handler(req, res) {
     report.commercial_fair_value = commercialFairValue;
     report.commercial_savings = commercialSavings;
     report.commercial_overcharge_pct = commercialOverchargePct;
-    recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate, isHarness);
+    await recordAnalytics(extracted, enrichedItems, billType, totalBilled, estimatedFairValue, potentialSavings, report.grade, issueCount, drgEstimate, isHarness);
 
     // ════════════════════════════════════════════════════════════
     // ENFORCEMENT CHAIN (order matters -- each step feeds the next)
