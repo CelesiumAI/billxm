@@ -3393,11 +3393,6 @@ function BillXM() {
                 </div>
                 <button onClick={function() { startCheckout("upgrade"); }} style={{ width: "100%", padding: "12px 0", borderRadius: 8, background: C.blue, color: "white", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>Upgrade for $5.00 →</button>
               </div>
-              <div style={{ borderTop: "1px solid " + C.border, paddingTop: 14, textAlign: "center" }}>
-                <div style={{ fontSize: 13, color: C.navy, fontWeight: 700, marginBottom: 4 }}>Or: We Negotiate For You — <span style={{ color: C.green }}>$99</span></div>
-                <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Our billing experts call the hospital for you. Pay only after we accept your case. Money-back guarantee.</div>
-                <button onClick={function() { setShowPaywall(false); setActiveTab("negotiate"); }} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid " + C.blue, background: "transparent", color: C.blue, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: C.font }}>Learn More</button>
-              </div>
             </div>
           ) : (
             /* ── FULL PAYMENT VIEW: user hasn't paid yet ── */
@@ -3424,12 +3419,6 @@ function BillXM() {
                   })}
                   <button onClick={function() { startCheckout("full_report"); }} style={{ marginTop: 12, width: "100%", padding: "9px 0", borderRadius: 8, background: C.navy, color: "white", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: C.font }}>Get Report + Dispute Kit →</button>
                 </div>
-              </div>
-              {/* $99 We Negotiate */}
-              <div style={{ borderTop: "1px solid " + C.border, paddingTop: 14, textAlign: "center" }}>
-                <div style={{ fontSize: 13, color: C.navy, fontWeight: 700, marginBottom: 4 }}>We Negotiate For You — <span style={{ color: C.green }}>$99</span></div>
-                <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Our billing experts call the hospital for you. Pay only after we accept your case. Money-back guarantee.</div>
-                <button onClick={function() { setShowPaywall(false); setActiveTab("negotiate"); }} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid " + C.blue, background: "transparent", color: C.blue, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: C.font }}>Learn More</button>
               </div>
             </div>
           )}
@@ -4523,7 +4512,6 @@ function BillXM() {
       { id: "lineitems", label: "📋 Line Items",              locked: isSummaryBill ? false : !isPaid },
       { id: "scripts",   label: "📞 Phone Scripts",           locked: isSummaryBill ? false : !hasFull },
       { id: "letter",    label: "✉️ Dispute Letter",          locked: isSummaryBill ? false : !hasFull },
-      { id: "negotiate", label: "🤝 We Negotiate",            locked: false },
     ];
 
     async function sendChatMessage() {
@@ -4574,7 +4562,6 @@ function BillXM() {
     }
 
     function handleTabClick(tab) {
-      if (tab.id === "negotiate") { setActiveTab(tab.id); return; }
       // Summary bills: all tabs unlocked for free
       if (isSummaryBill) { setActiveTab(tab.id); return; }
       if ((tab.id === "letter" || tab.id === "scripts") && !hasFull) {
@@ -5222,50 +5209,10 @@ function BillXM() {
               </div>
           )}
 
-          {activeTab === "negotiate" && (
-            <Card style={{ padding: "40px 24px", textAlign: "center", maxWidth: 600, margin: "0 auto" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🤝</div>
-              <h3 style={{ fontSize: 24, fontWeight: 800, color: C.navy, marginBottom: 12 }}>Let Our Team Handle It</h3>
-              <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.7, marginBottom: 8 }}>
-                Don't want to make the calls yourself? Our billing team — with 15+ years of experience at major hospital systems — will negotiate directly with the hospital on your behalf.
-              </p>
-              <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.7, marginBottom: 24 }}>
-                <strong style={{ color: C.navy }}>$99 — only charged after we accept your case. Money-back guarantee.</strong>
-              </p>
-              <div style={{ background: "#f8fafc", border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, textAlign: "left", marginBottom: 24 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-                  <div>
-                    <label style={{ display: "block", color: C.muted, fontSize: 13, marginBottom: 4 }}>First name</label>
-                    <input type="text" id="negFirstName" placeholder="Your first name" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, boxSizing: "border-box" }} />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", color: C.muted, fontSize: 13, marginBottom: 4 }}>Last name</label>
-                    <input type="text" id="negLastName" placeholder="Your last name" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, boxSizing: "border-box" }} />
-                  </div>
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ display: "block", color: C.muted, fontSize: 13, marginBottom: 4 }}>Email *</label>
-                  <input type="email" id="negEmail" placeholder="your@email.com" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, boxSizing: "border-box" }} />
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ display: "block", color: C.muted, fontSize: 13, marginBottom: 4 }}>Phone *</label>
-                  <input type="tel" id="negPhone" placeholder="(555) 123-4567" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, boxSizing: "border-box" }} />
-                </div>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", color: C.muted, fontSize: 13, marginBottom: 4 }}>Brief description</label>
-                  <textarea id="negDescription" rows={3} placeholder="Tell us about your bill and situation" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, boxSizing: "border-box", resize: "vertical" }} />
-                </div>
-                <button onClick={submitNegotiateRequest} style={{ width: "100%", padding: 14, borderRadius: 10, background: C.blue, color: "white", fontWeight: 700, border: "none", cursor: "pointer", fontSize: 16, fontFamily: C.font }}>Request a Review</button>
-                <div id="negSuccess" style={{ display: "none", color: C.green, fontSize: 14, marginTop: 12, textAlign: "center" }} />
-                <div id="negError" style={{ display: "none", color: C.red, fontSize: 14, marginTop: 12, textAlign: "center" }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", fontSize: 13, color: C.muted }}>
-                <span>✓ No payment upfront</span>
-                <span>✓ Expert review within 24hrs</span>
-                <span>✓ Money-back guarantee</span>
-              </div>
-            </Card>
-          )}
+          {/* Report footer */}
+          <div style={{ textAlign: "center", padding: "32px 0 16px", marginTop: 24, borderTop: `1px solid ${C.border}`, color: C.muted, fontSize: 13 }}>
+            Generated by <strong style={{ color: C.navy }}>BillXM</strong> | Celesium AI | <a href="https://billxm.com" style={{ color: C.blue, textDecoration: "none" }}>billxm.com</a>
+          </div>
 
         </div>
       </div>
