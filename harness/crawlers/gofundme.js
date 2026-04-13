@@ -24,7 +24,7 @@ const { INBOX, CONFIG_PATH, SEEN_PATH } = require('../paths');
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 // Set to true once puppeteer is installed (npm install puppeteer)
-const USE_PUPPETEER = false;
+const USE_PUPPETEER = true;
 
 // ── Shared helpers ──────────────────────────────────────────────
 
