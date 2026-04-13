@@ -21,6 +21,7 @@ const { startWatcher, log, terminateOcr } = require('./watcher');
 const { crawlReddit } = require('./crawlers/reddit');
 const { crawlGoFundMe } = require('./crawlers/gofundme');
 const { crawlImages } = require('./crawlers/google');
+const { crawlNews } = require('./crawlers/news');
 const { generateDailySummary } = require('./summary');
 
 const { CONFIG_PATH } = require('./paths');
@@ -34,7 +35,8 @@ const doCrawl = args.includes('--crawl') || args.includes('--crawl-only');
 const crawlOnly = args.includes('--crawl-only')
   || args.includes('--reddit-only')
   || args.includes('--images-only')
-  || args.includes('--gofundme-only');
+  || args.includes('--gofundme-only')
+  || args.includes('--news-only');
 const daemonMode = args.includes('--daemon');
 const summaryOnly = args.includes('--summary');
 
@@ -42,6 +44,7 @@ const summaryOnly = args.includes('--summary');
 const runReddit = doCrawl || args.includes('--reddit-only');
 const runImages = doCrawl || args.includes('--images-only');
 const runGoFundMe = doCrawl || args.includes('--gofundme-only');
+const runNews = doCrawl || args.includes('--news-only');
 
 // ── Run all enabled crawlers ────────────────────────────────────
 
@@ -73,6 +76,15 @@ async function runAllCrawlers() {
     log(`Image search done: ${stats.downloaded} downloaded`);
   } catch (err) {
     log(`Image search crawler error: ${err.message}`);
+  }
+
+  log('── News article crawler ──');
+  try {
+    const stats = await crawlNews(log);
+    totalDownloaded += stats.downloaded;
+    log(`News done: ${stats.downloaded} downloaded`);
+  } catch (err) {
+    log(`News crawler error: ${err.message}`);
   }
 
   log(`All crawlers finished: ${totalDownloaded} total images downloaded to inbox/`);
@@ -117,7 +129,18 @@ async function runSelectedCrawlers() {
     }
   }
 
-  if (totalDownloaded > 0 || runReddit || runImages || runGoFundMe) {
+  if (runNews) {
+    log('── News article crawler ──');
+    try {
+      const stats = await crawlNews(log);
+      totalDownloaded += stats.downloaded;
+      log(`News done: ${stats.downloaded} downloaded`);
+    } catch (err) {
+      log(`News crawler error: ${err.message}`);
+    }
+  }
+
+  if (totalDownloaded > 0 || runReddit || runImages || runGoFundMe || runNews) {
     log(`All crawlers finished: ${totalDownloaded} total images downloaded to inbox/`);
   }
 
@@ -195,7 +218,7 @@ if (process.env.ANTHROPIC_API_KEY) {
   }
 
   // One-shot crawl modes
-  if (doCrawl || runReddit || runImages || runGoFundMe) {
+  if (doCrawl || runReddit || runImages || runGoFundMe || runNews) {
     await runSelectedCrawlers();
 
     if (crawlOnly) {

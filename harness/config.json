@@ -43,18 +43,34 @@
     },
     "news": {
       "enabled": true,
-      "frequency": "weekly",
+      "frequency": "daily",
       "search_queries": [
         "outrageous hospital bill",
         "medical bill viral",
-        "itemized hospital charges"
-      ]
+        "itemized hospital charges",
+        "hospital bill shocked",
+        "medical bill thousands",
+        "ER bill surprise charges",
+        "NICU bill parents",
+        "ambulance bill outrageous",
+        "surgery bill overcharged patient"
+      ],
+      "max_articles_per_query": 10,
+      "max_images_per_article": 5,
+      "direct_sites": true
     },
     "google_images": {
       "enabled": true,
       "search_queries": [
         "itemized hospital bill",
-        "medical bill charges CPT"
+        "medical bill charges CPT",
+        "itemized hospital bill CPT codes",
+        "ER bill charges itemized",
+        "surgery bill overcharged",
+        "NICU bill itemized statement",
+        "ambulance bill charges",
+        "hospital bill $100,000",
+        "medical bill line items"
       ],
       "skip_domains": [
         "istockphoto.com",
