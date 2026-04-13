@@ -15,6 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
 const cron = require('node-cron');
 const { startWatcher, log, terminateOcr } = require('./watcher');
 const { crawlReddit } = require('./crawlers/reddit');
@@ -179,6 +180,12 @@ function getCronExpression() {
 log('═══════════════════════════════════════════════');
 log('  BillXM Harness v0.1 — Starting up');
 log('═══════════════════════════════════════════════');
+
+if (process.env.ANTHROPIC_API_KEY) {
+  log('Haiku vision fallback: ENABLED');
+} else {
+  log('Haiku vision fallback: DISABLED (set ANTHROPIC_API_KEY in .env.local to enable)');
+}
 
 (async function main() {
   // --summary: generate summary and exit

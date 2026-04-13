@@ -104,27 +104,7 @@ async function processBill(filePath) {
   }
   log(`OCR   ${filename} — done (${ocrResult.method}, confidence: ${Math.round(ocrResult.confidence)}%, ${ocrResult.text.length} chars)`);
 
-  // 3. Load config for OCR confidence threshold
-  let config = {};
-  try { config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch (_) {}
-  const minConfidence = (config.ocr && config.ocr.min_confidence) || 60;
-
-  if (ocrResult.confidence < minConfidence) {
-    log(`FLAG  ${filename} — OCR confidence ${Math.round(ocrResult.confidence)}% < ${minConfidence}% threshold`);
-    const flaggedPath = path.join(FLAGGED, filename);
-    await moveFile(processingPath, flaggedPath);
-    await fs.promises.writeFile(
-      path.join(FLAGGED, `${path.basename(filename, ext)}_flag.json`),
-      JSON.stringify({
-        reason: `OCR confidence too low: ${Math.round(ocrResult.confidence)}%`,
-        confidence: ocrResult.confidence,
-        timestamp: new Date().toISOString()
-      }, null, 2)
-    );
-    return;
-  }
-
-  // 4. Bill validation
+  // 3. Bill validation (confidence no longer gates — let the 4-signal validator decide)
   const validation = validateBillText(ocrResult.text);
   if (!validation.valid) {
     log(`FLAG  ${filename} — ${validation.reason}`);
