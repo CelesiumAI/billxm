@@ -22,7 +22,7 @@ const { crawlGoFundMe } = require('./crawlers/gofundme');
 const { crawlImages } = require('./crawlers/google');
 const { generateDailySummary } = require('./summary');
 
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const { CONFIG_PATH } = require('./paths');
 
 function loadConfig() {
   try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch (_) { return {}; }

@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const { CONFIG_PATH } = require('./paths');
 
 function loadConfig() {
   try {

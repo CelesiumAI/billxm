@@ -1,4 +1,5 @@
 {
+  "work_dir": "C:\\billxm-harness",
   "crawl_schedule": "daily",
   "crawl_time": "06:00",
   "sources": {

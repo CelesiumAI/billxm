@@ -8,10 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const HARNESS_ROOT = path.resolve(__dirname);
-const RESULTS = path.join(HARNESS_ROOT, 'results');
-const FLAGGED = path.join(HARNESS_ROOT, 'flagged');
-const LOGS = path.join(HARNESS_ROOT, 'logs');
+const { RESULTS, FLAGGED, LOGS } = require('./paths');
 
 /**
  * Generate the daily summary for a given date (defaults to today).

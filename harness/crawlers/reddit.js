@@ -11,10 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const HARNESS_ROOT = path.resolve(__dirname, '..');
-const INBOX = path.join(HARNESS_ROOT, 'inbox');
-const CONFIG_PATH = path.join(HARNESS_ROOT, 'config.json');
-const SEEN_PATH = path.join(HARNESS_ROOT, 'seen_urls.json');
+const { INBOX, CONFIG_PATH, SEEN_PATH } = require('../paths');
 
 const USER_AGENT = 'BillXM-Harness/1.0 (medical bill research)';
 

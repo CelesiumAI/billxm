@@ -14,12 +14,7 @@ const { validateBillText } = require('./validator');
 const { analyzeBill } = require('./analyze');
 const { checkFlags } = require('./flagger');
 
-const HARNESS_ROOT = path.resolve(__dirname);
-const INBOX = path.join(HARNESS_ROOT, 'inbox');
-const PROCESSING = path.join(HARNESS_ROOT, 'processing');
-const RESULTS = path.join(HARNESS_ROOT, 'results');
-const FLAGGED = path.join(HARNESS_ROOT, 'flagged');
-const LOGS = path.join(HARNESS_ROOT, 'logs');
+const { HARNESS_ROOT, CONFIG_PATH, INBOX, PROCESSING, RESULTS, FLAGGED, LOGS } = require('./paths');
 
 const VALID_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.tif', '.pdf', '.webp']);
 
@@ -111,7 +106,7 @@ async function processBill(filePath) {
 
   // 3. Load config for OCR confidence threshold
   let config = {};
-  try { config = JSON.parse(fs.readFileSync(path.join(HARNESS_ROOT, 'config.json'), 'utf8')); } catch (_) {}
+  try { config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch (_) {}
   const minConfidence = (config.ocr && config.ocr.min_confidence) || 60;
 
   if (ocrResult.confidence < minConfidence) {
